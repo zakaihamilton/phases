@@ -6,6 +6,7 @@ import { useNavigation } from "./page.nav.js";
 import Mandala from "../components/Mandala";
 import HUD from "../components/HUD";
 import Controls from "../components/Controls";
+import SummaryPanel from "../components/SummaryPanel";
 
 export default function Phases() {
   const [cameraScale, setCameraScale] = useState(1);
@@ -44,6 +45,10 @@ export default function Phases() {
       <HUD 
         activeSubData={activeSubData}
         activePath={activePath}
+      />
+
+      <SummaryPanel 
+        activeSubData={activeSubData}
       />
 
       <Controls 

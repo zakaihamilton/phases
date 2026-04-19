@@ -19,12 +19,15 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const isPreviousPhase = data.pIdx < activePath.p;
         const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
 
-        // Construct Border
-        const borderThickness = isFocused ? 12 : 10;
-        let borderStyle = `${borderThickness}px ${data.borderType || 'solid'} ${data.color}`;
+        // Construct Border Components
+        const baseThickness = isFocused ? 12 : 10;
+        let cBorderWidth = baseThickness;
+        let cBorderStyle = data.borderType || 'solid';
+        let cBorderColor = data.color;
+
         if (isPreviousPhase && isVisible) {
-          const thickness = Math.max(10, 60 - (data.sIdx * 10));
-          borderStyle = `${thickness}px solid ${data.color}`;
+          cBorderWidth = Math.max(10, 60 - (data.sIdx * 10));
+          cBorderStyle = 'solid';
         }
         
         // Construct Glow
@@ -37,11 +40,15 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
             boxShadow = `0 0 ${baseGlowSize + 10}px ${glowColor}, inset 15px 0 25px -5px ${glowColor}`;
           } else if (isPreviousPhase) {
             if (data.sIdx === 0) {
-              boxShadow = `0 0 40px ${glowColor}`;
+              boxShadow = `0 0 40px ${glowColor}, inset 0 0 0 0 transparent`;
+            } else {
+              boxShadow = `0 0 0px transparent, inset 0 0 0 0 transparent`;
             }
           } else {
-            boxShadow = `0 0 ${baseGlowSize}px ${glowColor}`;
+            boxShadow = `0 0 ${baseGlowSize}px ${glowColor}, inset 0 0 0 0 transparent`;
           }
+        } else {
+          boxShadow = `0 0 0px transparent, inset 0 0 0 0 transparent`;
         }
 
         return (
@@ -57,7 +64,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
             <div
               className={`${styles.ringInner} ${isFocused ? styles.focused : ''} ${data.pulse && isVisible ? styles.pulse : ''}`}
               style={{
-                border: borderStyle,
+                borderWidth: `${cBorderWidth}px`,
+                borderStyle: cBorderStyle,
+                borderColor: cBorderColor,
                 boxShadow: boxShadow,
                 backgroundColor: isVisible ? (data.bg || 'transparent') : 'transparent',
               }}
