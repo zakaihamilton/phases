@@ -27,11 +27,13 @@ const SummaryPanel = ({ activeSubData }) => {
     <>
       {paragraphs[0] && (
         <div className={`${styles.leftPanel} ${isLeftCollapsed ? styles.collapsedContainer : ''}`}>
-          <div className={`${styles.summaryGlass} ${isLeftCollapsed ? styles.collapsed : ''}`} key={`left-${activeSubData.id}`}>
+          <div className={`${styles.summaryGlass} ${isLeftCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.summaryHeader} onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}>
-              <h2 className={styles.summaryTitle} style={{ color: activeSubData.color }}>
-                Overview
-              </h2>
+              {!isLeftCollapsed && (
+                <h2 className={styles.summaryTitle} style={{ color: activeSubData.color }}>
+                  Overview
+                </h2>
+              )}
               <button className={styles.collapseBtn}>
                 <CollapseIcon isCollapsed={isLeftCollapsed} />
               </button>
