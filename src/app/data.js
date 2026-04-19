@@ -1,6 +1,6 @@
 export const MAPPED_DATA = [
     {
-        phase: "0", title: "The Root (Nature)", sub: [
+        phase: "0", title: "Nature", sub: [
             { id: "0.0", name: "Energy", color: "#94a3b8", pulse: true },
             { id: "0.1", name: "Still", color: "#a7a895" },
             { id: "0.2", name: "Vegetative", color: "#879cb5" },
@@ -11,7 +11,7 @@ export const MAPPED_DATA = [
     {
         phase: "1", title: "Humanity", sub: [
             {
-                id: "1.1", name: "Core", color: "#f59e0b", summary: [
+                id: "1.1", name: "Core", color: "#f59e0b", pulse: true, summary: [
                     "All the phases in the Preparation Tier are in the world of Infinity (or Boundless). This world represents reality, the one playing field where all creatures interact from vegetation and animals to humans. This is the base, the reality perceived by each individual through their corporeal senses. The world of Infinity is normally considered the most exalted spiritual world without any corporeal manifestation at all. However, in System Concepts it is considered the exact opposite, the world of Infinity represents the corporeal reality where all individuals begin their journey. The individual traverses the spiritual path according to the order of cause and consequence expressed by the materials of Kabbalah edited by the great Teacher Rabbi Yehuda HaLevi Ashlag even though he concealed this sequence as the path of advancement.",
                     "Every individual begins their journey when they are born in the physical world. They enter the phase of the Core desires (1.1) in the world of Infinity. The core desires are the basic desires of any individual in various amounts of attention. These desires are sorted into three categories: food, love and family. Food includes the sustenance of the individual including maintenance of the body, medical support and food consumption, entertainment for the self and working for a living. Love includes interaction with individuals such as various friendships, dating, partners and marriage without a business or spiritual counterpart. Family is the fruit of those relationships such as children, education and other activities associated with their upbringing. This phase is the unformed phase of Humanity (1.1)."
                 ]
@@ -39,7 +39,7 @@ export const MAPPED_DATA = [
     {
         phase: "2", title: "Society", sub: [
             {
-                id: "2.1", name: "Connection", color: "#6189c7", summary: [
+                id: "2.1", name: "Connection", color: "#6189c7", pulse: true, summary: [
                     "Connection is the application of theology towards positive emotional human interaction. Theology deals with the spiritual structure as a body of knowledge and is an inward activity of the individual processing information. Connection takes theology and directs it towards a social activity, manifesting into various experiences focused on human acknowledgement. They eat, learn and work together with the focal point on the well-being of the other members in the society. The trademark of the society is altruism without self benefit. This phase is the unformed phase of Society (2.1).",
                     "There are people who do not join society but still advance. They will still expect in some manner a routine of either sessions at a set time with each other or some other regimen that fulfill the need for a general connection with the friends. The friends are considered those who are either advancing or aspiring through such a connection to reach some spiritual enlightenment. The intention expected at this phase is abstract and lacks any definitive details. This removes the ability for their goal to be achieved in any meaningful manner."
                 ]
@@ -67,7 +67,7 @@ export const MAPPED_DATA = [
     {
         phase: "3", title: "Group", sub: [
             {
-                id: "3.1", name: "Intention", color: "#f05638", summary: [
+                id: "3.1", name: "Intention", color: "#f05638", pulse: true, summary: [
                     "Intention is the direction of the individual to advance consciously towards increasing their internal power. The individual is learning about the attitude they should apply to themselves in order to advance in an orderly fashion. The individual is aligned correctly to the goal of the group, to increase their self worth and empower themselves using the group in an optimal manner. This phase is the unformed phase of Group (3.1).",
                     "There are individuals who have a hard time investing in their own benefit and prefer to focus on helping others in various altruistic activities or helping others advance. However, it is vital for an individual in the Preparation Tier (before the barrier) to focus only on their own spiritual advancement. They interact with the group that cleans concepts only in order to advance themselves. There will be plenty of time to help others and disseminate the material after the individual achieves their own success both corporeally and spiritually."
                 ]
@@ -95,7 +95,7 @@ export const MAPPED_DATA = [
     {
         phase: "4", title: "Individual", sub: [
             {
-                id: "4.1", name: "Doubts", color: "#4dbd42", summary:
+                id: "4.1", name: "Doubts", color: "#4dbd42", pulse: true, summary:
                     [
                         "The phase of Doubts is the process where the individual has concerns, questions and doubts about advancement. The egoism of the individual is increasing heavily in this phase. They have a demand for answers and feel tension towards the method and its application. Various scorpion (criticism towards environment) and snake (criticism towards self) thoughts arise in the individual that should be addressed in order to strengthen their egoism towards spiritual attainment. This phase is the unformed phase of Individual (4.1).",
                         "The individual might find that they have no criticism towards themselves or others. However, this is just a facade. They are making sure that no problems seep into their awareness in order to avoid confronting the uncomfortable pain of such deficiencies. This is where the group and teacher can help the individual realise the issues that require attention to confront. The individual should not solve such problems but rather have acceptance for them to exist and be solved through spiritual advancement. Thus, the accumulation of critical issues is in order to increase the need for the individual to grow their egoism towards attaining internal power."
