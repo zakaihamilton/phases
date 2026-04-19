@@ -7,7 +7,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
   // Memory stores
   const transitionsRef = useRef(new Map());
-  const gradientCacheRef = useRef(new Map()); // Caches gradients to prevent GC thrashing
+  const gradientCacheRef = useRef(new Map());
+
+  // New Trackers for Cinematic Transitions
+  const prevPathRef = useRef(`${activePath.p}-${activePath.s}`);
+  const globalSpinVelocityRef = useRef(0);
+  const globalSpinOffsetRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -26,13 +31,24 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
     let lastTime = startTime;
 
     const draw = (currentTime) => {
-      // Cap delta time to prevent massive jumps if the tab is inactive
       const dt = Math.min((currentTime - lastTime) / 1000, 0.05);
       lastTime = currentTime;
       const elapsedTime = (currentTime - startTime) / 1000;
 
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
       ctx.globalCompositeOperation = 'lighter';
+
+      // --- 1. GLOBAL ROTATIONAL BURST ---
+      const currentPathStr = `${activePath.p}-${activePath.s}`;
+      if (prevPathRef.current !== currentPathStr) {
+        // Inject a sudden burst of speed when phase changes
+        globalSpinVelocityRef.current += 3.0;
+        prevPathRef.current = currentPathStr;
+      }
+
+      // Apply friction to slow the burst down smoothly
+      globalSpinVelocityRef.current -= globalSpinVelocityRef.current * 2.5 * dt;
+      globalSpinOffsetRef.current += globalSpinVelocityRef.current * dt;
 
       const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
 
@@ -42,8 +58,14 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const isFocused = index === focusedIndex;
         const rl = radiusLevels[index];
         const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
-        const targetRadius = 800 * dynamicScale * cameraScale;
-        const targetOpacity = data.opacity || 1;
+
+        // Push unfocused rings slightly further back for depth
+        const depthScale = isFocused ? 1 : 0.95;
+        const targetRadius = 800 * dynamicScale * cameraScale * depthScale;
+
+        // Dim unfocused rings significantly to make transitions pop
+        const baseTargetOpacity = data.opacity || 1;
+        const targetOpacity = isFocused ? baseTargetOpacity : baseTargetOpacity * 0.4;
         const targetFocus = isFocused ? 1 : 0;
 
         let tState = transitionsRef.current.get(index);
@@ -51,21 +73,30 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           tState = {
             focusProgress: targetFocus,
             animatedRadius: targetRadius,
+            radiusVelocity: 0, // Used for spring physics
             animatedOpacity: targetOpacity,
             ripples: []
           };
           transitionsRef.current.set(index, tState);
         }
 
-        tState.focusProgress += (targetFocus - tState.focusProgress) * 6 * dt;
-        tState.animatedRadius += (targetRadius - tState.animatedRadius) * 6 * dt;
-        tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * 6 * dt;
+        // --- 2. SPRING PHYSICS LERPING ---
+        // Instead of linear sliding, we use stiffness and damping to make the radius "bounce" into place
+        const stiffness = 120; // Higher = faster snap
+        const damping = 12;    // Higher = less bounciness
+
+        const springForce = (targetRadius - tState.animatedRadius) * stiffness;
+        tState.radiusVelocity += (springForce - (tState.radiusVelocity * damping)) * dt;
+        tState.animatedRadius += tState.radiusVelocity * dt;
+
+        // Smooth fade for opacity and focus
+        tState.focusProgress += (targetFocus - tState.focusProgress) * 8 * dt;
+        tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * 8 * dt;
 
         const focusP = tState.focusProgress;
-        const currentRadius = tState.animatedRadius;
+        const currentRadius = Math.max(0, tState.animatedRadius); // Prevent negative radius bounds
         let baseOpacity = tState.animatedOpacity;
 
-        // Strict early exit to save render cycles
         if (baseOpacity < 0.001 && currentRadius < 1) return;
 
         if (data.pulse && baseOpacity > 0.01) {
@@ -75,12 +106,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const cColor = data.color;
         ctx.lineCap = 'round';
 
-        // --- OPTIMIZATION 1: Gradient Caching ---
         const getCometGradient = (radius) => {
-          // Round radius to nearest 10px to reuse gradients and avoid memory leaks
           const cacheKey = `${Math.round(radius / 10) * 10}-${cColor}`;
           let grad = gradientCacheRef.current.get(cacheKey);
-
           if (!grad) {
             grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
             grad.addColorStop(0, cColor);
@@ -91,42 +119,36 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           return grad;
         };
 
-        // Add a mouse move listener to your useEffect to capture parallax offset
-        let mouseX = 0, mouseY = 0;
-        window.addEventListener('mousemove', (e) => {
-          mouseX = (e.clientX / window.innerWidth - 0.5) * 20; // 20px max offset
-          mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
-        });
-
         const drawRing = (radius, width, dashArray, rotationSpeed, glowAmount, alpha, useGradient = false) => {
           if (alpha <= 0.01 || radius <= 0) return;
 
-          // Draw 3 times for Chromatic Aberration
-          const colors = ['#ff0000', '#00ff00', '#0000ff']; // R, G, B
-          const offsets = [-1, 0, 1]; // Slight pixel shift
+          ctx.save();
+          ctx.translate(CENTER, CENTER);
 
-          offsets.forEach((offset, i) => {
-            ctx.save();
-            ctx.globalAlpha = alpha * 0.5; // Lower alpha for each color pass
+          // Apply individual spin + global momentum burst
+          if (rotationSpeed) {
+            ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
+          } else {
+            // Even non-spinning rings slightly drift with the momentum burst
+            ctx.rotate(globalSpinOffsetRef.current * 0.2);
+          }
 
-            // Apply Parallax + Chromatic Offset
-            ctx.translate(CENTER + mouseX + offset, CENTER + mouseY + offset);
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = useGradient ? getCometGradient(radius) : cColor;
 
-            if (rotationSpeed) {
-              ctx.rotate(elapsedTime * rotationSpeed);
-            }
+          if (dashArray) ctx.setLineDash(dashArray);
 
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-
-            // Use the color pass for the stroke
-            ctx.strokeStyle = colors[i];
-            ctx.lineWidth = width;
-
-            if (dashArray) ctx.setLineDash(dashArray);
+          if (glowAmount > 0) {
+            ctx.globalAlpha = Math.max(0, alpha * 0.25);
+            ctx.lineWidth = width + glowAmount;
             ctx.stroke();
-            ctx.restore();
-          });
+          }
+
+          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+          ctx.lineWidth = width;
+          ctx.stroke();
+          ctx.restore();
         };
 
         const drawNodes = (radius, count, rotationSpeed, alpha) => {
@@ -134,7 +156,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.save();
           ctx.globalAlpha = alpha;
           ctx.translate(CENTER, CENTER);
-          ctx.rotate(elapsedTime * rotationSpeed);
+
+          // Apply spin + momentum burst
+          ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
 
           ctx.fillStyle = cColor;
 
@@ -144,7 +168,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
             ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Fast Glow for nodes
             ctx.globalAlpha = alpha * 0.3;
             ctx.beginPath();
             ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 12, 0, Math.PI * 2);
@@ -154,12 +177,13 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.restore();
         };
 
-        // --- OPTIMIZATION 3: In-Place Array Mutation for GC ---
+        // --- DRAW LAYERS ---
+
+        // Shockwaves
         if (isFocused && Math.random() < 0.03) {
           tState.ripples.push({ spread: 0, alpha: 1 });
         }
 
-        // Loop backwards to safely remove items without using .filter()
         for (let i = tState.ripples.length - 1; i >= 0; i--) {
           let ripple = tState.ripples[i];
           ripple.spread += 100 * dt;
@@ -172,7 +196,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           }
         }
 
-        // Draw Orbits
+        // Orbits
         if (focusP > 0.01) {
           drawRing(currentRadius * 1.05, 1, [4, 60], -0.15, 5, baseOpacity * 0.4 * focusP);
           drawNodes(currentRadius * 1.05, 3, -0.15, baseOpacity * 0.8 * focusP);
@@ -181,19 +205,19 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           drawNodes(currentRadius * 0.95, 6, 0.3, baseOpacity * 0.8 * focusP);
         }
 
-        // Draw Core
+        // Core
         const currentThickness = 10 - (4 * focusP);
         const currentGlow = 15 + (15 * focusP);
 
         drawRing(currentRadius, currentThickness, null, 0, currentGlow, baseOpacity * (1 - focusP));
         drawRing(currentRadius, currentThickness, [180, 60, 20, 60], 0.1, currentGlow, baseOpacity * focusP, true);
 
-        // Draw Background Fill
+        // Fill
         if (data.bg) {
           ctx.save();
           ctx.globalAlpha = Math.max(0, Math.min(1, baseOpacity));
           ctx.beginPath();
-          ctx.arc(CENTER, CENTER, Math.max(0, currentRadius), 0, Math.PI * 2);
+          ctx.arc(CENTER, CENTER, currentRadius, 0, Math.PI * 2);
           ctx.fillStyle = data.bg;
           ctx.fill();
           ctx.restore();
