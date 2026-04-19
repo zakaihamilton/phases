@@ -3,20 +3,19 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  background: linear-gradient(to top,
-      rgba(2, 2, 5, 0.4) 0%,
-      transparent 100%);
   pointer-events: none;
   text-align: center;
   z-index: 50;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transform: translateZ(0);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hudOverlayCollapsed {
+  padding-bottom: 0.5rem;
 }
 
 .hudGlow {
@@ -63,6 +62,89 @@
   transform: translateZ(0);
   backface-visibility: hidden;
   contain: content;
+  pointer-events: auto;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hudCardCollapsed {
+  height: 44px;
+  min-height: 44px;
+  min-width: 180px;
+  padding: 0 1rem;
+  border-radius: 22px;
+  display: flex;
+  gap: 15px;
+  background: rgba(2, 2, 5, 0.95);
+}
+
+.collapseBtn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.hudCardCollapsed .collapseBtn {
+  position: static;
+  background: transparent;
+  border: none;
+  width: 24px;
+  height: 24px;
+}
+
+.collapseBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: scale(1.1);
+}
+
+.collapseIcon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+.collapsedInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideUpFade 0.4s ease forwards;
+}
+
+.hudPhaseBadgeSmall {
+  background: rgba(255, 255, 255, 0.15);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hudLevelSmall {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: white;
 }
 
 /* Decorative corners */
@@ -204,21 +286,6 @@
   font-weight: 800;
   font-family: var(--font-geist-mono);
   letter-spacing: 0.1em;
-}
-
-@media (min-width: 768px) {
-  .hudTitle {
-    font-size: 5.5rem;
-  }
-
-  .hudPhaseName {
-    font-size: 1.2rem;
-    width: 400px;
-  }
-
-  .hudCard {
-    height: 320px;
-  }
 }
 
 .progressContainer {
