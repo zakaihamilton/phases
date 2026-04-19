@@ -23,13 +23,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
     let lastTime = startTime;
 
     const draw = (currentTime) => {
-      // Calculate delta time to ensure smooth zooming regardless of frame rate
       const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
       const elapsedTime = (currentTime - startTime) / 1000;
 
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
-      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalCompositeOperation = 'lighter'; // Keeps the beautiful additive light blending
 
       const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
 
@@ -37,27 +36,23 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const isVisible = visibleList.includes(index);
         const isFocused = index === focusedIndex;
 
-        // Calculate the mathematical target size for this specific frame
         const rl = radiusLevels[index];
         const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
         const targetRadius = 800 * dynamicScale * cameraScale;
         const targetOpacity = isVisible ? (data.opacity || 1) : 0;
         const targetFocus = isFocused ? 1 : 0;
 
-        // --- LERP ENGINE: Smoothly animate Focus, Zoom (Radius), and Fades (Opacity) ---
         let tState = transitionsRef.current.get(index);
         if (!tState) {
-          // Initialize state for the very first frame
           tState = {
             focusProgress: targetFocus,
             animatedRadius: targetRadius,
-            animatedOpacity: targetOpacity
+            animatedOpacity: targetOpacity,
+            ripples: [] // Initialize our new shockwave particle system
           };
           transitionsRef.current.set(index, tState);
         }
 
-        // The multiplier (6) dictates the speed of the transition. 
-        // This math creates a beautiful exponential ease-out curve, mimicking your CSS.
         tState.focusProgress += (targetFocus - tState.focusProgress) * 6 * dt;
         tState.animatedRadius += (targetRadius - tState.animatedRadius) * 6 * dt;
         tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * 6 * dt;
@@ -66,10 +61,8 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const currentRadius = tState.animatedRadius;
         let baseOpacity = tState.animatedOpacity;
 
-        // Optimization: If the ring is completely invisible and shrunk, don't draw it
         if (baseOpacity < 0.001 && currentRadius < 1) return;
 
-        // Apply the continuous pulsing effect on top of the animated base opacity
         if (data.pulse && baseOpacity > 0.01) {
           baseOpacity = baseOpacity * (0.8 + Math.sin(elapsedTime * 2) * 0.2);
         }
@@ -77,20 +70,33 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const cColor = data.color;
         ctx.lineCap = 'round';
 
-        const drawRing = (radius, width, dashArray, rotationSpeed, glowAmount, alpha) => {
+        // --- NEW: Helper function to create Comet Trail Gradients ---
+        const getCometGradient = (radius) => {
+          // Creates a linear sweep that acts like a 3D sheen across the ring
+          const grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+          grad.addColorStop(0, cColor);
+          grad.addColorStop(0.5, 'transparent');
+          grad.addColorStop(1, cColor);
+          return grad;
+        };
+
+        const drawRing = (radius, width, dashArray, rotationSpeed, glowAmount, alpha, useGradient = false) => {
           if (alpha <= 0.01 || radius <= 0) return;
           ctx.save();
-          ctx.globalAlpha = Math.max(0, Math.min(1, alpha)); // Clamp alpha between 0 and 1
+          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
 
           if (rotationSpeed) {
             ctx.translate(CENTER, CENTER);
             ctx.rotate(elapsedTime * rotationSpeed);
-            ctx.translate(-CENTER, -CENTER);
+          } else {
+            ctx.translate(CENTER, CENTER); // Center origin even if not rotating
           }
 
           ctx.beginPath();
-          ctx.arc(CENTER, CENTER, radius, 0, Math.PI * 2);
-          ctx.strokeStyle = cColor;
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
+
+          // Apply standard color or our new comet sweep gradient
+          ctx.strokeStyle = useGradient ? getCometGradient(radius) : cColor;
           ctx.lineWidth = width;
 
           if (dashArray) ctx.setLineDash(dashArray);
@@ -104,25 +110,67 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.restore();
         };
 
-        // --- DRAWING THE LAYERS WITH LERPED RADIUS ---
+        // --- NEW: Helper function to draw glowing Data Nodes ---
+        const drawNodes = (radius, count, rotationSpeed, alpha) => {
+          if (alpha <= 0.01 || radius <= 0) return;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.translate(CENTER, CENTER);
+          ctx.rotate(elapsedTime * rotationSpeed);
 
-        // 1. Outer Tracking Orbit 
-        drawRing(currentRadius * 1.05, 2, [4, 40], -0.15, 0, baseOpacity * 0.4 * focusP);
+          ctx.fillStyle = cColor;
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = cColor;
 
-        // 2. Inner Tracking Orbit 
-        drawRing(currentRadius * 0.95, 3, [60, 20, 10, 20], 0.3, 0, baseOpacity * 0.8 * focusP);
+          for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 / count) * i;
+            ctx.beginPath();
+            // Plot nodes along the circumference
+            ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        };
 
-        // 3. The Core Rings 
+
+        // --- EFFECTS ENGINE ---
+
+        // 1. Shockwave Ripples (Spawns periodically when focused)
+        if (isFocused && Math.random() < 0.03) { // 3% chance per frame to spawn a ripple
+          tState.ripples.push({ spread: 0, alpha: 1 });
+        }
+
+        // Update and draw existing ripples
+        tState.ripples = tState.ripples.filter(ripple => {
+          ripple.spread += 100 * dt; // Expansion speed
+          ripple.alpha -= 0.8 * dt;  // Fade out speed
+
+          if (ripple.alpha > 0) {
+            drawRing(currentRadius + ripple.spread, 1, null, 0, 10, baseOpacity * ripple.alpha * 0.5);
+            return true; // Keep ripple alive
+          }
+          return false; // Destroy ripple
+        });
+
+        // 2. Outer Tracking Orbit + Data Nodes
+        drawRing(currentRadius * 1.05, 1, [4, 60], -0.15, 5, baseOpacity * 0.4 * focusP);
+        drawNodes(currentRadius * 1.05, 3, -0.15, baseOpacity * 0.8 * focusP); // 3 counter-clockwise nodes
+
+        // 3. Inner Tracking Orbit + Data Nodes
+        drawRing(currentRadius * 0.95, 2, [40, 20, 5, 20], 0.3, 5, baseOpacity * 0.8 * focusP);
+        drawNodes(currentRadius * 0.95, 6, 0.3, baseOpacity * 0.8 * focusP); // 6 fast clockwise nodes
+
+        // 4. The Core Rings
         const currentThickness = 10 - (4 * focusP);
         const currentGlow = 15 + (15 * focusP);
 
         // Solid Default Ring (fades out as focusP goes to 1)
         drawRing(currentRadius, currentThickness, null, 0, currentGlow, baseOpacity * (1 - focusP));
 
-        // Spinning Dashed Ring (fades in as focusP goes to 1)
-        drawRing(currentRadius, currentThickness, [180, 60, 20, 60], 0.1, currentGlow, baseOpacity * focusP);
+        // Spinning Dashed Ring (Fades in, uses the Comet Sweep Gradient!)
+        drawRing(currentRadius, currentThickness, [180, 60, 20, 60], 0.1, currentGlow, baseOpacity * focusP, true);
 
-        // 4. Background Fill
+        // 5. Background Fill
         if (data.bg) {
           ctx.save();
           ctx.globalAlpha = Math.max(0, Math.min(1, baseOpacity));
