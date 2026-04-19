@@ -7,7 +7,7 @@ const HUD = ({ activeSubData, activePath }) => {
   const subPhaseIndex = activePath.s;
   const currentPhase = MAPPED_DATA[phaseIndex];
 
-  const phaseLabel = useMemo(() => `PHASE ${activeSubData.phaseNumber}`, [activeSubData.phaseNumber]);
+  const phaseLabel = useMemo(() => activeSubData.phaseNumber, [activeSubData.phaseNumber]);
   const phaseDescription = activeSubData.phaseTitle;
 
   return (
