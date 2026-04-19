@@ -5,6 +5,10 @@ import { FLAT_DATA } from '../app/data.js';
 const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
 
+  // SVG viewBox size. This gives us a massive, crisp canvas to work on.
+  const VIEW_SIZE = 2000;
+  const CENTER = VIEW_SIZE / 2;
+
   return (
     <div
       className={styles.camera}
@@ -12,65 +16,68 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         transform: `translate(-50%, -50%) scale(${cameraScale})`
       }}
     >
-      {FLAT_DATA.map((data, index) => {
-        const rl = radiusLevels[index];
-        const isVisible = visibleList.includes(index);
-        const isFocused = index === focusedIndex;
-        const isPreviousPhase = data.pIdx < activePath.p;
-        const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
+      <svg
+        width={VIEW_SIZE}
+        height={VIEW_SIZE}
+        viewBox={`0 0 ${VIEW_SIZE} ${VIEW_SIZE}`}
+        className={styles.svgCanvas}
+      >
+        {/* Define our SVG Glow Filters once */}
+        <defs>
+          <filter id="glow-focused" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="15" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="glow-default" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-        // Standardize Border - use a constant width and use spread shadow for "thick" look
-        // This avoids layout-heavy border-width transitions which cause flickers.
-        const cBorderWidth = isFocused ? 12 : 10;
-        const cBorderColor = data.color;
-        
-        // Construct Glow with stable string structure for transitions
-        // 3 segments: [Outer Glow], [Inset Effect], [Condensed Spread]
-        const baseGlowSize = 40 * (data.glowIntensity || 1);
-        const glowColor = data.color;
-        const color0 = glowColor.startsWith('#') ? `${glowColor}00` : 'rgba(255, 255, 255, 0)';
-        
-        let segGlow = `0 0 0px ${color0}`;
-        let segInset = `inset 0 0 0px 0px ${color0}`;
-        let segSpread = `0 0 0 0px ${color0}`;
-        
-        if (isVisible) {
-          if (isFocused) {
-            segGlow = `0 0 ${baseGlowSize + 10}px ${glowColor}`;
-            segInset = `inset 15px 0 25px -5px ${glowColor}`;
-          } else if (isPreviousPhase) {
-            segSpread = `0 0 0 20px ${glowColor}`;
-            if (data.sIdx === 0) segGlow = `0 0 40px ${glowColor}`;
-          } else {
-            segGlow = `0 0 ${baseGlowSize}px ${glowColor}`;
-          }
-        }
+        {FLAT_DATA.map((data, index) => {
+          const rl = radiusLevels[index];
+          const isVisible = visibleList.includes(index);
+          const isFocused = index === focusedIndex;
 
-        const boxShadow = `${segGlow}, ${segInset}, ${segSpread}`;
+          // Base radius of the circle
+          const baseRadius = 800;
+          // Scale it down based on your dynamic scale logic
+          const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
+          const currentRadius = baseRadius * dynamicScale;
 
-        return (
-          <div
-            key={data.id}
-            className={styles.ringWrapper}
-            style={{
-              opacity: isVisible ? (data.opacity || 1) : 0,
-              transform: `translate(-50%, -50%) scale(${dynamicScale})`,
-              zIndex: index,
-            }}
-          >
-            <div
-              className={`${styles.ringInner} ${isFocused ? styles.focused : ''} ${data.pulse && isVisible ? styles.pulse : ''}`}
+          const cColor = data.color;
+          const cOpacity = isVisible ? (data.opacity || 1) : 0;
+
+          return (
+            <g
+              key={data.id}
+              className={`${styles.ringGroup} ${isFocused ? styles.focused : ''} ${data.pulse && isVisible ? styles.pulse : ''}`}
               style={{
-                borderWidth: `${cBorderWidth}px`,
-                borderStyle: 'solid',
-                borderColor: cBorderColor,
-                boxShadow: boxShadow,
-                backgroundColor: isVisible ? (data.bg || color0) : color0,
+                opacity: cOpacity,
+                // We use transform-origin in CSS to keep the spin centered
               }}
-            />
-          </div>
-        );
-      })}
+            >
+              {/* The Circle */}
+              <circle
+                cx={CENTER}
+                cy={CENTER}
+                r={currentRadius}
+                fill={isVisible && data.bg ? data.bg : 'transparent'}
+                stroke={cColor}
+                strokeWidth={isFocused ? 12 : 10}
+                filter={isFocused ? "url(#glow-focused)" : "url(#glow-default)"}
+                className={styles.svgCircle}
+              />
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 };
