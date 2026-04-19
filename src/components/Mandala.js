@@ -91,37 +91,42 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           return grad;
         };
 
-        // --- OPTIMIZATION 2: Fake Glows (No shadowBlur) ---
+        // Add a mouse move listener to your useEffect to capture parallax offset
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+          mouseX = (e.clientX / window.innerWidth - 0.5) * 20; // 20px max offset
+          mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
+        });
+
         const drawRing = (radius, width, dashArray, rotationSpeed, glowAmount, alpha, useGradient = false) => {
           if (alpha <= 0.01 || radius <= 0) return;
 
-          ctx.save();
-          if (rotationSpeed) {
-            ctx.translate(CENTER, CENTER);
-            ctx.rotate(elapsedTime * rotationSpeed);
-          } else {
-            ctx.translate(CENTER, CENTER);
-          }
+          // Draw 3 times for Chromatic Aberration
+          const colors = ['#ff0000', '#00ff00', '#0000ff']; // R, G, B
+          const offsets = [-1, 0, 1]; // Slight pixel shift
 
-          ctx.beginPath();
-          ctx.arc(0, 0, radius, 0, Math.PI * 2);
-          ctx.strokeStyle = useGradient ? getCometGradient(radius) : cColor;
+          offsets.forEach((offset, i) => {
+            ctx.save();
+            ctx.globalAlpha = alpha * 0.5; // Lower alpha for each color pass
 
-          if (dashArray) ctx.setLineDash(dashArray);
+            // Apply Parallax + Chromatic Offset
+            ctx.translate(CENTER + mouseX + offset, CENTER + mouseY + offset);
 
-          // Fast Glow: Draw a thicker, highly transparent stroke underneath
-          if (glowAmount > 0) {
-            ctx.globalAlpha = Math.max(0, alpha * 0.25);
-            ctx.lineWidth = width + glowAmount;
+            if (rotationSpeed) {
+              ctx.rotate(elapsedTime * rotationSpeed);
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+
+            // Use the color pass for the stroke
+            ctx.strokeStyle = colors[i];
+            ctx.lineWidth = width;
+
+            if (dashArray) ctx.setLineDash(dashArray);
             ctx.stroke();
-          }
-
-          // Core pass
-          ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-          ctx.lineWidth = width;
-          ctx.stroke();
-
-          ctx.restore();
+            ctx.restore();
+          });
         };
 
         const drawNodes = (radius, count, rotationSpeed, alpha) => {
