@@ -11,7 +11,7 @@ export const MAPPED_DATA = [
     {
         phase: "1", title: "Humanity", sub: [
             {
-                id: "1.1", name: "Nations", color: "#f59e0b", summary: [
+                id: "1.1", name: "Core", color: "#f59e0b", summary: [
                     "All the phases in the Preparation Tier are in the world of Infinity (or Boundless). This world represents reality, the one playing field where all creatures interact from vegetation and animals to humans. This is the base, the reality perceived by each individual through their corporeal senses. The world of Infinity is normally considered the most exalted spiritual world without any corporeal manifestation at all. However, in System Concepts it is considered the exact opposite, the world of Infinity represents the corporeal reality where all individuals begin their journey. The individual traverses the spiritual path according to the order of cause and consequence expressed by the materials of Kabbalah edited by the great Teacher Rabbi Yehuda HaLevi Ashlag even though he concealed this sequence as the path of advancement.",
                     "Every individual begins their journey when they are born in the physical world. They enter the phase of the Core desires (1.1) in the world of Infinity. The core desires are the basic desires of any individual in various amounts of attention. These desires are sorted into three categories: food, love and family. Food includes the sustenance of the individual including maintenance of the body, medical support and food consumption, entertainment for the self and working for a living. Love includes interaction with individuals such as various friendships, dating, partners and marriage without a business or spiritual counterpart. Family is the fruit of those relationships such as children, education and other activities associated with their upbringing. This phase is the unformed phase of Humanity (1.1)."
                 ]
@@ -23,13 +23,13 @@ export const MAPPED_DATA = [
                 ]
             },
             {
-                id: "1.3", name: "Religion & Mysticism", color: "#f48c16", summary: [
+                id: "1.3", name: "Religion / Mysticism", color: "#f48c16", summary: [
                     "The desire for religion or mysticism is the need for a person to deal with their faith, the unknown, the limitless. People feel the limitations of life, the struggle and tension, the barriers of matter that stand strong before them that close them within. They yearn for freedom, for faith to save them from their reason, to release them from the physical circumstances, to give them meaning to their suffering . This phase is the darkness phase of Humanity (1.3).",
                     "The solution to this deficiency for freedom from the obstacles of physicality is the next progressive phase called physicalized spirituality. This is the rudimentary foray without much detail as a response to the confinement of reason. The immaturity is the need for spiritual matters of perception to be corporealized into physical rituals expressed through motions, speech and actions of the corporeal body. There are two roads to choose from at this point in development: either religion or mysticism. Both solutions play on the emotional element (the animate force) in people such as fear, anticipation and excitement. Individuals in this phase have a passive point (deficiency) in the heart (egoism)."
                 ]
             },
             {
-                id: "1.4", name: "Theology & Philosophy", color: "#cad04d", summary: [
+                id: "1.4", name: "Theology / Philosophy", color: "#cad04d", summary: [
                     "Religion deals with the matter of action, what the individual should do with the movements of their body, their animate force of desire. Theology deals with the matter of thought, why the individual should do those movements, the meaning behind them, the spiritual structure of the religion and its core tenants. The desire to study the vast library of spiritual structure and the focus on the intellectual research and handling of religious doctrine raises the individual to the phase of theology. This phase is the spirit phase of Humanity (1.4).",
                     "Unlike the desire for knowledge (1.2) that covers the knowledge of reality, theology deals with the reason for manifestations in reality. It can be seen that theology deals with the meaning of life, why there is suffering, the goal of life and other secrets of meaning. Knowledge deals with the known, the workings of reality, not the process of the manifestation of reality. Knowledge is the process of what is happening, the behaviour, the effect, the branch. Theology is the process of why it is happening, the cause, the root."
                 ]
