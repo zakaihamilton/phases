@@ -10,6 +10,9 @@ const HUD = ({ activeSubData, activePath }) => {
   const phaseLabel = useMemo(() => activeSubData.phaseNumber, [activeSubData.phaseNumber]);
   const phaseDescription = activeSubData.phaseTitle;
 
+  // Unique key to force re-render animations on phase change
+  const transitionKey = `${phaseIndex}-${subPhaseIndex}`;
+
   return (
     <div className={styles.hudOverlay}>
       <div
@@ -20,12 +23,14 @@ const HUD = ({ activeSubData, activePath }) => {
       />
 
       <div className={styles.hudCard}>
-        <header className={styles.hudHeader}>
+        {/* Animated Header */}
+        <header key={`header-${transitionKey}`} className={`${styles.hudHeader} ${styles.animateSlideUp}`}>
           <div className={styles.hudPhaseBadge}>{phaseLabel}</div>
           <div className={styles.hudPhaseName}>{phaseDescription}</div>
         </header>
 
-        <div className={styles.hudTitleContainer}>
+        {/* Animated Title Area */}
+        <div key={`title-${transitionKey}`} className={`${styles.hudTitleContainer} ${styles.animateSlideUpDelay}`}>
           <h1 className={styles.hudTitle} style={{ color: activeSubData.color }}>
             {activeSubData.name}
           </h1>
@@ -36,13 +41,14 @@ const HUD = ({ activeSubData, activePath }) => {
           </div>
         </div>
 
+        {/* Progress stays static so dots can animate their width smoothly */}
         <footer className={styles.progressContainer}>
           {currentPhase.sub.map((_, idx) => (
             <div
               key={idx}
               className={`${styles.progressDot} ${idx === subPhaseIndex
-                  ? styles.progressDotActive
-                  : styles.progressDotInactive
+                ? styles.progressDotActive
+                : styles.progressDotInactive
                 }`}
               style={idx === subPhaseIndex ? {
                 backgroundColor: activeSubData.color,

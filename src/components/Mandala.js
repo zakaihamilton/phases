@@ -8,11 +8,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const transitionsRef = useRef(new Map());
   const gradientCacheRef = useRef(new Map());
   const starsRef = useRef([]);
-  const cloudsRef = useRef([]); // NEW: Memory store for our gas clouds
+  const cloudsRef = useRef([]);
 
   const prevPathRef = useRef(`${activePath.p}-${activePath.s}`);
   const globalSpinVelocityRef = useRef(0);
   const globalSpinOffsetRef = useRef(0);
+  const phaseTransitionRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,7 +29,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
     ctx.scale(dpr, dpr);
 
     // --- INITIALIZE BACKGROUNDS ---
-    // Generate Stars
     if (starsRef.current.length === 0) {
       for (let i = 0; i < 400; i++) {
         const r = Math.sqrt(Math.random()) * 1500;
@@ -46,14 +46,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       }
     }
 
-    // Generate Gas Clouds (Nebula)
     if (cloudsRef.current.length === 0) {
-      // Cosmic color palette using strict RGB strings to ensure smooth transparency fading
       const cosmicColors = [
-        { r: 74, g: 0, b: 224 },   // Deep Indigo
-        { r: 0, g: 198, b: 255 },  // Cyan
-        { r: 255, g: 0, b: 153 },  // Magenta
-        { r: 142, g: 45, b: 226 }  // Purple
+        { r: 74, g: 0, b: 224 },
+        { r: 0, g: 198, b: 255 },
+        { r: 255, g: 0, b: 153 },
+        { r: 142, g: 45, b: 226 }
       ];
 
       for (let i = 0; i < 8; i++) {
@@ -61,10 +59,10 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         cloudsRef.current.push({
           x: Math.random() * VIEW_SIZE,
           y: Math.random() * VIEW_SIZE,
-          radius: Math.random() * 500 + 400, // Massive sizes (400px to 900px)
-          vx: (Math.random() - 0.5) * 15,    // Slow drift velocity
+          radius: Math.random() * 500 + 400,
+          vx: (Math.random() - 0.5) * 15,
           vy: (Math.random() - 0.5) * 15,
-          baseAlpha: Math.random() * 0.04 + 0.01, // Extremely subtle to not overpower UI
+          baseAlpha: Math.random() * 0.04 + 0.01,
           pulseSpeed: Math.random() * 0.5 + 0.2,
           timeOffset: Math.random() * Math.PI * 2,
           color: colorObj
@@ -83,41 +81,39 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
       ctx.globalCompositeOperation = 'lighter';
 
-      // Global Momentum
+      // --- TRANSITION TRIGGERS ---
       const currentPathStr = `${activePath.p}-${activePath.s}`;
       if (prevPathRef.current !== currentPathStr) {
         globalSpinVelocityRef.current += 3.0;
+        phaseTransitionRef.current = 1.0;
         prevPathRef.current = currentPathStr;
       }
+
       globalSpinVelocityRef.current -= globalSpinVelocityRef.current * 2.5 * dt;
       globalSpinOffsetRef.current += globalSpinVelocityRef.current * dt;
 
+      phaseTransitionRef.current = Math.max(0, phaseTransitionRef.current - (1.5 * dt));
+      const tIntensity = phaseTransitionRef.current;
 
       // --- 1. DRAW GAS CLOUDS ---
       ctx.save();
-      // Clouds rotate even slower than stars for massive depth parallax
       ctx.translate(CENTER, CENTER);
       ctx.rotate(globalSpinOffsetRef.current * 0.02);
       ctx.translate(-CENTER, -CENTER);
 
       cloudsRef.current.forEach(cloud => {
-        // Drift physics
         cloud.x += cloud.vx * dt;
         cloud.y += cloud.vy * dt;
 
-        // Wrap around canvas edges so the nebula is infinite
         if (cloud.x < -cloud.radius) cloud.x = VIEW_SIZE + cloud.radius;
         if (cloud.x > VIEW_SIZE + cloud.radius) cloud.x = -cloud.radius;
         if (cloud.y < -cloud.radius) cloud.y = VIEW_SIZE + cloud.radius;
         if (cloud.y > VIEW_SIZE + cloud.radius) cloud.y = -cloud.radius;
 
-        // Oscillate opacity
         const currentAlpha = cloud.baseAlpha + Math.sin(elapsedTime * cloud.pulseSpeed + cloud.timeOffset) * (cloud.baseAlpha * 0.5);
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, currentAlpha);
-
-        // We translate to the cloud's position so we can use a highly-optimized cached gradient
         ctx.translate(cloud.x, cloud.y);
 
         const cacheKey = `cloud-${cloud.color.r}-${cloud.color.g}-${Math.round(cloud.radius)}`;
@@ -126,7 +122,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         if (!grad) {
           grad = ctx.createRadialGradient(0, 0, 0, 0, 0, cloud.radius);
           grad.addColorStop(0, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 1)`);
-          grad.addColorStop(1, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 0)`); // Fades to true invisible
+          grad.addColorStop(1, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 0)`);
           gradientCacheRef.current.set(cacheKey, grad);
         }
 
@@ -138,7 +134,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       });
       ctx.restore();
 
-
       // --- 2. DRAW STARFIELD ---
       ctx.save();
       ctx.translate(CENTER, CENTER);
@@ -147,15 +142,54 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       starsRef.current.forEach(star => {
         const currentAlpha = star.baseAlpha + Math.sin(elapsedTime * star.twinkleSpeed + star.timeOffset) * 0.3;
         ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
-        ctx.fillStyle = star.color;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fill();
+
+        if (tIntensity > 0.01) {
+          const angle = Math.atan2(star.y, star.x);
+          const stretch = tIntensity * 250 * star.radius;
+
+          const grad = ctx.createLinearGradient(star.x, star.y, star.x + Math.cos(angle) * stretch, star.y + Math.sin(angle) * stretch);
+          grad.addColorStop(0, star.color);
+          grad.addColorStop(1, 'transparent');
+
+          ctx.beginPath();
+          ctx.moveTo(star.x, star.y);
+          ctx.lineTo(star.x + Math.cos(angle) * stretch, star.y + Math.sin(angle) * stretch);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = star.radius * 1.5;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
       ctx.restore();
 
+      // --- 3. THE REFINED NOVA SHOCKWAVE ---
+      if (tIntensity > 0.01) {
+        ctx.save();
+        ctx.translate(CENTER, CENTER);
+        const novaRadius = (1.0 - Math.pow(tIntensity, 3)) * (VIEW_SIZE * 0.8);
 
-      // --- 3. DRAW MANDALA RINGS ---
+        // Ambient screen flash (Reduced to 1% opacity so it's not blinding)
+        ctx.fillStyle = `rgba(0, 198, 255, ${tIntensity * 0.01})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, VIEW_SIZE, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Expanding Energy Ring (Thinner, softer color, tighter glow)
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(0, novaRadius), 0, Math.PI * 2);
+        ctx.lineWidth = tIntensity * 15; // Was 40
+        ctx.strokeStyle = `rgba(200, 240, 255, ${tIntensity * 0.6})`; // Softened white
+        ctx.shadowBlur = 30; // Was 60
+        ctx.shadowColor = '#00c6ff';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // --- 4. DRAW MANDALA RINGS ---
       const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
 
       FLAT_DATA.forEach((data, index) => {
@@ -184,8 +218,8 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           transitionsRef.current.set(index, tState);
         }
 
-        const stiffness = 120;
-        const damping = 12;
+        const stiffness = 180 - (index * 6);
+        const damping = 12 + (index * 0.2);
 
         const springForce = (targetRadius - tState.animatedRadius) * stiffness;
         tState.radiusVelocity += (springForce - (tState.radiusVelocity * damping)) * dt;
