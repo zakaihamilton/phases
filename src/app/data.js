@@ -10,7 +10,6 @@ export const MAPPED_DATA = [
     },
     {
         phase: "1", title: "Humanity", sub: [
-            { id: "1.0", name: "Tribes", color: "#e2ae4d" },
             {
                 id: "1.1", name: "Nations", color: "#f59e0b", summary: [
                     "All the phases in the Preparation Tier are in the world of Infinity (or Boundless). This world represents reality, the one playing field where all creatures interact from vegetation and animals to humans. This is the base, the reality perceived by each individual through their corporeal senses. The world of Infinity is normally considered the most exalted spiritual world without any corporeal manifestation at all. However, in System Concepts it is considered the exact opposite, the world of Infinity represents the corporeal reality where all individuals begin their journey. The individual traverses the spiritual path according to the order of cause and consequence expressed by the materials of Kabbalah edited by the great Teacher Rabbi Yehuda HaLevi Ashlag even though he concealed this sequence as the path of advancement.",
@@ -39,7 +38,6 @@ export const MAPPED_DATA = [
     },
     {
         phase: "2", title: "Society", sub: [
-            { id: "2.0", name: "Study", color: "#7da1d9" },
             {
                 id: "2.1", name: "Connection", color: "#6189c7", summary: [
                     "Connection is the application of theology towards positive emotional human interaction. Theology deals with the spiritual structure as a body of knowledge and is an inward activity of the individual processing information. Connection takes theology and directs it towards a social activity, manifesting into various experiences focused on human acknowledgement. They eat, learn and work together with the focal point on the well-being of the other members in the society. The trademark of the society is altruism without self benefit. This phase is the unformed phase of Society (2.1).",
@@ -68,7 +66,6 @@ export const MAPPED_DATA = [
     },
     {
         phase: "3", title: "Group", sub: [
-            { id: "3.0", name: "Interaction", color: "#f87171" },
             {
                 id: "3.1", name: "Intention", color: "#f05638", summary: [
                     "Intention is the direction of the individual to advance consciously towards increasing their internal power. The individual is learning about the attitude they should apply to themselves in order to advance in an orderly fashion. The individual is aligned correctly to the goal of the group, to increase their self worth and empower themselves using the group in an optimal manner. This phase is the unformed phase of Group (3.1).",
@@ -97,7 +94,6 @@ export const MAPPED_DATA = [
     },
     {
         phase: "4", title: "Individual", sub: [
-            { id: "4.0", name: "Faith", color: "#4ade80" },
             {
                 id: "4.1", name: "Doubts", color: "#4dbd42", summary:
                     [
