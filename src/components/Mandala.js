@@ -4,8 +4,11 @@ import { FLAT_DATA } from '../app/data.js';
 
 const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const canvasRef = useRef(null);
+
   const transitionsRef = useRef(new Map());
   const gradientCacheRef = useRef(new Map());
+  const starsRef = useRef([]);
+  const cloudsRef = useRef([]); // NEW: Memory store for our gas clouds
 
   const prevPathRef = useRef(`${activePath.p}-${activePath.s}`);
   const globalSpinVelocityRef = useRef(0);
@@ -24,6 +27,51 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
     canvas.height = VIEW_SIZE * dpr;
     ctx.scale(dpr, dpr);
 
+    // --- INITIALIZE BACKGROUNDS ---
+    // Generate Stars
+    if (starsRef.current.length === 0) {
+      for (let i = 0; i < 400; i++) {
+        const r = Math.sqrt(Math.random()) * 1500;
+        const theta = Math.random() * Math.PI * 2;
+
+        starsRef.current.push({
+          x: Math.cos(theta) * r,
+          y: Math.sin(theta) * r,
+          radius: Math.random() * 1.2 + 0.2,
+          baseAlpha: Math.random() * 0.4 + 0.1,
+          twinkleSpeed: Math.random() * 1.5 + 0.5,
+          timeOffset: Math.random() * Math.PI * 2,
+          color: Math.random() > 0.8 ? '#88ccff' : (Math.random() > 0.9 ? '#ffcc88' : '#ffffff')
+        });
+      }
+    }
+
+    // Generate Gas Clouds (Nebula)
+    if (cloudsRef.current.length === 0) {
+      // Cosmic color palette using strict RGB strings to ensure smooth transparency fading
+      const cosmicColors = [
+        { r: 74, g: 0, b: 224 },   // Deep Indigo
+        { r: 0, g: 198, b: 255 },  // Cyan
+        { r: 255, g: 0, b: 153 },  // Magenta
+        { r: 142, g: 45, b: 226 }  // Purple
+      ];
+
+      for (let i = 0; i < 8; i++) {
+        const colorObj = cosmicColors[Math.floor(Math.random() * cosmicColors.length)];
+        cloudsRef.current.push({
+          x: Math.random() * VIEW_SIZE,
+          y: Math.random() * VIEW_SIZE,
+          radius: Math.random() * 500 + 400, // Massive sizes (400px to 900px)
+          vx: (Math.random() - 0.5) * 15,    // Slow drift velocity
+          vy: (Math.random() - 0.5) * 15,
+          baseAlpha: Math.random() * 0.04 + 0.01, // Extremely subtle to not overpower UI
+          pulseSpeed: Math.random() * 0.5 + 0.2,
+          timeOffset: Math.random() * Math.PI * 2,
+          color: colorObj
+        });
+      }
+    }
+
     let startTime = performance.now();
     let lastTime = startTime;
 
@@ -35,15 +83,79 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
       ctx.globalCompositeOperation = 'lighter';
 
+      // Global Momentum
       const currentPathStr = `${activePath.p}-${activePath.s}`;
       if (prevPathRef.current !== currentPathStr) {
         globalSpinVelocityRef.current += 3.0;
         prevPathRef.current = currentPathStr;
       }
-
       globalSpinVelocityRef.current -= globalSpinVelocityRef.current * 2.5 * dt;
       globalSpinOffsetRef.current += globalSpinVelocityRef.current * dt;
 
+
+      // --- 1. DRAW GAS CLOUDS ---
+      ctx.save();
+      // Clouds rotate even slower than stars for massive depth parallax
+      ctx.translate(CENTER, CENTER);
+      ctx.rotate(globalSpinOffsetRef.current * 0.02);
+      ctx.translate(-CENTER, -CENTER);
+
+      cloudsRef.current.forEach(cloud => {
+        // Drift physics
+        cloud.x += cloud.vx * dt;
+        cloud.y += cloud.vy * dt;
+
+        // Wrap around canvas edges so the nebula is infinite
+        if (cloud.x < -cloud.radius) cloud.x = VIEW_SIZE + cloud.radius;
+        if (cloud.x > VIEW_SIZE + cloud.radius) cloud.x = -cloud.radius;
+        if (cloud.y < -cloud.radius) cloud.y = VIEW_SIZE + cloud.radius;
+        if (cloud.y > VIEW_SIZE + cloud.radius) cloud.y = -cloud.radius;
+
+        // Oscillate opacity
+        const currentAlpha = cloud.baseAlpha + Math.sin(elapsedTime * cloud.pulseSpeed + cloud.timeOffset) * (cloud.baseAlpha * 0.5);
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, currentAlpha);
+
+        // We translate to the cloud's position so we can use a highly-optimized cached gradient
+        ctx.translate(cloud.x, cloud.y);
+
+        const cacheKey = `cloud-${cloud.color.r}-${cloud.color.g}-${Math.round(cloud.radius)}`;
+        let grad = gradientCacheRef.current.get(cacheKey);
+
+        if (!grad) {
+          grad = ctx.createRadialGradient(0, 0, 0, 0, 0, cloud.radius);
+          grad.addColorStop(0, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 1)`);
+          grad.addColorStop(1, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 0)`); // Fades to true invisible
+          gradientCacheRef.current.set(cacheKey, grad);
+        }
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, cloud.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+      ctx.restore();
+
+
+      // --- 2. DRAW STARFIELD ---
+      ctx.save();
+      ctx.translate(CENTER, CENTER);
+      ctx.rotate(globalSpinOffsetRef.current * 0.05);
+
+      starsRef.current.forEach(star => {
+        const currentAlpha = star.baseAlpha + Math.sin(elapsedTime * star.twinkleSpeed + star.timeOffset) * 0.3;
+        ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
+        ctx.fillStyle = star.color;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+
+
+      // --- 3. DRAW MANDALA RINGS ---
       const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
 
       FLAT_DATA.forEach((data, index) => {
@@ -95,17 +207,14 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const cColor = data.color;
         ctx.lineCap = 'round';
 
-        // --- UPGRADED: A sweeping light sheen on a FULL ring ---
         const getCometGradient = () => {
           const cacheKey = `sheen-${cColor}`;
           let grad = gradientCacheRef.current.get(cacheKey);
 
           if (!grad) {
             grad = ctx.createConicGradient(0, 0, 0);
-            // The ring remains fully solid with its base color all the way around
             grad.addColorStop(0, cColor);
             grad.addColorStop(0.8, cColor);
-            // We inject a bright white/glowing "sheen" that acts as the sweeping highlight
             grad.addColorStop(0.95, '#ffffff');
             grad.addColorStop(1, cColor);
             gradientCacheRef.current.set(cacheKey, grad);
@@ -169,8 +278,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.restore();
         };
 
-        // --- DRAW LAYERS ---
-
         if (isFocused && Math.random() < 0.03) {
           tState.ripples.push({ spread: 0, alpha: 1 });
         }
@@ -187,7 +294,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           }
         }
 
-        // --- Orbits: Now full lines (null dashArray) with a sweeping gradient ---
         if (focusP > 0.01) {
           drawRing(currentRadius * 1.05, 1, null, -0.15, 5, baseOpacity * 0.4 * focusP, true);
           drawNodes(currentRadius * 1.05, 3, -0.15, baseOpacity * 0.8 * focusP);
@@ -201,11 +307,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
         const slowDriftSpeed = (index % 2 === 0 ? 0.3 : -0.3) - (index * 0.05);
 
-        // --- Core Rings: ALL gaps removed (`null` instead of `[180, 60...]`) ---
-        // Draw Unfocused Ring
         drawRing(currentRadius, currentThickness, null, slowDriftSpeed, currentGlow, baseOpacity * (1 - focusP), true);
-
-        // Draw Focused Ring (Spins faster, full line)
         drawRing(currentRadius, currentThickness, null, 0.6, currentGlow, baseOpacity * focusP, true);
 
         if (data.bg) {
