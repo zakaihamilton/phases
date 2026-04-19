@@ -10,14 +10,12 @@ const HUD = ({ activeSubData, activePath }) => {
   const phaseLabel = useMemo(() => `PHASE ${activeSubData.phaseNumber}`, [activeSubData.phaseNumber]);
   const phaseDescription = activeSubData.phaseTitle;
 
-  const glowColor0 = activeSubData.color.startsWith('#') ? `${activeSubData.color}00` : 'rgba(255, 255, 255, 0)';
-
   return (
     <div className={styles.hudOverlay}>
       <div
         className={styles.hudGlow}
         style={{
-          background: `radial-gradient(circle, ${activeSubData.color} 0%, ${glowColor0} 70%)`
+          backgroundColor: activeSubData.color
         }}
       />
 

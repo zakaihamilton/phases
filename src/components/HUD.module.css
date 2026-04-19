@@ -26,11 +26,12 @@
   transform: translateX(-50%);
   width: 150%;
   height: 200%;
+  border-radius: 50%;
   pointer-events: none;
   z-index: -1;
-  transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 800ms cubic-bezier(0.16, 1, 0.3, 1);
   filter: blur(100px);
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
 @media (min-width: 768px) {
@@ -60,7 +61,6 @@
   padding: 2rem;
   /* Force Hardware Acceleration and stabilize painting */
   transform: translateZ(0);
-  will-change: transform, color, background-color;
   backface-visibility: hidden;
   contain: content;
 }

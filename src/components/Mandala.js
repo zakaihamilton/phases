@@ -19,36 +19,34 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const isPreviousPhase = data.pIdx < activePath.p;
         const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
 
-        // Construct Border Components
-        const baseThickness = isFocused ? 12 : 10;
-        let cBorderWidth = baseThickness;
-        let cBorderColor = data.color;
-
-        if (isPreviousPhase && isVisible) {
-          cBorderWidth = Math.max(10, 60 - (data.sIdx * 10));
-        }
+        // Standardize Border - use a constant width and use spread shadow for "thick" look
+        // This avoids layout-heavy border-width transitions which cause flickers.
+        const cBorderWidth = isFocused ? 12 : 10;
+        const cBorderColor = data.color;
         
         // Construct Glow with stable string structure for transitions
-        // Use a 0-alpha version of the color instead of 'transparent' to prevent gray/black flashes
+        // 3 segments: [Outer Glow], [Inset Effect], [Condensed Spread]
         const baseGlowSize = 40 * (data.glowIntensity || 1);
         const glowColor = data.color;
         const color0 = glowColor.startsWith('#') ? `${glowColor}00` : 'rgba(255, 255, 255, 0)';
         
-        let boxShadow = `0 0 0px ${color0}, inset 0 0 0px 0px ${color0}`;
+        let segGlow = `0 0 0px ${color0}`;
+        let segInset = `inset 0 0 0px 0px ${color0}`;
+        let segSpread = `0 0 0 0px ${color0}`;
         
         if (isVisible) {
           if (isFocused) {
-            boxShadow = `0 0 ${baseGlowSize + 10}px ${glowColor}, inset 15px 0 25px -5px ${glowColor}`;
+            segGlow = `0 0 ${baseGlowSize + 10}px ${glowColor}`;
+            segInset = `inset 15px 0 25px -5px ${glowColor}`;
           } else if (isPreviousPhase) {
-            if (data.sIdx === 0) {
-              boxShadow = `0 0 40px ${glowColor}, inset 0 0 0px 0px ${color0}`;
-            } else {
-              boxShadow = `0 0 0px ${color0}, inset 0 0 0px 0px ${color0}`;
-            }
+            segSpread = `0 0 0 20px ${glowColor}`;
+            if (data.sIdx === 0) segGlow = `0 0 40px ${glowColor}`;
           } else {
-            boxShadow = `0 0 ${baseGlowSize}px ${glowColor}, inset 0 0 0px 0px ${color0}`;
+            segGlow = `0 0 ${baseGlowSize}px ${glowColor}`;
           }
         }
+
+        const boxShadow = `${segGlow}, ${segInset}, ${segSpread}`;
 
         return (
           <div

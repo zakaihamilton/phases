@@ -19,6 +19,7 @@
   transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1), 
               opacity 700ms cubic-bezier(0.16, 1, 0.3, 1);
   backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .ringInner {
@@ -28,10 +29,9 @@
   transition: 
     background-color 700ms cubic-bezier(0.16, 1, 0.3, 1), 
     box-shadow 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    border-width 700ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 700ms cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
-
+  transform: translateZ(0);
 }
 
 .focused {
