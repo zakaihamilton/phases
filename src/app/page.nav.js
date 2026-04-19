@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MAPPED_DATA, FLAT_DATA } from './data.js';
 
 export function useNavigation() {
@@ -22,7 +22,6 @@ export function useNavigation() {
     useEffect(() => {
         const activeItem = FLAT_DATA.find(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
         if (activeItem) {
-            // Use replaceState to avoid cluttering history when moving fast
             const newHash = `#${activeItem.id}`;
             if (window.location.hash !== newHash) {
                 window.history.replaceState(null, '', newHash);
@@ -67,42 +66,50 @@ export function useNavigation() {
         performNav(direction);
     };
 
-    const targetFlatIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
-    const activeSubData = FLAT_DATA[targetFlatIndex];
+    const targetFlatIndex = useMemo(() => 
+        FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s),
+        [activePath]
+    );
 
-    const visibleList = [];
-    const radiusLevels = new Array(FLAT_DATA.length).fill(0);
-    
-    const completedPhasesCount = activePath.p;
-    const currentPhaseSubCount = activePath.s + 1;
-    let level = (completedPhasesCount * 1.5) + currentPhaseSubCount;
-    
-    // Completed phases
-    for (let p = 0; p < activePath.p; p++) {
-        FLAT_DATA.forEach((d, i) => {
-            if (d.pIdx === p) {
+    const activeSubData = useMemo(() => FLAT_DATA[targetFlatIndex], [targetFlatIndex]);
+
+    const navigationState = useMemo(() => {
+        const visibleList = [];
+        const radiusLevels = new Array(FLAT_DATA.length).fill(0);
+        
+        const completedPhasesCount = activePath.p;
+        const currentPhaseSubCount = activePath.s + 1;
+        let level = (completedPhasesCount * 1.5) + currentPhaseSubCount;
+        
+        // Completed phases
+        for (let p = 0; p < activePath.p; p++) {
+            FLAT_DATA.forEach((d, i) => {
+                if (d.pIdx === p) {
+                    radiusLevels[i] = level;
+                    visibleList.push(i);
+                }
+            });
+            level -= 1.5; // Gap between condensed phases
+        }
+        
+        // Current phase
+        for (let s = 0; s <= activePath.s; s++) {
+            const i = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === s);
+            if (i !== -1) {
                 radiusLevels[i] = level;
                 visibleList.push(i);
+                level -= 1.0; // Space between active sub phases
             }
-        });
-        level -= 1.5; // Gap between condensed phases
-    }
-    
-    // Current phase
-    for (let s = 0; s <= activePath.s; s++) {
-        const i = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === s);
-        if (i !== -1) {
-            radiusLevels[i] = level;
-            visibleList.push(i);
-            level -= 1.0; // Space between active sub phases
         }
-    }
+
+        return { visibleList, radiusLevels };
+    }, [activePath]);
 
     return {
         activePath,
         activeSubData,
-        visibleList,
-        radiusLevels,
+        visibleList: navigationState.visibleList,
+        radiusLevels: navigationState.radiusLevels,
         navTo,
         targetFlatIndex
     };

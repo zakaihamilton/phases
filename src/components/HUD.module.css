@@ -175,10 +175,21 @@
 }
 
 .hudSubTitle {
-  font-size: 0.85rem;
-  color: #475569;
-  font-weight: 700;
+  font-size: 1.5rem;
+  color: #ffffff;
+  font-weight: 800;
   letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.hudSubLabel {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 900;
+  letter-spacing: 0.2em;
 }
 
 .hudDivider {
