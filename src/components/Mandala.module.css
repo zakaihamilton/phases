@@ -15,18 +15,26 @@
 
 .ringGroup {
   transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1);
-  transform-origin: center center;
+  /* Lock the rotation exactly to the center of the 2000px viewBox */
+  transform-origin: 1000px 1000px;
 }
 
 .svgCircle {
-  /* Animate the radius (scale) and stroke width smoothly */
   transition: r 700ms cubic-bezier(0.16, 1, 0.3, 1),
     stroke-width 700ms cubic-bezier(0.16, 1, 0.3, 1),
     fill 700ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* When focused, break the solid line into dashes so you can see it move */
+.focused .svgCircle {
+  /* First number is the dash length, second is the gap length */
+  stroke-dasharray: 40 60;
+  /* Optional: rounds the ends of the dashes so they look softer */
+  stroke-linecap: round;
+}
+
 .focused {
-  animation: spin 15s linear infinite;
+  animation: spin 20s linear infinite;
 }
 
 .pulse {
