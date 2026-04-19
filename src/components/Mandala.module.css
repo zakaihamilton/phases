@@ -1,64 +1,18 @@
-.camera {
+.cameraWrapper {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 2000px;
   height: 2000px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
 }
 
-.svgCanvas {
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.ringGroup {
-  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1);
-  /* Lock the rotation exactly to the center of the 2000px viewBox */
-  transform-origin: 1000px 1000px;
-}
-
-.svgCircle {
-  transition: r 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    stroke-width 700ms cubic-bezier(0.16, 1, 0.3, 1),
-    fill 700ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* When focused, break the solid line into dashes so you can see it move */
-.focused .svgCircle {
-  /* First number is the dash length, second is the gap length */
-  stroke-dasharray: 40 60;
-  /* Optional: rounds the ends of the dashes so they look softer */
-  stroke-linecap: round;
-}
-
-.focused {
-  animation: spin 20s linear infinite;
-}
-
-.pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: .5;
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+.canvasElement {
+  display: block;
+  /* Ensure the canvas sits perfectly centered without anti-aliasing artifacts */
+  image-rendering: pixelated;
 }
