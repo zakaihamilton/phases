@@ -4,12 +4,9 @@ import { FLAT_DATA } from '../app/data.js';
 
 const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const canvasRef = useRef(null);
-
-  // Memory stores
   const transitionsRef = useRef(new Map());
   const gradientCacheRef = useRef(new Map());
 
-  // New Trackers for Cinematic Transitions
   const prevPathRef = useRef(`${activePath.p}-${activePath.s}`);
   const globalSpinVelocityRef = useRef(0);
   const globalSpinOffsetRef = useRef(0);
@@ -38,15 +35,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
       ctx.globalCompositeOperation = 'lighter';
 
-      // --- 1. GLOBAL ROTATIONAL BURST ---
       const currentPathStr = `${activePath.p}-${activePath.s}`;
       if (prevPathRef.current !== currentPathStr) {
-        // Inject a sudden burst of speed when phase changes
         globalSpinVelocityRef.current += 3.0;
         prevPathRef.current = currentPathStr;
       }
 
-      // Apply friction to slow the burst down smoothly
       globalSpinVelocityRef.current -= globalSpinVelocityRef.current * 2.5 * dt;
       globalSpinOffsetRef.current += globalSpinVelocityRef.current * dt;
 
@@ -59,11 +53,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const rl = radiusLevels[index];
         const dynamicScale = rl === 0 ? 0.05 : 0.2 + (rl - 1) * 0.18;
 
-        // Push unfocused rings slightly further back for depth
         const depthScale = isFocused ? 1 : 0.95;
         const targetRadius = 800 * dynamicScale * cameraScale * depthScale;
 
-        // Dim unfocused rings significantly to make transitions pop
         const baseTargetOpacity = data.opacity || 1;
         const targetOpacity = isFocused ? baseTargetOpacity : baseTargetOpacity * 0.4;
         const targetFocus = isFocused ? 1 : 0;
@@ -73,28 +65,25 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           tState = {
             focusProgress: targetFocus,
             animatedRadius: targetRadius,
-            radiusVelocity: 0, // Used for spring physics
+            radiusVelocity: 0,
             animatedOpacity: targetOpacity,
             ripples: []
           };
           transitionsRef.current.set(index, tState);
         }
 
-        // --- 2. SPRING PHYSICS LERPING ---
-        // Instead of linear sliding, we use stiffness and damping to make the radius "bounce" into place
-        const stiffness = 120; // Higher = faster snap
-        const damping = 12;    // Higher = less bounciness
+        const stiffness = 120;
+        const damping = 12;
 
         const springForce = (targetRadius - tState.animatedRadius) * stiffness;
         tState.radiusVelocity += (springForce - (tState.radiusVelocity * damping)) * dt;
         tState.animatedRadius += tState.radiusVelocity * dt;
 
-        // Smooth fade for opacity and focus
         tState.focusProgress += (targetFocus - tState.focusProgress) * 8 * dt;
         tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * 8 * dt;
 
         const focusP = tState.focusProgress;
-        const currentRadius = Math.max(0, tState.animatedRadius); // Prevent negative radius bounds
+        const currentRadius = Math.max(0, tState.animatedRadius);
         let baseOpacity = tState.animatedOpacity;
 
         if (baseOpacity < 0.001 && currentRadius < 1) return;
@@ -106,13 +95,18 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const cColor = data.color;
         ctx.lineCap = 'round';
 
-        const getCometGradient = (radius) => {
-          const cacheKey = `${Math.round(radius / 10) * 10}-${cColor}`;
+        // --- UPGRADED: A sweeping light sheen on a FULL ring ---
+        const getCometGradient = () => {
+          const cacheKey = `sheen-${cColor}`;
           let grad = gradientCacheRef.current.get(cacheKey);
+
           if (!grad) {
-            grad = ctx.createLinearGradient(-radius, -radius, radius, radius);
+            grad = ctx.createConicGradient(0, 0, 0);
+            // The ring remains fully solid with its base color all the way around
             grad.addColorStop(0, cColor);
-            grad.addColorStop(0.5, 'transparent');
+            grad.addColorStop(0.8, cColor);
+            // We inject a bright white/glowing "sheen" that acts as the sweeping highlight
+            grad.addColorStop(0.95, '#ffffff');
             grad.addColorStop(1, cColor);
             gradientCacheRef.current.set(cacheKey, grad);
           }
@@ -125,17 +119,16 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.save();
           ctx.translate(CENTER, CENTER);
 
-          // Apply individual spin + global momentum burst
           if (rotationSpeed) {
             ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
           } else {
-            // Even non-spinning rings slightly drift with the momentum burst
             ctx.rotate(globalSpinOffsetRef.current * 0.2);
           }
 
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
-          ctx.strokeStyle = useGradient ? getCometGradient(radius) : cColor;
+
+          ctx.strokeStyle = useGradient ? getCometGradient() : cColor;
 
           if (dashArray) ctx.setLineDash(dashArray);
 
@@ -157,7 +150,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.globalAlpha = alpha;
           ctx.translate(CENTER, CENTER);
 
-          // Apply spin + momentum burst
           ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
 
           ctx.fillStyle = cColor;
@@ -179,7 +171,6 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
         // --- DRAW LAYERS ---
 
-        // Shockwaves
         if (isFocused && Math.random() < 0.03) {
           tState.ripples.push({ spread: 0, alpha: 1 });
         }
@@ -196,23 +187,27 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           }
         }
 
-        // Orbits
+        // --- Orbits: Now full lines (null dashArray) with a sweeping gradient ---
         if (focusP > 0.01) {
-          drawRing(currentRadius * 1.05, 1, [4, 60], -0.15, 5, baseOpacity * 0.4 * focusP);
+          drawRing(currentRadius * 1.05, 1, null, -0.15, 5, baseOpacity * 0.4 * focusP, true);
           drawNodes(currentRadius * 1.05, 3, -0.15, baseOpacity * 0.8 * focusP);
 
-          drawRing(currentRadius * 0.95, 2, [40, 20, 5, 20], 0.3, 5, baseOpacity * 0.8 * focusP);
+          drawRing(currentRadius * 0.95, 2, null, 0.3, 5, baseOpacity * 0.8 * focusP, true);
           drawNodes(currentRadius * 0.95, 6, 0.3, baseOpacity * 0.8 * focusP);
         }
 
-        // Core
         const currentThickness = 10 - (4 * focusP);
         const currentGlow = 15 + (15 * focusP);
 
-        drawRing(currentRadius, currentThickness, null, 0, currentGlow, baseOpacity * (1 - focusP));
-        drawRing(currentRadius, currentThickness, [180, 60, 20, 60], 0.1, currentGlow, baseOpacity * focusP, true);
+        const slowDriftSpeed = (index % 2 === 0 ? 0.3 : -0.3) - (index * 0.05);
 
-        // Fill
+        // --- Core Rings: ALL gaps removed (`null` instead of `[180, 60...]`) ---
+        // Draw Unfocused Ring
+        drawRing(currentRadius, currentThickness, null, slowDriftSpeed, currentGlow, baseOpacity * (1 - focusP), true);
+
+        // Draw Focused Ring (Spins faster, full line)
+        drawRing(currentRadius, currentThickness, null, 0.6, currentGlow, baseOpacity * focusP, true);
+
         if (data.bg) {
           ctx.save();
           ctx.globalAlpha = Math.max(0, Math.min(1, baseOpacity));
