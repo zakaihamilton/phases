@@ -24,9 +24,9 @@
     top: 2rem;
     right: 3rem;
     transform: translateY(0);
-    width: 30vw;
+    width: 32vw;
     padding: 1.5rem;
-    height: 110px;
+    height: 15vh;
     background: rgba(15, 23, 42, 0.6);
 }
 
@@ -39,6 +39,9 @@
         left: 2.5rem;
         transform: translateY(0);
         padding: 2rem;
+        height: auto;
+        max-height: 70vh;
+        overflow-y: auto;
     }
 }
 
@@ -68,6 +71,7 @@
     letter-spacing: 0.2em;
     color: white;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
     text-transform: uppercase;
 }
 
@@ -108,10 +112,16 @@
 
 .descContentWrap {
     overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .descInner {
     padding-top: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .descCondition {
@@ -179,6 +189,7 @@
     display: flex;
     gap: 1rem;
     width: 100%;
+    margin-top: auto;
 }
 
 .navBtn {
