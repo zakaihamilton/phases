@@ -45,10 +45,16 @@ const HUD = ({ activeSubData, activePath }) => {
         }}
       />
 
-      <div className={`${styles.hudCard} ${isCollapsed ? styles.hudCardCollapsed : ''}`}>
+      <div 
+        className={`${styles.hudCard} ${isCollapsed ? styles.hudCardCollapsed : ''}`}
+        onClick={() => isCollapsed && setIsCollapsed(false)}
+      >
         <button
           className={styles.collapseBtn}
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsCollapsed(!isCollapsed);
+          }}
           title={isCollapsed ? "Expand HUD" : "Collapse HUD"}
         >
           <CollapseIcon isCollapsed={isCollapsed} />

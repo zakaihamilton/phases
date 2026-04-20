@@ -23,14 +23,17 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
     const VIEW_SIZE = 2000;
     const CENTER = VIEW_SIZE / 2;
 
-    const dpr = window.devicePixelRatio || 1;
+    const isMobile = window.innerWidth < 768;
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 3);
+    
     canvas.width = VIEW_SIZE * dpr;
     canvas.height = VIEW_SIZE * dpr;
     ctx.scale(dpr, dpr);
 
     // --- INITIALIZE BACKGROUNDS ---
     if (starsRef.current.length === 0) {
-      for (let i = 0; i < 400; i++) {
+      const starCount = isMobile ? 150 : 400;
+      for (let i = 0; i < starCount; i++) {
         const r = Math.sqrt(Math.random()) * 1500;
         const theta = Math.random() * Math.PI * 2;
 
@@ -54,14 +57,15 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         { r: 142, g: 45, b: 226 }
       ];
 
-      for (let i = 0; i < 8; i++) {
+      const cloudCount = isMobile ? 4 : 8;
+      for (let i = 0; i < cloudCount; i++) {
         const colorObj = cosmicColors[Math.floor(Math.random() * cosmicColors.length)];
         cloudsRef.current.push({
           x: Math.random() * VIEW_SIZE,
           y: Math.random() * VIEW_SIZE,
           radius: Math.random() * 500 + 400,
-          vx: (Math.random() - 0.5) * 15,
-          vy: (Math.random() - 0.5) * 15,
+          vx: (Math.random() - 0.5) * (isMobile ? 8 : 15),
+          vy: (Math.random() - 0.5) * (isMobile ? 8 : 15),
           baseAlpha: Math.random() * 0.04 + 0.01,
           pulseSpeed: Math.random() * 0.5 + 0.2,
           timeOffset: Math.random() * Math.PI * 2,
@@ -84,7 +88,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       // --- TRANSITION TRIGGERS ---
       const currentPathStr = `${activePath.p}-${activePath.s}`;
       if (prevPathRef.current !== currentPathStr) {
-        globalSpinVelocityRef.current += 3.0;
+        globalSpinVelocityRef.current += isMobile ? 1.5 : 3.0;
         phaseTransitionRef.current = 1.0;
         prevPathRef.current = currentPathStr;
       }
@@ -143,7 +147,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const currentAlpha = star.baseAlpha + Math.sin(elapsedTime * star.twinkleSpeed + star.timeOffset) * 0.3;
         ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
 
-        if (tIntensity > 0.01) {
+        if (tIntensity > 0.01 && !isMobile) {
           const angle = Math.atan2(star.y, star.x);
           const stretch = tIntensity * 250 * star.radius;
 
@@ -181,10 +185,14 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         // Expanding Energy Ring (Thinner, softer color, tighter glow)
         ctx.beginPath();
         ctx.arc(0, 0, Math.max(0, novaRadius), 0, Math.PI * 2);
-        ctx.lineWidth = tIntensity * 15; // Was 40
-        ctx.strokeStyle = `rgba(200, 240, 255, ${tIntensity * 0.6})`; // Softened white
-        ctx.shadowBlur = 30; // Was 60
-        ctx.shadowColor = '#00c6ff';
+        ctx.lineWidth = tIntensity * (isMobile ? 8 : 15);
+        ctx.strokeStyle = `rgba(200, 240, 255, ${tIntensity * 0.6})`;
+        
+        if (!isMobile) {
+           ctx.shadowBlur = 30;
+           ctx.shadowColor = '#00c6ff';
+        }
+        
         ctx.stroke();
         ctx.restore();
       }
@@ -218,15 +226,15 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           transitionsRef.current.set(index, tState);
         }
 
-        const stiffness = 180 - (index * 6);
-        const damping = 12 + (index * 0.2);
+        const stiffness = (isMobile ? 120 : 180) - (index * 6);
+        const damping = (isMobile ? 10 : 12) + (index * 0.2);
 
         const springForce = (targetRadius - tState.animatedRadius) * stiffness;
         tState.radiusVelocity += (springForce - (tState.radiusVelocity * damping)) * dt;
         tState.animatedRadius += tState.radiusVelocity * dt;
 
-        tState.focusProgress += (targetFocus - tState.focusProgress) * 8 * dt;
-        tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * 8 * dt;
+        tState.focusProgress += (targetFocus - tState.focusProgress) * (isMobile ? 6 : 8) * dt;
+        tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * (isMobile ? 6 : 8) * dt;
 
         const focusP = tState.focusProgress;
         const currentRadius = Math.max(0, tState.animatedRadius);
@@ -271,11 +279,11 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
 
-          ctx.strokeStyle = useGradient ? getCometGradient() : cColor;
+          ctx.strokeStyle = (useGradient && !isMobile) ? getCometGradient() : cColor;
 
           if (dashArray) ctx.setLineDash(dashArray);
 
-          if (glowAmount > 0) {
+          if (glowAmount > 0 && !isMobile) {
             ctx.globalAlpha = Math.max(0, alpha * 0.25);
             ctx.lineWidth = width + glowAmount;
             ctx.stroke();
@@ -300,19 +308,21 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 / count) * i;
             ctx.beginPath();
-            ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 4, 0, Math.PI * 2);
+            ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, isMobile ? 3 : 4, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.globalAlpha = alpha * 0.3;
-            ctx.beginPath();
-            ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = alpha;
+            if (!isMobile) {
+              ctx.globalAlpha = alpha * 0.3;
+              ctx.beginPath();
+              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 12, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.globalAlpha = alpha;
+            }
           }
           ctx.restore();
         };
 
-        if (isFocused && Math.random() < 0.03) {
+        if (isFocused && !isMobile && Math.random() < 0.03) {
           tState.ripples.push({ spread: 0, alpha: 1 });
         }
 
@@ -336,7 +346,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           drawNodes(currentRadius * 0.95, 6, 0.3, baseOpacity * 0.8 * focusP);
         }
 
-        const currentThickness = 10 - (4 * focusP);
+        const currentThickness = isMobile ? (8 - (3 * focusP)) : (10 - (4 * focusP));
         const currentGlow = 15 + (15 * focusP);
 
         const slowDriftSpeed = (index % 2 === 0 ? 0.3 : -0.3) - (index * 0.05);
