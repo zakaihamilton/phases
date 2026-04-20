@@ -77,13 +77,10 @@ export function useNavigation({
                 });
             }
 
-            // Description panel visibility with Up/Down arrows
-            if (e.key === "ArrowUp") {
+            // Description panel visibility with Enter key toggle
+            if (e.key === "Enter") {
                 e.preventDefault();
-                setIsDescriptionOpen(true);
-            } else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setIsDescriptionOpen(false);
+                setIsDescriptionOpen(prev => !prev);
             }
         };
 
