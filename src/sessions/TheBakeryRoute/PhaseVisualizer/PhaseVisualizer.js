@@ -531,7 +531,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             });
 
             // Smoothly shift tires tracks color
-            if (frames % 3 === 0) {
+            if (frames % 6 === 0) {
                 const tW = 5.5;
                 const rearPos = getWorldPos(-8, 0);
                 trail.push({
@@ -546,15 +546,15 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             const trB = 184 + (94 - 184) * currentDesireLevel;
 
             trail.forEach((tr, index) => {
-                tr.life -= 0.025;
+                tr.life -= 0.06;
                 if (tr.life <= 0) trail.splice(index, 1);
                 else {
                     obj(tr.lx + tr.ly, () => {
                         const trL = toIso(tr.lx, tr.ly, 1);
                         const trR = toIso(tr.rx, tr.ry, 1);
                         ctx.fillStyle = `rgba(${trR}, ${trG}, ${trB}, ${tr.life * 0.4})`;
-                        ctx.beginPath(); ctx.arc(trL.x, trL.y, 2, 0, Math.PI * 2); ctx.fill();
-                        ctx.beginPath(); ctx.arc(trR.x, trR.y, 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(trL.x, trL.y, 1, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(trR.x, trR.y, 1, 0, Math.PI * 2); ctx.fill();
                     });
                 }
             });
