@@ -89,6 +89,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         let aromaParticles = [];
         let emotionParticles = [];
         let frames = 0;
+        let lastPhaseId = phaseRef.current.id;
 
         const getBezierXY = (t, curve) => {
             const { p0, p1, p2, p3 } = curve;
@@ -120,6 +121,15 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         const render = () => {
             frames++;
             const currentPhase = phaseRef.current;
+
+            if (currentPhase.id !== lastPhaseId) {
+                t = 0;
+                walkerTrail = [];
+                aromaParticles = [];
+                emotionParticles = [];
+                lastPhaseId = currentPhase.id;
+            }
+
             ctx.fillStyle = '#020b06';
             ctx.fillRect(0, 0, W, H);
 
