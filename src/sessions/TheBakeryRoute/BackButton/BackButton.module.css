@@ -1,0 +1,27 @@
+.root {
+    pointer-events: auto;
+    /* Re-enable pointer events for the button */
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 0.75rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 200ms;
+    width: fit-content;
+    height: fit-content;
+    backdrop-filter: blur(4px);
+}
+
+.root:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateX(-4px);
+}

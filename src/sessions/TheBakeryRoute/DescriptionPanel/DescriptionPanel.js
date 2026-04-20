@@ -1,42 +1,27 @@
 import React from 'react';
-import { Route, ChevronDown, Info } from 'lucide-react';
+import { Route, Info } from 'lucide-react';
 import styles from './DescriptionPanel.module.css';
 
 const DescriptionPanel = ({
-    phase,
-    isSidebarOpen,
-    isDescriptionOpen,
-    setIsDescriptionOpen,
-    isHorizontallyCollapsed
+    phase
 }) => {
     return (
-        <div className={`${styles.descPane} ${isSidebarOpen ? styles.descPaneSidebarOpen : (isDescriptionOpen ? styles.descPaneDescOpen : styles.descPaneDescClosed)
-            }`}>
+        <div className={styles.descPane}>
             <div className={styles.descTopGlow} style={{ background: phase.gradientHorizontal }} />
 
-            <div
-                className={`${styles.descHeader} ${isHorizontallyCollapsed ? styles.descHeaderCollapsed : styles.descHeaderNormal}`}
-                onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
-            >
-                <div className={`${styles.descHeaderLeft} ${isHorizontallyCollapsed ? styles.descHeaderLeftCollapsed : ''}`}>
+            <div className={styles.descHeader}>
+                <div className={styles.descHeaderLeft}>
                     <div className={styles.descIconWrap} style={{ background: phase.gradientVertical }}>
                         <Route color="white" size={24} />
                     </div>
-                    <h3 className={`${styles.descTitle} ${isHorizontallyCollapsed ? styles.descTitleCollapsed : styles.descTitleNormal}`}>
-                        {isHorizontallyCollapsed ? 'Description' : phase.name}
+                    <h3 className={styles.descTitle}>
+                        {phase.name}
                     </h3>
                 </div>
-                <button className={styles.descToggleBtn}>
-                    <ChevronDown
-                        size={24}
-                        className={`${styles.toggleIcon} ${isHorizontallyCollapsed ? styles.rotate90Lg : (isDescriptionOpen ? styles.rotate180 : styles.rotate0)}`}
-                    />
-                </button>
             </div>
 
-            <div className={`${styles.descContentWrap} ${isDescriptionOpen ? styles.descContentOpen : (!isSidebarOpen ? styles.descContentClosedHalf : styles.descContentClosedFull)
-                }`}>
-                <div className={`${styles.descInner} ${isHorizontallyCollapsed ? styles.descInnerCollapsed : ''}`}>
+            <div className={styles.descContentWrap}>
+                <div className={styles.descInner}>
                     <p
                         key={phase.id}
                         className={styles.descCondition}

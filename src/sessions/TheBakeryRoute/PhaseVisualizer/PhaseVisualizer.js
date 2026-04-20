@@ -11,7 +11,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
         let animationFrameId;
 
         // Logical resolution (Internal drawing coordinates)
-        const W = 400;
+        const W = 800; // Increased to 800
         const H = 600;
 
         const scale = window.devicePixelRatio || 2;
@@ -19,50 +19,63 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
         canvas.height = H * scale;
         ctx.scale(scale, scale);
 
-        const START = { x: 200, y: 530 };
-        const HOME = { x: 200, y: 70 };
-        const BAKERY = { x: 310, y: 300 };
+        const START = { x: 400, y: 530 };
+        const HOME = { x: 400, y: 70 };
+        const BAKERY = { x: 620, y: 300 };
 
-        const mainCurve = { p0: START, p1: { x: 380, y: 450 }, p2: { x: 380, y: 150 }, p3: HOME };
-        const detourCurve = { p0: START, p1: { x: 20, y: 450 }, p2: { x: 20, y: 150 }, p3: HOME };
+        const mainCurve = { p0: START, p1: { x: 760, y: 450 }, p2: { x: 760, y: 150 }, p3: HOME };
+        const detourCurve = { p0: START, p1: { x: 40, y: 450 }, p2: { x: 40, y: 150 }, p3: HOME };
 
-        const grassTufts = Array.from({ length: 1000 }).map(() => ({
+        const grassTufts = Array.from({ length: 2000 }).map(() => ({
             x: Math.random() * W, y: Math.random() * H, height: Math.random() * 5 + 3, tilt: (Math.random() - 0.5) * 5
         }));
 
         const benches = [
-            { x: 260, y: 380, w: 22, h: 10, color: '#78350f' },
-            { x: 130, y: 360, w: 10, h: 22, color: '#78350f' },
-            { x: 240, y: 150, w: 22, h: 10, color: '#78350f' }
+            { x: 520, y: 380, w: 22, h: 10, color: '#78350f' },
+            { x: 260, y: 360, w: 10, h: 22, color: '#78350f' },
+            { x: 480, y: 150, w: 22, h: 10, color: '#78350f' },
+            { x: 180, y: 450, w: 22, h: 10, color: '#78350f' },
+            { x: 660, y: 180, w: 10, h: 22, color: '#78350f' }
         ];
 
         const crosswalks = [
-            { x: 180, y: 110, count: 4, width: 8, height: 20, gap: 14, horizontal: true },
-            { x: 360, y: 300, count: 3, width: 20, height: 8, gap: 12, horizontal: false }
+            { x: 360, y: 110, count: 4, width: 8, height: 20, gap: 14, horizontal: true },
+            { x: 720, y: 300, count: 3, width: 20, height: 8, gap: 12, horizontal: false },
+            { x: 140, y: 420, count: 3, width: 20, height: 8, gap: 12, horizontal: false },
+            { x: 500, y: 250, count: 4, width: 8, height: 20, gap: 14, horizontal: true }
         ];
 
         const trees = [
-            { x: 100, y: 480, size: 22, color: '#064e3b' }, { x: 130, y: 500, size: 30, color: '#065f46' },
-            { x: 280, y: 490, size: 26, color: '#064e3b' }, { x: 80, y: 380, size: 24, color: '#065f46' },
-            { x: 120, y: 250, size: 32, color: '#064e3b' }, { x: 90, y: 220, size: 18, color: '#065f46' },
-            { x: 280, y: 150, size: 28, color: '#064e3b' }, { x: 310, y: 120, size: 22, color: '#065f46' },
-            { x: 120, y: 100, size: 24, color: '#064e3b' }, { x: 260, y: 80, size: 18, color: '#065f46' },
+            { x: 200, y: 480, size: 22, color: '#064e3b' }, { x: 260, y: 500, size: 30, color: '#065f46' },
+            { x: 560, y: 490, size: 26, color: '#064e3b' }, { x: 160, y: 380, size: 24, color: '#065f46' },
+            { x: 240, y: 250, size: 32, color: '#064e3b' }, { x: 180, y: 220, size: 18, color: '#065f46' },
+            { x: 560, y: 150, size: 28, color: '#064e3b' }, { x: 620, y: 120, size: 22, color: '#065f46' },
+            { x: 240, y: 100, size: 24, color: '#064e3b' }, { x: 520, y: 80, size: 18, color: '#065f46' },
+            { x: 100, y: 450, size: 28, color: '#065f46' }, { x: 700, y: 480, size: 20, color: '#064e3b' },
+            { x: 680, y: 380, size: 30, color: '#064e3b' }, { x: 100, y: 280, size: 25, color: '#065f46' },
+            { x: 680, y: 200, size: 26, color: '#064e3b' }, { x: 120, y: 150, size: 22, color: '#065f46' },
+            { x: 700, y: 80, size: 32, color: '#064e3b' }, { x: 340, y: 400, size: 20, color: '#065f46' }
         ];
 
         const buildings = [
-            { x: 140, y: 290, w: 70, h: 90, color: '#0f172a' }, { x: 70, y: 270, w: 60, h: 70, color: '#1e293b' },
-            { x: 190, y: 170, w: 50, h: 60, color: '#0f172a' }, { x: 220, y: 410, w: 60, h: 50, color: '#1e293b' },
+            { x: 280, y: 290, w: 70, h: 90, color: '#0f172a' }, { x: 140, y: 270, w: 60, h: 70, color: '#1e293b' },
+            { x: 380, y: 170, w: 50, h: 60, color: '#0f172a' }, { x: 440, y: 410, w: 60, h: 50, color: '#1e293b' },
+            { x: 60, y: 180, w: 50, h: 80, color: '#1e293b' }, { x: 540, y: 380, w: 65, h: 70, color: '#0f172a' },
+            { x: 660, y: 250, w: 55, h: 65, color: '#1e293b' }, { x: 500, y: 150, w: 60, h: 80, color: '#0f172a' }
         ];
 
-        const streetLights = [{ x: 200, y: 530 }, { x: 320, y: 430 }, { x: 350, y: 230 }, { x: 200, y: 70 }];
+        const streetLights = [
+            { x: 400, y: 530 }, { x: 640, y: 430 }, { x: 700, y: 230 }, { x: 400, y: 70 },
+            { x: 260, y: 400 }, { x: 160, y: 200 }, { x: 550, y: 500 }
+        ];
 
-        const fireflies = Array.from({ length: 80 }).map(() => ({
+        const fireflies = Array.from({ length: 160 }).map(() => ({
             x: Math.random() * W, y: Math.random() * H, size: Math.random() * 2 + 0.8,
             twinkleSpeed: Math.random() * 0.04 + 0.02, phase: Math.random() * Math.PI * 2,
             vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4
         }));
 
-        const mistPatches = Array.from({ length: 8 }).map(() => ({
+        const mistPatches = Array.from({ length: 16 }).map(() => ({
             x: Math.random() * W, y: Math.random() * H, size: Math.random() * 70 + 50, speed: Math.random() * 0.2 + 0.1
         }));
 
@@ -317,9 +330,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
                     </div>
                 </div>
             </div>
-
-            <div className={`${styles.mapLabel} ${styles.startLabel}`}>START</div>
-            <div className={`${styles.mapLabel} ${styles.homeLabel}`}>HOME</div>
         </div>
     );
 };

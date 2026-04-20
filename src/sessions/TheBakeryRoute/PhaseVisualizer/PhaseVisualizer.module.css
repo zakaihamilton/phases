@@ -1,39 +1,19 @@
 .canvasWrapper {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 2/3;
-    margin: 0 auto;
-    background: #020b06;
-    border-radius: 1rem;
-    border: 1px solid #334155;
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
     overflow: hidden;
-    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.1);
     transition: all 0.5s ease;
 }
 
-.canvasMaxWidthNormal {
-    max-width: 450px;
-}
+/* Empty classes kept to prevent React errors if they are still passed */
+.canvasMaxWidthNormal {}
 
-.canvasMaxWidthExpanded {
-    max-width: 550px;
-}
+.canvasMaxWidthExpanded {}
 
-@media (min-width: 1280px) {
-    .canvasMaxWidthExpanded {
-        max-width: 600px;
-    }
-}
-
-.canvasMaxWidthSuper {
-    max-width: 800px;
-}
-
-@media (min-width: 1280px) {
-    .canvasMaxWidthSuper {
-        max-width: 1000px;
-    }
-}
+.canvasMaxWidthSuper {}
 
 .canvasGlow {
     position: absolute;
@@ -50,6 +30,7 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+    object-position: left center;
     pointer-events: none;
 }
 
@@ -155,23 +136,4 @@
     font-size: 0.875rem;
     pointer-events: none;
     border: 1px solid;
-}
-
-.startLabel {
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #e2e8f0;
-    background: rgba(15, 23, 42, 0.9);
-    border-color: rgba(51, 65, 85, 0.5);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-}
-
-.homeLabel {
-    top: 1.5rem;
-    right: 1.5rem;
-    color: #e0e7ff;
-    background: rgba(30, 58, 138, 0.8);
-    border-color: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }

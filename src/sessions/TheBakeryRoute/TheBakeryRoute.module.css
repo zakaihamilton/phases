@@ -1,111 +1,26 @@
 .appContainer {
-    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
     font-family: system-ui, -apple-system, sans-serif;
-    padding: 1rem;
     transition: background 1s ease;
     color: #e2e8f0;
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 .appContainer * {
     box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
-    .appContainer {
-        padding: 2rem;
-    }
-}
-
-@media (min-width: 1280px) {
-    .appContainer {
-        padding: 3rem;
-    }
-}
-
-.contentWrapper {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-/* MAIN LAYOUT */
-.mainLayout {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    align-items: stretch;
-    width: 100%;
-}
-
-@media (min-width: 1024px) {
-    .mainLayout {
-        flex-direction: row;
-        gap: 3rem;
-    }
-}
-
-/* RIGHT COLUMN LAYOUT */
-.rightCol {
-    flex-grow: 1;
-    min-width: 0;
-    transition: all 0.5s;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    height: 100%;
-}
-
-@media (min-width: 1024px) {
-    .rightCol {
-        flex-direction: row;
-    }
-}
-
-/* CANVAS PANE SIZING */
+/* CANVAS PANE - FILLS EVERYTHING */
 .canvasPane {
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.5s;
-}
-
-.canvasPaneSidebarOpen {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-}
-
-@media (min-width: 1280px) {
-    .canvasPaneSidebarOpen {
-        width: 50%;
-    }
-}
-
-.canvasPaneDescOpen {
-    width: 100%;
-}
-
-@media (min-width: 1024px) {
-    .canvasPaneDescOpen {
-        width: 45%;
-    }
-}
-
-@media (min-width: 1280px) {
-    .canvasPaneDescOpen {
-        width: 41.666%;
-    }
-}
-
-.canvasPaneDescClosed {
-    width: 100%;
-}
-
-@media (min-width: 1024px) {
-    .canvasPaneDescClosed {
-        flex-grow: 1;
-        width: 0;
-    }
+    height: 100%;
+    z-index: 1; /* Below HUD elements */
 }
