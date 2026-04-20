@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import styles from './SummaryPanel.module.css';
+import styles from './Summary.module.css';
 
-const SummaryPanel = ({ activeSubData }) => {
+const Summary = ({ activeSubData }) => {
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
 
   if (!activeSubData || !activeSubData.summary) {
@@ -55,4 +55,4 @@ const SummaryPanel = ({ activeSubData }) => {
   );
 };
 
-export default React.memo(SummaryPanel);
+export default React.memo(Summary);

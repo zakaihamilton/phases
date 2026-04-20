@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import styles from './Mandala.module.css';
-import { FLAT_DATA } from '../app/data.js';
+import { FLAT_DATA } from '../Data';
 
 const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const canvasRef = useRef(null);
@@ -25,7 +25,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
     const isMobile = window.innerWidth < 768;
     const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 3);
-    
+
     canvas.width = VIEW_SIZE * dpr;
     canvas.height = VIEW_SIZE * dpr;
     ctx.scale(dpr, dpr);
@@ -187,12 +187,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         ctx.arc(0, 0, Math.max(0, novaRadius), 0, Math.PI * 2);
         ctx.lineWidth = tIntensity * (isMobile ? 8 : 15);
         ctx.strokeStyle = `rgba(200, 240, 255, ${tIntensity * 0.6})`;
-        
+
         if (!isMobile) {
-           ctx.shadowBlur = 30;
-           ctx.shadowColor = '#00c6ff';
+          ctx.shadowBlur = 30;
+          ctx.shadowColor = '#00c6ff';
         }
-        
+
         ctx.stroke();
         ctx.restore();
       }

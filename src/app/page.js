@@ -1,59 +1,37 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import styles from "./page.module.css";
-import { useNavigation } from "./page.nav.js";
-import Mandala from "../components/Mandala";
-import HUD from "../components/HUD";
-import Controls from "../components/Controls";
-import SummaryPanel from "../components/SummaryPanel";
+import Launcher from "@/sessions/Launcher";
+import sessions from "@/sessions/sessions";
 
-export default function Phases() {
-  const [cameraScale, setCameraScale] = useState(1);
+function getHashUrl() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return window?.location?.hash?.slice(1);
+}
 
-  const {
-    activePath,
-    activeSubData,
-    visibleList,
-    radiusLevels,
-    navTo,
-  } = useNavigation();
+export default function Home() {
+  const [hashUrl, setHashUrl] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const updateScale = () => {
-      const requiredSize = 2200;
-      const minDim = Math.min(window.innerWidth, window.innerHeight);
-      setCameraScale(minDim / requiredSize);
+    setIsMounted(true);
+    setHashUrl(getHashUrl());
+
+    const handleHashChange = () => {
+      setHashUrl(getHashUrl());
     };
 
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
   }, []);
 
-  return (
-    <div className={styles.appContainer}>
-      <div className={styles.bgSpace} />
-      
-      <Mandala 
-        cameraScale={cameraScale}
-        activePath={activePath}
-        visibleList={visibleList}
-        radiusLevels={radiusLevels}
-      />
+  const session = hashUrl?.split("/")[0];
 
-      <HUD 
-        activeSubData={activeSubData}
-        activePath={activePath}
-      />
+  const Session = (isMounted && sessions?.find((s) => s.id === session)?.component) || Launcher;
 
-      <SummaryPanel 
-        activeSubData={activeSubData}
-      />
-
-      <Controls 
-        navTo={navTo}
-      />
-    </div>
-  );
+  return <Session />;
 }

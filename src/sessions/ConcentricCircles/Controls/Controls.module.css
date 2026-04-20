@@ -10,7 +10,8 @@
   display: grid;
   grid-template-areas: 
     ". up ."
-    "left down right";
+    "left down right"
+    ". home .";
   gap: 0.5rem;
   pointer-events: auto;
 }
@@ -48,6 +49,7 @@
 .btnDown { grid-area: down; }
 .btnLeft { grid-area: left; }
 .btnRight { grid-area: right; }
+.btnHome { grid-area: home; }
 
 @media (max-width: 768px) {
   .controlsContainer {

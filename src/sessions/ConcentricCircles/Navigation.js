@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { MAPPED_DATA, FLAT_DATA } from './data.js';
+import { MAPPED_DATA, FLAT_DATA } from './Data.js';
 
 export function useNavigation() {
     const [activePath, setActivePath] = useState({ p: 0, s: 0 });
@@ -22,7 +22,7 @@ export function useNavigation() {
     useEffect(() => {
         const activeItem = FLAT_DATA.find(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
         if (activeItem) {
-            const newHash = `#${activeItem.id}`;
+            const newHash = `#concentric-circle/${activeItem.id}`;
             if (window.location.hash !== newHash) {
                 window.history.replaceState(null, '', newHash);
             }
@@ -36,10 +36,10 @@ export function useNavigation() {
 
         setActivePath(prev => {
             let { p, s } = prev;
-            if (direction === "up") { 
-                p = Math.max(0, p - 1); s = 0; 
-            } else if (direction === "down") { 
-                p = Math.min(MAPPED_DATA.length - 1, p + 1); s = 0; 
+            if (direction === "up") {
+                p = Math.max(0, p - 1); s = 0;
+            } else if (direction === "down") {
+                p = Math.min(MAPPED_DATA.length - 1, p + 1); s = 0;
             } else if (direction === "left") {
                 if (s > 0) s--;
                 else if (p > 0) { p--; s = MAPPED_DATA[p].sub.length - 1; }
@@ -57,6 +57,7 @@ export function useNavigation() {
             else if (e.key === "ArrowDown") performNav("down");
             else if (e.key === "ArrowLeft") performNav("left");
             else if (e.key === "ArrowRight") performNav("right");
+            else if (e.key === "Escape") window.location.hash = 'launcher';
         };
 
         let touchStartX = 0;
@@ -92,7 +93,7 @@ export function useNavigation() {
         window.addEventListener("keydown", handleKeyDown);
         window.addEventListener("touchstart", handleTouchStart, { passive: true });
         window.addEventListener("touchend", handleTouchEnd, { passive: true });
-        
+
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("touchstart", handleTouchStart);
@@ -104,7 +105,7 @@ export function useNavigation() {
         performNav(direction);
     };
 
-    const targetFlatIndex = useMemo(() => 
+    const targetFlatIndex = useMemo(() =>
         FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s),
         [activePath]
     );
@@ -114,11 +115,11 @@ export function useNavigation() {
     const navigationState = useMemo(() => {
         const visibleList = [];
         const radiusLevels = new Array(FLAT_DATA.length).fill(0);
-        
+
         const completedPhasesCount = activePath.p;
         const currentPhaseSubCount = activePath.s + 1;
         let level = (completedPhasesCount * 1.5) + currentPhaseSubCount;
-        
+
         // Completed phases
         for (let p = 0; p < activePath.p; p++) {
             FLAT_DATA.forEach((d, i) => {
@@ -129,7 +130,7 @@ export function useNavigation() {
             });
             level -= 1.5; // Gap between condensed phases
         }
-        
+
         // Current phase
         for (let s = 0; s <= activePath.s; s++) {
             const i = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === s);

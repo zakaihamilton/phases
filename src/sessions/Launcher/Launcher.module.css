@@ -1,0 +1,136 @@
+/* Global Resets & App Container */
+.appContainer {
+    min-height: 100vh;
+    background-color: #020617;
+    color: #f1f5f9;
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.appContainer ::selection {
+    background-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Cinematic Background Elements */
+.bgElements {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.bgGlow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    background-color: rgba(49, 46, 129, 0.2);
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.5;
+    mix-blend-mode: screen;
+}
+
+.bgPattern {
+    position: absolute;
+    inset: 0;
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=');
+    opacity: 0.3;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black, transparent);
+}
+
+/* Transitions */
+.moduleTransitionIn {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+    transition: all 0.3s;
+}
+
+.moduleTransitionOut {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(4px);
+    transition: all 0.3s;
+}
+
+/* Active Module View */
+.moduleView {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.mainContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+@media (min-width: 640px) {
+    .mainContent {
+        padding: 2rem;
+    }
+}
+
+/* Custom Scrollbar */
+.customScrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.customScrollbar::-webkit-scrollbar-track {
+    background: rgba(2, 6, 23, 0.5);
+}
+
+.customScrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.customScrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.contentContainer {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+.mobileTitleBox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .mobileTitleBox {
+        display: none;
+    }
+}
+
+.mobileTitleBox svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #818cf8;
+}
+
+.mobileTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    margin: 0;
+}

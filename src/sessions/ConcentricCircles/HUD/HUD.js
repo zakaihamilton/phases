@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import styles from './HUD.module.css';
-import { MAPPED_DATA } from '../app/data.js';
+import { MAPPED_DATA } from '../Data.js';
 
 const HUD = ({ activeSubData, activePath }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -45,7 +45,7 @@ const HUD = ({ activeSubData, activePath }) => {
         }}
       />
 
-      <div 
+      <div
         className={`${styles.hudCard} ${isCollapsed ? styles.hudCardCollapsed : ''}`}
         onClick={() => isCollapsed && setIsCollapsed(false)}
       >

@@ -1,0 +1,268 @@
+.descPane {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.5s;
+}
+
+.descPaneSidebarOpen {
+    width: 100%;
+    padding: 1.5rem;
+    justify-content: center;
+    height: max-content;
+}
+
+@media (min-width: 768px) {
+    .descPaneSidebarOpen {
+        padding: 2rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    .descPaneSidebarOpen {
+        width: 50%;
+    }
+}
+
+.descPaneDescOpen {
+    width: 100%;
+    padding: 1.5rem;
+    justify-content: center;
+    height: max-content;
+}
+
+@media (min-width: 768px) {
+    .descPaneDescOpen {
+        padding: 2rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .descPaneDescOpen {
+        width: 55%;
+    }
+}
+
+@media (min-width: 1280px) {
+    .descPaneDescOpen {
+        width: 58.333%;
+    }
+}
+
+.descPaneDescClosed {
+    width: 100%;
+    padding: 1.5rem;
+    justify-content: center;
+    height: max-content;
+}
+
+@media (min-width: 1024px) {
+    .descPaneDescClosed {
+        width: 80px;
+        padding: 2rem 1rem;
+        justify-content: flex-start;
+        align-items: center;
+        height: auto;
+    }
+}
+
+.descTopGlow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+}
+
+.descHeader {
+    display: flex;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.5s;
+}
+
+.descHeaderNormal {
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    flex-direction: row;
+}
+
+.descHeaderCollapsed {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@media (min-width: 1024px) {
+    .descHeaderCollapsed {
+        flex-direction: column;
+        justify-content: center;
+        gap: 2rem;
+        height: 100%;
+    }
+}
+
+.descHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.descHeaderLeftCollapsed {
+    flex-direction: row;
+}
+
+@media (min-width: 1024px) {
+    .descHeaderLeftCollapsed {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+.descIconWrap {
+    padding: 0.75rem;
+    border-radius: 50%;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    display: flex;
+}
+
+.descTitle {
+    font-weight: 900;
+    color: white;
+    transition: all 0.3s;
+    font-size: 1.5rem;
+}
+
+.descTitleNormal {
+    opacity: 1;
+}
+
+.descTitleCollapsed {
+    opacity: 0;
+}
+
+@media (min-width: 1024px) {
+    .descTitleCollapsed {
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+        opacity: 0.4;
+        font-size: 1rem;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        margin: 0;
+    }
+}
+
+.descToggleBtn {
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+}
+
+.descToggleBtn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.descContentWrap {
+    transition: all 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.descContentOpen {
+    opacity: 1;
+    grid-template-rows: 1fr;
+    height: auto;
+}
+
+.descContentClosedHalf {
+    opacity: 0;
+    height: 0;
+}
+
+.descContentClosedFull {
+    opacity: 0;
+    height: 0;
+}
+
+.descInner {
+    padding-top: 1rem;
+    transition: all 0.3s;
+}
+
+.descInnerCollapsed {
+    opacity: 0;
+}
+
+.descCondition {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.descText {
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #cbd5e1;
+    margin-bottom: 2rem;
+}
+
+.takeawayBox {
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 4px solid #3b82f6;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+}
+
+.takeawayHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.takeawayTitle {
+    font-weight: 700;
+    color: #60a5fa;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.875rem;
+}
+
+.takeawayText {
+    color: #94a3b8;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.toggleIcon {
+    transition: transform 0.3s ease;
+}
+
+.rotate180 {
+    transform: rotate(180deg);
+}
+
+.rotate0 {
+    transform: rotate(0);
+}
+
+@media (min-width: 1024px) {
+    .rotate90Lg {
+        transform: rotate(90deg);
+    }
+}
