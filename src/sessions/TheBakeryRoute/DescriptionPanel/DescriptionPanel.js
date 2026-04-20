@@ -18,7 +18,7 @@ const DescriptionPanel = ({
             <div className={styles.descTopGlow} style={{ background: phase.gradientHorizontal }} />
 
             <div className={styles.descHeader}>
-                <div className={styles.descHeaderLeft}>
+                <div key={phase.id} className={styles.descHeaderLeft}>
                     <div className={styles.phaseBadge} style={{ background: phase.gradientVertical }}>
                         PHASE 0{phase.id}
                     </div>
@@ -43,7 +43,7 @@ const DescriptionPanel = ({
                     transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}
             >
-                <div className={styles.descInner}>
+                <div key={phase.id} className={styles.descInner}>
                     <p
                         key={phase.id}
                         className={styles.descCondition}
