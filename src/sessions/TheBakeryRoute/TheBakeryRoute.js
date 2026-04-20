@@ -23,7 +23,7 @@ export default function TheBakeryRoute() {
 
     // Sidebar and Description are now conceptually "always open" in a floating state, 
     // but we can retain the toggles if the user wants to minimize them.
-    const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
+    const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useNavigation({
@@ -67,7 +67,6 @@ export default function TheBakeryRoute() {
             <DescriptionPanel
                 phase={activePhase}
                 phases={PHASES}
-                setActivePhaseId={setActivePhaseId}
                 isSidebarOpen={isSidebarOpen}
                 isDescriptionOpen={isDescriptionOpen}
                 setIsDescriptionOpen={setIsDescriptionOpen}

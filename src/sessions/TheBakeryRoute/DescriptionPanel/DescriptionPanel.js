@@ -1,11 +1,10 @@
 import React from 'react';
-import { Route, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Info, ChevronDown } from 'lucide-react';
 import styles from './DescriptionPanel.module.css';
 
 const DescriptionPanel = ({
     phase,
     phases,
-    setActivePhaseId,
     isDescriptionOpen,
     setIsDescriptionOpen
 }) => {
