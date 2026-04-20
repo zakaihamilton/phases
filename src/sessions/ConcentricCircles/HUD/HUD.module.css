@@ -37,6 +37,10 @@
   .hudOverlay {
     padding: 3rem 4rem;
   }
+  
+  .hudOverlay.hudOverlayCollapsed {
+    padding-bottom: 1rem;
+  }
 }
 
 .hudCard {
@@ -344,6 +348,14 @@
     padding: 2rem;
     width: fit-content;
     min-width: 1200px;
+  }
+
+  .hudCard.hudCardCollapsed {
+    height: 44px;
+    min-height: 44px;
+    min-width: 180px;
+    padding: 0 1rem;
+    width: fit-content;
   }
 
   .hudTitleContainer {
