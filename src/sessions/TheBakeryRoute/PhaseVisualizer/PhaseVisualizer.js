@@ -566,11 +566,14 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 const top = pts.map(p => toIso(p.x, p.y, cz + h));
                 const bot = pts.map(p => toIso(p.x, p.y, cz));
 
+                // If `colors` is an object, we use explicit face coloring. 
+                // If it's a string, we set the string as the base color and apply transparent black/white overlay for shading.
+                const isObj = typeof colors === 'object';
                 const faces = [
-                    { p1: 0, p2: 1, c: colors.front, index: 0 },
-                    { p1: 1, p2: 2, c: colors.right, index: 1 },
-                    { p1: 2, p2: 3, c: colors.back, index: 2 },
-                    { p1: 3, p2: 0, c: colors.left, index: 3 }
+                    { p1: 0, p2: 1, c: isObj ? colors.front : colors, over: isObj ? null : 'rgba(0,0,0,0.1)', index: 0 },
+                    { p1: 1, p2: 2, c: isObj ? colors.right : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 1 },
+                    { p1: 2, p2: 3, c: isObj ? colors.back : colors, over: isObj ? null : 'rgba(0,0,0,0.5)', index: 2 },
+                    { p1: 3, p2: 0, c: isObj ? colors.left : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 3 }
                 ];
 
                 faces.forEach((f) => { f.z = bot[f.p1].y + bot[f.p2].y; });
@@ -580,13 +583,20 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     ctx.fillStyle = f.c; ctx.beginPath();
                     ctx.moveTo(top[f.p1].x, top[f.p1].y); ctx.lineTo(top[f.p2].x, top[f.p2].y);
                     ctx.lineTo(bot[f.p2].x, bot[f.p2].y); ctx.lineTo(bot[f.p1].x, bot[f.p1].y); ctx.fill();
+
+                    if (f.over) { ctx.fillStyle = f.over; ctx.fill(); }
+
                     ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
                     if (drawFaceDetails) drawFaceDetails(f.index, top[f.p1], top[f.p2], bot[f.p2], bot[f.p1]);
                 });
 
-                ctx.fillStyle = colors.top; ctx.beginPath();
+                ctx.fillStyle = isObj ? colors.top : colors; ctx.beginPath();
                 ctx.moveTo(top[0].x, top[0].y); ctx.lineTo(top[1].x, top[1].y);
-                ctx.lineTo(top[2].x, top[2].y); ctx.lineTo(top[3].x, top[3].y); ctx.fill(); ctx.stroke();
+                ctx.lineTo(top[2].x, top[2].y); ctx.lineTo(top[3].x, top[3].y); ctx.fill();
+
+                if (!isObj) { ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill(); }
+
+                ctx.stroke();
                 if (drawFaceDetails) drawFaceDetails(4, top[0], top[1], top[2], top[3]);
             };
 
@@ -596,12 +606,8 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.beginPath(); ctx.ellipse(shadow.x, shadow.y, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
 
-                const hue = currentPhase.hasDesire ? 343 : 215;
-                const sat = currentPhase.hasDesire ? 85 : 20;
-                const bodyColors = {
-                    top: `hsl(${hue}, ${sat}%, 55%)`, front: `hsl(${hue}, ${sat}%, 45%)`,
-                    right: `hsl(${hue}, ${sat}%, 35%)`, back: `hsl(${hue}, ${sat}%, 25%)`, left: `hsl(${hue}, ${sat}%, 35%)`
-                };
+                // Assign the glow phase color directly as the car color
+                const bodyColor = currentPhase.glowColor || '#60a5fa';
                 const wheelColors = { top: '#334155', front: '#0f172a', right: '#1e293b', back: '#020617', left: '#1e293b' };
 
                 // Local Z-Sorting for car components
@@ -614,10 +620,10 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     addCarPart(wp.x + wp.y, () => drawRotatedBox(wp.x, wp.y, bounce, 7, 3, 5, angle, wheelColors, drawWheelDetails));
                 });
 
-                addCarPart(pos.x + pos.y, () => drawRotatedBox(pos.x, pos.y, bounce + 2.5, 26, 14, 7, angle, bodyColors, drawBodyDetails));
+                addCarPart(pos.x + pos.y, () => drawRotatedBox(pos.x, pos.y, bounce + 2.5, 26, 14, 7, angle, bodyColor, drawBodyDetails));
 
                 const cp = getWorldPos(-2, 0);
-                addCarPart(cp.x + cp.y + 10, () => drawRotatedBox(cp.x, cp.y, bounce + 9.5, 14, 12, 6, angle, bodyColors, drawCabinDetails));
+                addCarPart(cp.x + cp.y + 10, () => drawRotatedBox(cp.x, cp.y, bounce + 9.5, 14, 12, 6, angle, bodyColor, drawCabinDetails));
 
                 carRenderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
             });
