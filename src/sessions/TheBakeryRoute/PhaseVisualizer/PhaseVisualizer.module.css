@@ -2,7 +2,7 @@
     position: absolute;
     inset: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     background: transparent;
     overflow: hidden;
     transition: all 0.5s ease;
@@ -52,7 +52,7 @@
     backdrop-filter: blur(12px);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     z-index: 10;
-    min-width: 220px;
+    width: 280px;
     transition: transform 0.3s ease;
 }
 
@@ -142,4 +142,27 @@
     font-size: 0.875rem;
     pointer-events: none;
     border: 1px solid;
+}
+
+@media (max-width: 1024px) {
+    .hudOverlay {
+        right: 1.5rem;
+        left: auto;
+        top: 1.5rem;
+        width: 240px;
+        padding: 0.75rem;
+    }
+
+    .hudValue {
+        font-size: 0.75rem;
+    }
+
+    .hudHeader {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .hudList {
+        gap: 0.5rem;
+    }
 }

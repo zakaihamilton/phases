@@ -113,3 +113,37 @@
     opacity: 1;
     transform: translateY(0);
 }
+
+@media (max-width: 1024px) {
+    .timelineContainer {
+        bottom: 2rem;
+        left: 2rem;
+        right: 2rem;
+        transform: none;
+        gap: 1.5rem;
+        padding: 1rem 2rem 2.75rem;
+        width: auto;
+        justify-content: center;
+        border-radius: 1.5rem;
+    }
+
+    .progressLine {
+        left: 3.625rem;
+        right: 3.625rem;
+        top: 2.55rem;
+    }
+
+    .timelineDot {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .dotIndex {
+        font-size: 1rem;
+    }
+
+    .dotLabel {
+        font-size: 0.7rem;
+        top: 3.25rem;
+    }
+}

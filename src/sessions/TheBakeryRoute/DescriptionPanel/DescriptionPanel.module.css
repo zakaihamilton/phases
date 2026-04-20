@@ -1,7 +1,7 @@
 .descPane {
     position: absolute;
     right: 2.5rem;
-    top: 5vh;
+    top: 5dvh;
     width: 35vw;
     background: rgba(15, 23, 42, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -26,23 +26,8 @@
     transform: translateY(0);
     width: 32vw;
     padding: 1.5rem;
-    height: 15vh;
+    height: 15dvh;
     background: rgba(15, 23, 42, 0.6);
-}
-
-@media (max-width: 1024px) {
-    .descPane {
-        width: calc(100% - 5rem);
-        bottom: 8rem;
-        top: auto;
-        right: 2.5rem;
-        left: 2.5rem;
-        transform: translateY(0);
-        padding: 2rem;
-        height: auto;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
 }
 
 .descTopGlow {
@@ -215,4 +200,65 @@
 .navBtn:disabled {
     opacity: 0.2;
     cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+    .descPane {
+        width: calc(100% - 5rem);
+        bottom: 18dvh;
+        top: auto;
+        right: 2.5rem;
+        left: 2.5rem;
+        transform: translateY(0);
+        padding: 1rem;
+        height: auto;
+        max-height: 60dvh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .descContentWrap {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .descTitle {
+        font-size: 1rem;
+    }
+
+    .phaseBadge {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.75rem;
+    }
+
+    .descCondition {
+        font-size: 0.65rem;
+        margin-bottom: 1rem;
+    }
+
+    .descText {
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .takeawayBox {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        border-radius: 1rem;
+    }
+
+    .takeawayTitle {
+        font-size: 0.7rem;
+    }
+
+    .takeawayText {
+        font-size: 0.85rem;
+    }
+
+    .navBtn {
+        padding: 1rem;
+        font-size: 0.7rem;
+    }
 }
