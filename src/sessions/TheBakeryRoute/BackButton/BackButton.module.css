@@ -1,22 +1,22 @@
 .root {
     pointer-events: auto;
-    /* Re-enable pointer events for the button */
     position: absolute;
-    left: 15px;
-    top: 15px;
+    left: 1.5rem;
+    top: 1.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(15, 23, 42, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #94a3b8;
-    padding: 0.75rem;
-    border-radius: 50%;
+    padding: 1rem;
+    border-radius: 1rem;
     cursor: pointer;
-    transition: all 200ms;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     width: fit-content;
     height: fit-content;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(12px);
+    z-index: 30;
 }
 
 .root:hover {
@@ -24,4 +24,5 @@
     color: white;
     border-color: rgba(255, 255, 255, 0.3);
     transform: translateX(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }

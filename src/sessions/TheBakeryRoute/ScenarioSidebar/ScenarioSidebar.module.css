@@ -1,62 +1,114 @@
 .timelineContainer {
     position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 3rem;
+    left: 2.5rem;
+    transform: none;
     display: flex;
-    gap: 1.5rem;
+    gap: 6rem;
     z-index: 20;
-    background: rgba(15, 23, 42, 0.6);
-    padding: 0.75rem 1.5rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    background: rgba(15, 23, 42, 0.4);
+    padding: 1.5rem 5rem 3rem;
+    border-radius: 2.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.4),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.progressLine {
+    position: absolute;
+    top: 3.05rem;
+    left: 6.625rem;
+    right: 6.625rem;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+
+.dotWrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
 }
 
 .timelineDot {
-    width: 3rem;
-    height: 3rem;
+    width: 3.25rem;
+    height: 3.25rem;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.4);
-    color: #94a3b8;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: #0f172a;
+    color: #64748b;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     padding: 0;
+    overflow: visible;
 }
 
 .timelineDot:hover {
-    border-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.4);
     color: white;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
 .timelineDotActive {
     border-color: transparent;
     color: white;
-    transform: scale(1.1);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    transform: scale(1.15) translateY(-4px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
 }
 
-.timelineDotActive:hover {
-    transform: scale(1.1) translateY(-2px);
+.timelineDotCompleted {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #e2e8f0;
 }
 
 .dotGlow {
     position: absolute;
-    inset: -2px;
+    inset: -3px;
     border-radius: 50%;
     z-index: -1;
-    opacity: 0.8;
+    opacity: 0.9;
+    filter: blur(4px);
+    animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { opacity: 0.6; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1.05); }
 }
 
 .dotIndex {
-    font-weight: 800;
-    font-size: 1.125rem;
+    font-weight: 900;
+    font-size: 1.25rem;
     z-index: 2;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.dotLabel {
+    position: absolute;
+    top: 4.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: white;
+    white-space: nowrap;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    pointer-events: none;
+    transform: translateY(4px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dotLabelActive {
+    opacity: 1;
+    transform: translateY(0);
 }

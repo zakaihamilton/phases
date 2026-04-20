@@ -3,24 +3,35 @@
     height: 100vh;
     overflow: hidden;
     position: relative;
-    font-family: system-ui, -apple-system, sans-serif;
-    transition: background 1s ease;
-    color: #e2e8f0;
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #f8fafc;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    background-color: #020617;
+}
+
+.appContainer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 50;
+    mix-blend-mode: overlay;
 }
 
 .appContainer * {
     box-sizing: border-box;
 }
 
-/* CANVAS PANE - FILLS EVERYTHING */
 .canvasPane {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* Below HUD elements */
+    z-index: 1;
 }

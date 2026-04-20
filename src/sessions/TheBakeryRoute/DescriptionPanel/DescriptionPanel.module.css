@@ -1,36 +1,44 @@
 .descPane {
     position: absolute;
-    right: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 450px;
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1.5rem;
+    right: 2.5rem;
+    top: 5vh;
+    width: 35vw;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 2rem;
     overflow: hidden;
-    box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+        0 40px 100px -20px rgba(0, 0, 0, 0.6),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
     display: flex;
     flex-direction: column;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 20;
     padding: 2.5rem;
+    height: 880px;
 }
 
 .descPaneCollapsed {
     top: 2rem;
+    right: 3rem;
     transform: translateY(0);
+    width: 30vw;
     padding: 1.5rem;
+    height: 110px;
+    background: rgba(15, 23, 42, 0.6);
 }
 
 @media (max-width: 1024px) {
     .descPane {
-        width: calc(100% - 4rem);
-        bottom: 7rem;
+        width: calc(100% - 5rem);
+        bottom: 8rem;
         top: auto;
+        right: 2.5rem;
+        left: 2.5rem;
         transform: translateY(0);
-        padding: 1.5rem;
+        padding: 2rem;
     }
 }
 
@@ -39,8 +47,9 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 6px;
+    height: 4px;
     z-index: 2;
+    opacity: 0.8;
 }
 
 .descHeader {
@@ -48,52 +57,53 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.phaseBadge {
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
 }
 
 .collapseBtn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    width: 48px;
+    height: 48px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .collapseBtn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
 }
 
 .descHeaderLeft {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.descIconWrap {
-    padding: 1rem;
-    border-radius: 50%;
-    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-    display: flex;
-}
-
-.descIconWrap svg {
-    width: 28px;
-    height: 28px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
 }
 
 .descTitle {
-    font-weight: 900;
+    font-weight: 800;
     color: white;
-    font-size: 2rem;
+    font-size: 2.25rem;
     margin: 0;
-    letter-spacing: -0.02em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
 }
 
 .descContentWrap {
@@ -101,55 +111,97 @@
 }
 
 .descInner {
-    padding-top: 0.5rem;
+    padding-top: 1rem;
 }
 
 .descCondition {
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-size: 1rem;
-    margin-bottom: 2rem;
+    letter-spacing: 0.2em;
+    font-size: 0.85rem;
+    margin-bottom: 2.5rem;
     margin-top: 0;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    opacity: 0.9;
 }
 
 .descText {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     line-height: 1.8;
-    color: #e2e8f0;
-    margin-bottom: 2.5rem;
+    color: #cbd5e1;
+    margin-bottom: 3rem;
     font-weight: 400;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .takeawayBox {
-    background: rgba(15, 23, 42, 0.6);
-    border-left: 4px solid #3b82f6;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
+    background: rgba(30, 41, 59, 0.4);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    margin-bottom: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.takeawayBox::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, #3b82f6, #60a5fa);
 }
 
 .takeawayHeader {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .takeawayTitle {
     font-weight: 800;
     color: #93c5fd;
     text-transform: uppercase;
-    letter-spacing: 0.15em;
-    font-size: 0.875rem;
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
 }
 
 .takeawayText {
-    color: #cbd5e1;
+    color: #94a3b8;
     font-style: italic;
     line-height: 1.7;
-    font-size: 1.125rem;
+    font-size: 1rem;
     margin: 0;
+}
+
+.navButtons {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.navBtn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navBtn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.navBtn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
 }

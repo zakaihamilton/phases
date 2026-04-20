@@ -44,7 +44,7 @@
 .hudOverlay {
     position: absolute;
     top: 1rem;
-    left: 1rem;
+    left: 6rem;
     background: rgba(15, 23, 42, 0.95);
     padding: 1rem;
     border-radius: 0.75rem;

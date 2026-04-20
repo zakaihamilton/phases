@@ -66,6 +66,8 @@ export default function TheBakeryRoute() {
 
             <DescriptionPanel
                 phase={activePhase}
+                phases={PHASES}
+                setActivePhaseId={setActivePhaseId}
                 isSidebarOpen={isSidebarOpen}
                 isDescriptionOpen={isDescriptionOpen}
                 setIsDescriptionOpen={setIsDescriptionOpen}
