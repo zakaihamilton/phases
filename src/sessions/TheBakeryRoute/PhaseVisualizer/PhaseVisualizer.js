@@ -74,7 +74,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             { x: 260, y: 400 }, { x: 160, y: 200 }, { x: 550, y: 500 }
         ];
 
-        const fireflies = Array.from({ length: 160 }).map(() => ({
+        const fireflies = Array.from({ length: 40 }).map(() => ({
             x: Math.random() * W, y: Math.random() * H, size: Math.random() * 2 + 0.8,
             twinkleSpeed: Math.random() * 0.04 + 0.02, phase: Math.random() * Math.PI * 2,
             vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4
@@ -317,14 +317,14 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 style={{ background: `radial-gradient(circle at center, ${phase.glowColor} 0%, transparent 70%)` }}
             />
 
-            <canvas 
-                ref={canvasRef} 
-                className={`${styles.canvasEl} ${!isDescriptionOpen ? styles.canvasElFill : ''}`} 
+            <canvas
+                ref={canvasRef}
+                className={`${styles.canvasEl} ${!isDescriptionOpen ? styles.canvasElFill : ''}`}
             />
 
             <div className={styles.hudOverlay}>
                 <div className={styles.hudHeader}>
-                    <Navigation size={18} color="#60a5fa" /> Environment HUD
+                    <Navigation size={18} color="#60a5fa" /> Legend
                 </div>
                 <div className={styles.hudList}>
                     <div className={styles.hudRow}>
