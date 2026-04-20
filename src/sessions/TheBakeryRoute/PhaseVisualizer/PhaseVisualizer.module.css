@@ -32,6 +32,12 @@
     object-fit: contain;
     object-position: left center;
     pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.canvasElFill {
+    object-fit: contain;
+    object-position: center center;
 }
 
 /* CANVAS HUD */

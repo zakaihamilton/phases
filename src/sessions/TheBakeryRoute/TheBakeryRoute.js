@@ -50,6 +50,7 @@ export default function TheBakeryRoute() {
                     phase={activePhase}
                     isExpanded={true}
                     isSuperExpanded={true}
+                    isDescriptionOpen={isDescriptionOpen}
                 />
             </div>
 

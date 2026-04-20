@@ -1,12 +1,14 @@
 import React from 'react';
-import { Route, Info } from 'lucide-react';
+import { Route, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import styles from './DescriptionPanel.module.css';
 
 const DescriptionPanel = ({
-    phase
+    phase,
+    isDescriptionOpen,
+    setIsDescriptionOpen
 }) => {
     return (
-        <div className={styles.descPane}>
+        <div className={`${styles.descPane} ${!isDescriptionOpen ? styles.descPaneCollapsed : ''}`}>
             <div className={styles.descTopGlow} style={{ background: phase.gradientHorizontal }} />
 
             <div className={styles.descHeader}>
@@ -18,9 +20,22 @@ const DescriptionPanel = ({
                         {phase.name}
                     </h3>
                 </div>
+                <button 
+                    onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
+                    className={styles.collapseBtn}
+                >
+                    {isDescriptionOpen ? <ChevronDown size={24} color="white" /> : <ChevronUp size={24} color="white" />}
+                </button>
             </div>
 
-            <div className={styles.descContentWrap}>
+            <div 
+                className={styles.descContentWrap} 
+                style={{
+                    maxHeight: isDescriptionOpen ? '1000px' : '0px',
+                    opacity: isDescriptionOpen ? 1 : 0,
+                    transition: 'all 0.5s ease-in-out'
+                }}
+            >
                 <div className={styles.descInner}>
                     <p
                         key={phase.id}

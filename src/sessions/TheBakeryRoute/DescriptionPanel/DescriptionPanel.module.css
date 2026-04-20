@@ -8,14 +8,20 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1.5rem;
     overflow: hidden;
-    box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0,0,0,0.5);
+    box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     display: flex;
     flex-direction: column;
-    transition: all 0.5s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 20;
     padding: 2.5rem;
+}
+
+.descPaneCollapsed {
+    top: 2rem;
+    transform: translateY(0);
+    padding: 1.5rem;
 }
 
 @media (max-width: 1024px) {
@@ -40,8 +46,27 @@
 .descHeader {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
     margin-bottom: 1.5rem;
+}
+
+.collapseBtn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.collapseBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .descHeaderLeft {
@@ -68,7 +93,7 @@
     font-size: 2rem;
     margin: 0;
     letter-spacing: -0.02em;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 .descContentWrap {
@@ -86,7 +111,7 @@
     font-size: 1rem;
     margin-bottom: 2rem;
     margin-top: 0;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 .descText {
@@ -95,7 +120,7 @@
     color: #e2e8f0;
     margin-bottom: 2.5rem;
     font-weight: 400;
-    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .takeawayBox {

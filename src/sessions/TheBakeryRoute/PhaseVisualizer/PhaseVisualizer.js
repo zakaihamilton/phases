@@ -2,8 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { Navigation } from 'lucide-react';
 import styles from './PhaseVisualizer.module.css';
 
-const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
+const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen }) => {
     const canvasRef = useRef(null);
+    const phaseRef = useRef(phase);
+
+    useEffect(() => {
+        phaseRef.current = phase;
+    }, [phase]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -114,6 +119,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
 
         const render = () => {
             frames++;
+            const currentPhase = phaseRef.current;
             ctx.fillStyle = '#020b06';
             ctx.fillRect(0, 0, W, H);
 
@@ -146,7 +152,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
                 for (let i = 0; i < 3; i++) { for (let j = 0; j < 4; j++) { ctx.fillRect(b.x + 10 + i * 18, b.y + 10 + j * 18, 10, 10); } }
             });
 
-            if (phase.hasDetour) {
+            if (currentPhase.hasDetour) {
                 drawPath(detourCurve, 36, '#1e293b');
                 drawPath(detourCurve, 3, '#334155', true);
             } else {
@@ -157,7 +163,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
 
             drawPath(mainCurve, 36, '#1e293b');
             drawPath(mainCurve, 30, '#0f172a');
-            drawPath(mainCurve, 5, phase.hasDesire ? 'rgba(217, 119, 6, 0.6)' : 'rgba(71, 85, 105, 0.5)', true);
+            drawPath(mainCurve, 5, currentPhase.hasDesire ? 'rgba(217, 119, 6, 0.6)' : 'rgba(71, 85, 105, 0.5)', true);
 
             ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
             crosswalks.forEach(cw => {
@@ -229,7 +235,8 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
                 }
             });
 
-            const pos = getBezierXY(t, mainCurve);
+            const currentT = Math.min(t, 1.0);
+            const pos = getBezierXY(currentT, mainCurve);
             const isNearBakery = Math.hypot(pos.x - BAKERY.x, pos.y - BAKERY.y) < 140;
 
             if (frames % 3 === 0) walkerTrail.push({ x: pos.x, y: pos.y, life: 1 });
@@ -238,25 +245,25 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
                 if (tr.life <= 0) walkerTrail.splice(index, 1);
                 else {
                     ctx.beginPath(); ctx.arc(tr.x, tr.y, 6 + (1 - tr.life) * 3, 0, Math.PI * 2);
-                    ctx.fillStyle = phase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`; ctx.fill();
+                    ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`; ctx.fill();
                 }
             });
 
-            ctx.fillStyle = phase.hasDesire ? '#F43F5E' : '#94A3B8';
-            ctx.shadowColor = phase.hasDesire ? '#FB7185' : 'transparent';
-            ctx.shadowBlur = phase.hasDesire ? 25 : 0;
+            ctx.fillStyle = currentPhase.hasDesire ? '#F43F5E' : '#94A3B8';
+            ctx.shadowColor = currentPhase.hasDesire ? '#FB7185' : 'transparent';
+            ctx.shadowBlur = currentPhase.hasDesire ? 25 : 0;
 
             const bounce = Math.abs(Math.sin(frames * 0.25)) * 4;
             ctx.beginPath(); ctx.arc(pos.x, pos.y - bounce, 10, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(pos.x, pos.y - bounce, 4, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
 
-            if (isNearBakery && frames % (phase.hasDesire ? 5 : 12) === 0) {
+            if (isNearBakery && frames % (currentPhase.hasDesire ? 5 : 12) === 0) {
                 emotionParticles.push({
                     x: pos.x, y: pos.y - 18 - bounce,
-                    vx: phase.hasDesire ? (Math.random() * 2 + 0.8) : (Math.random() * -0.8 - 0.5),
+                    vx: currentPhase.hasDesire ? (Math.random() * 2 + 0.8) : (Math.random() * -0.8 - 0.5),
                     vy: Math.random() * -2.5 - 1.5,
-                    life: 1, type: phase.hasDesire ? 'desire' : 'indifferent', scale: Math.random() * 0.6 + 0.6
+                    life: 1, type: currentPhase.hasDesire ? 'desire' : 'indifferent', scale: Math.random() * 0.6 + 0.6
                 });
             }
 
@@ -283,13 +290,13 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
             });
 
             t += 0.0022;
-            if (t >= 1.05) { t = 0; walkerTrail = []; emotionParticles = []; }
+            if (t >= 1.25) { t = 0; walkerTrail = []; emotionParticles = []; }
             animationFrameId = requestAnimationFrame(render);
         };
 
         render();
         return () => cancelAnimationFrame(animationFrameId);
-    }, [phase]);
+    }, []);
 
     // Determine width classes
     const widthClass = isSuperExpanded
@@ -303,7 +310,10 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded }) => {
                 style={{ background: `radial-gradient(circle at center, ${phase.glowColor} 0%, transparent 70%)` }}
             />
 
-            <canvas ref={canvasRef} className={styles.canvasEl} />
+            <canvas 
+                ref={canvasRef} 
+                className={`${styles.canvasEl} ${!isDescriptionOpen ? styles.canvasElFill : ''}`} 
+            />
 
             <div className={styles.hudOverlay}>
                 <div className={styles.hudHeader}>
