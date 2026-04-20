@@ -94,7 +94,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         }));
 
         let t = 0;
-        let walkerTrail = [];
+        let trail = [];
         let aromaParticles = [];
         let emotionParticles = [];
         let frames = 0;
@@ -133,14 +133,14 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
 
             if (currentPhase.id !== lastPhaseId) {
                 t = 0;
-                walkerTrail = [];
+                trail = [];
                 aromaParticles = [];
                 emotionParticles = [];
                 lastPhaseId = currentPhase.id;
             }
 
             // === 1. Background ===
-            ctx.setTransform(scale, 0, 0, scale, 0, 0); // Reset transform
+            ctx.setTransform(scale, 0, 0, scale, 0, 0);
             ctx.fillStyle = '#020b06';
             ctx.fillRect(0, 0, W, H);
 
@@ -201,7 +201,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             const renderables = [];
             const obj = (depth, fn) => renderables.push({ depth, draw: fn });
 
-            // Mist patches (flat but floating slightly)
+            // Mist patches
             mistPatches.forEach(mist => {
                 mist.x += mist.speed;
                 if (mist.x > W + mist.size * 2) { mist.x = -mist.size * 2; mist.y = Math.random() * H; }
@@ -233,18 +233,18 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     const tr = toIso(bench.x + bench.w, bench.y, z);
                     const drop = toIso(bench.x, bench.y, 0).y - toIso(bench.x, bench.y, z).y;
 
-                    ctx.fillStyle = '#451a03'; // legs
+                    ctx.fillStyle = '#451a03';
                     ctx.fillRect(tl.x - 1, tl.y, 2, drop);
                     ctx.fillRect(tr.x - 1, tr.y, 2, drop);
                     ctx.fillRect(bl.x - 1, bl.y, 2, drop);
                     ctx.fillRect(br.x - 1, br.y, 2, drop);
 
-                    ctx.fillStyle = bench.color; // top
+                    ctx.fillStyle = bench.color;
                     ctx.beginPath(); ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y); ctx.fill();
                 });
             });
 
-            // Buildings (Improved)
+            // Buildings
             buildings.forEach(b => {
                 obj(b.x + b.w / 2 + b.y + b.h / 2, () => {
                     const topL = toIso(b.x, b.y, b.z);
@@ -256,29 +256,24 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     const gBotR = toIso(b.x + b.w, b.y + b.h, 0);
                     const gBotL = toIso(b.x, b.y + b.h, 0);
 
-                    // Ground Shadow
                     ctx.fillStyle = 'rgba(0,0,0,0.4)';
                     const shadowL = toIso(b.x - 15, b.y + b.h + 15, 0);
                     const shadowR = toIso(b.x + b.w - 5, b.y + b.h + 20, 0);
                     ctx.beginPath(); ctx.moveTo(gBotL.x, gBotL.y); ctx.lineTo(gBotR.x, gBotR.y);
                     ctx.lineTo(shadowR.x, shadowR.y); ctx.lineTo(shadowL.x, shadowL.y); ctx.fill();
 
-                    // Screen Left face
                     ctx.fillStyle = b.colors[2];
                     ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
                     ctx.lineTo(gBotR.x, gBotR.y); ctx.lineTo(gTopR.x, gTopR.y); ctx.fill();
 
-                    // Screen Right face
                     ctx.fillStyle = b.colors[1];
                     ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
                     ctx.lineTo(gBotR.x, gBotR.y); ctx.lineTo(gBotL.x, gBotL.y); ctx.fill();
 
-                    // Windows on Screen Right face
                     const winRows = Math.floor(b.z / 25);
                     const winCols = Math.floor(b.w / 18);
                     for (let r = 0; r < winRows; r++) {
                         for (let c = 0; c < winCols; c++) {
-                            // Pseudo-randomly light up some windows
                             const isLit = (b.x + b.y + r + c) % 7 === 0;
                             ctx.fillStyle = isLit ? 'rgba(253, 224, 71, 0.45)' : 'rgba(255, 255, 255, 0.03)';
 
@@ -295,7 +290,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                         }
                     }
 
-                    // Windows on Screen Left face
                     const winColsL = Math.floor(b.h / 18);
                     for (let r = 0; r < winRows; r++) {
                         for (let c = 0; c < winColsL; c++) {
@@ -315,12 +309,10 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                         }
                     }
 
-                    // Top face
                     ctx.fillStyle = b.colors[0];
                     ctx.beginPath(); ctx.moveTo(topL.x, topL.y); ctx.lineTo(topR.x, topR.y);
                     ctx.lineTo(botR.x, botR.y); ctx.lineTo(botL.x, botL.y); ctx.fill();
 
-                    // Roof Trim
                     ctx.fillStyle = 'rgba(0,0,0,0.15)';
                     const pad = 4;
                     const iTopL = toIso(b.x + pad, b.y + pad, b.z);
@@ -355,7 +347,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ctx.fillStyle = '#2563eb'; ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y); ctx.lineTo(pk.x, pk.y); ctx.fill();
                 ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y); ctx.lineTo(pk.x, pk.y); ctx.fill();
 
-                // Door (Screen right face)
                 ctx.fillStyle = '#60a5fa'; ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 10;
                 const doorTL = toIso(homeX + homeW / 2 - 8, homeY + homeH, 18);
                 const doorTR = toIso(homeX + homeW / 2 + 8, homeY + homeH, 18);
@@ -375,38 +366,32 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 const botR = toIso(bakX + bakW, bakY + bakH, z);
                 const botL = toIso(bakX, bakY + bakH, z);
 
-                // Screen Left Face
                 ctx.fillStyle = '#451a03';
                 ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
                 ctx.lineTo(toIso(bakX + bakW, bakY + bakH, 0).x, toIso(bakX + bakW, bakY + bakH, 0).y);
                 ctx.lineTo(toIso(bakX + bakW, bakY, 0).x, toIso(bakX + bakW, bakY, 0).y); ctx.fill();
 
-                // Screen Right Face
                 ctx.fillStyle = '#78350f';
                 ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
                 ctx.lineTo(toIso(bakX + bakW, bakY + bakH, 0).x, toIso(bakX + bakW, bakY + bakH, 0).y);
                 ctx.lineTo(toIso(bakX, bakY + bakH, 0).x, toIso(bakX, bakY + bakH, 0).y); ctx.fill();
 
-                // Top
                 ctx.fillStyle = '#92400e';
                 ctx.beginPath(); ctx.moveTo(topL.x, topL.y); ctx.lineTo(topR.x, topR.y);
                 ctx.lineTo(botR.x, botR.y); ctx.lineTo(botL.x, botL.y); ctx.fill();
 
-                // Awning on SCREEN LEFT face (X = bakX + bakW)
                 const faceX = bakX + bakW;
                 for (let i = 0; i < 7; i++) {
                     ctx.fillStyle = i % 2 === 0 ? '#ef4444' : '#fef2f2';
                     const sliceH = bakH / 7;
                     const aTL = toIso(faceX, bakY + i * sliceH, z - 8);
                     const aTR = toIso(faceX, bakY + (i + 1) * sliceH, z - 8);
-                    // Protrude out in local X+ direction (Screen Left)
                     const aBR = toIso(faceX + 15, bakY + (i + 1) * sliceH, z - 18);
                     const aBL = toIso(faceX + 15, bakY + i * sliceH, z - 18);
                     ctx.beginPath(); ctx.moveTo(aTL.x, aTL.y); ctx.lineTo(aTR.x, aTR.y);
                     ctx.lineTo(aBR.x, aBR.y); ctx.lineTo(aBL.x, aBL.y); ctx.fill();
                 }
 
-                // Window glowing on SCREEN LEFT face
                 const wTL = toIso(faceX, bakY + bakH * 0.2, z - 25);
                 const wTR = toIso(faceX, bakY + bakH * 0.8, z - 25);
                 const wBR = toIso(faceX, bakY + bakH * 0.8, z - 45);
@@ -416,7 +401,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ctx.shadowBlur = 0;
             });
 
-            // Trees (Improved)
+            // Trees
             trees.forEach(tree => {
                 obj(tree.x + tree.y, () => {
                     const trunkH = 15 + tree.size * 0.3;
@@ -424,13 +409,11 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     const trunkTop = toIso(tree.x, tree.y, trunkH);
                     const canopyCenter = toIso(tree.x, tree.y, trunkH + tree.size * 0.4);
 
-                    // Tree Ground Shadow
                     ctx.fillStyle = 'rgba(0,0,0,0.3)';
                     ctx.beginPath();
                     ctx.ellipse(base.x, base.y, tree.size * 0.8, tree.size * 0.4, 0, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Tapered Trunk
                     ctx.fillStyle = '#451a03';
                     ctx.beginPath();
                     const trunkBottomW = 3 + tree.size * 0.15;
@@ -441,26 +424,23 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     ctx.lineTo(trunkTop.x - trunkTopW, trunkTop.y);
                     ctx.fill();
 
-                    // Canopy (Clustered overlapping circles)
                     const clusters = [
                         { dx: -0.3, dy: 0, dz: -0.2, s: 0.7 },
                         { dx: 0.3, dy: 0, dz: -0.2, s: 0.7 },
                         { dx: 0, dy: -0.3, dz: -0.2, s: 0.75 },
                         { dx: 0, dy: 0, dz: 0.15, s: 0.85 },
-                        { dx: 0, dy: 0, dz: 0, s: 1.0 } // Center cluster
+                        { dx: 0, dy: 0, dz: 0, s: 1.0 }
                     ];
 
                     clusters.forEach(c => {
                         const cx = canopyCenter.x + c.dx * tree.size;
                         const cy = canopyCenter.y + c.dy * tree.size - c.dz * tree.size;
 
-                        // Base color
                         ctx.fillStyle = tree.color;
                         ctx.beginPath();
                         ctx.arc(cx, cy, tree.size * 0.65 * c.s, 0, Math.PI * 2);
                         ctx.fill();
 
-                        // Soft highlight
                         ctx.fillStyle = 'rgba(255,255,255,0.06)';
                         ctx.beginPath();
                         ctx.arc(cx - tree.size * 0.15 * c.s, cy - tree.size * 0.15 * c.s, tree.size * 0.4 * c.s, 0, Math.PI * 2);
@@ -480,42 +460,169 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 });
             });
 
-            // Walker pos
+            // Car pos
             const currentT = Math.min(t, 1.0);
             const pos = getBezierXY(currentT, mainCurve);
+
+            const nextT = Math.min(t + 0.01, 1.0);
+            const nextPos = getBezierXY(nextT, mainCurve);
+            let angle = Math.atan2(nextPos.y - pos.y, nextPos.x - pos.x);
+            if (t >= 0.99) {
+                const prevPos = getBezierXY(0.98, mainCurve);
+                angle = Math.atan2(pos.y - prevPos.y, pos.x - prevPos.x);
+            }
+
             const isNearBakery = Math.hypot(pos.x - BAKERY.x, pos.y - BAKERY.y) < 140;
 
-            if (frames % 3 === 0) walkerTrail.push({ x: pos.x, y: pos.y, life: 1 });
-            walkerTrail.forEach((tr, index) => {
+            const getWorldPos = (localX, localY) => ({
+                x: pos.x + localX * Math.cos(angle) - localY * Math.sin(angle),
+                y: pos.y + localX * Math.sin(angle) + localY * Math.cos(angle)
+            });
+
+            if (frames % 3 === 0) {
+                const tW = 5.5;
+                const rearPos = getWorldPos(-8, 0); // Start tracks at rear wheels
+                trail.push({
+                    lx: rearPos.x - Math.sin(angle) * tW, ly: rearPos.y + Math.cos(angle) * tW,
+                    rx: rearPos.x + Math.sin(angle) * tW, ry: rearPos.y - Math.cos(angle) * tW,
+                    life: 1
+                });
+            }
+
+            trail.forEach((tr, index) => {
                 tr.life -= 0.025;
-                if (tr.life <= 0) walkerTrail.splice(index, 1);
+                if (tr.life <= 0) trail.splice(index, 1);
                 else {
-                    obj(tr.x + tr.y, () => {
-                        const trPos = toIso(tr.x, tr.y, 2);
-                        ctx.beginPath(); ctx.arc(trPos.x, trPos.y, (6 + (1 - tr.life) * 3) * 0.7, 0, Math.PI * 2);
-                        ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`; ctx.fill();
+                    obj(tr.lx + tr.ly, () => {
+                        const trL = toIso(tr.lx, tr.ly, 1);
+                        const trR = toIso(tr.rx, tr.ry, 1);
+                        ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`;
+                        ctx.beginPath(); ctx.arc(trL.x, trL.y, 2, 0, Math.PI * 2); ctx.fill();
+                        ctx.beginPath(); ctx.arc(trR.x, trR.y, 2, 0, Math.PI * 2); ctx.fill();
                     });
                 }
             });
 
-            const bounce = Math.abs(Math.sin(frames * 0.25)) * 6;
+            // Enhanced Face Detailing Functions
+            const drawInsetPoly = (pA, pB, pC, pD, insetT, color) => {
+                const cx = (pA.x + pB.x + pC.x + pD.x) / 4;
+                const cy = (pA.y + pB.y + pC.y + pD.y) / 4;
+                const ins = (p) => ({ x: p.x + (cx - p.x) * insetT, y: p.y + (cy - p.y) * insetT });
+                ctx.fillStyle = color;
+                ctx.beginPath(); ctx.moveTo(ins(pA).x, ins(pA).y); ctx.lineTo(ins(pB).x, ins(pB).y);
+                ctx.lineTo(ins(pC).x, ins(pC).y); ctx.lineTo(ins(pD).x, ins(pD).y); ctx.fill();
+            };
+
+            const drawCabinDetails = (fIndex, pA, pB, pC, pD) => {
+                if (fIndex === 4) return; // Roof
+                const winColor = 'rgba(200, 230, 255, 0.8)';
+                const frameColor = 'rgba(20, 30, 40, 0.9)';
+                drawInsetPoly(pA, pB, pC, pD, 0.2, frameColor);
+                drawInsetPoly(pA, pB, pC, pD, 0.3, winColor);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.beginPath();
+                const cx = (pA.x + pB.x + pC.x + pD.x) / 4;
+                const cy = (pA.y + pB.y + pC.y + pD.y) / 4;
+                ctx.moveTo(pA.x + (cx - pA.x) * 0.3, pA.y + (cy - pA.y) * 0.3);
+                ctx.lineTo(pC.x + (cx - pC.x) * 0.3, pC.y + (cy - pC.y) * 0.3); ctx.stroke();
+            };
+
+            const drawBodyDetails = (fIndex, pA, pB, pC, pD) => {
+                const lerp = (p1, p2, t) => ({ x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t });
+                if (fIndex === 0) { // Headlights
+                    drawInsetPoly(pA, pB, pC, pD, 0.35, '#111'); // Grill
+                    const hl1 = lerp(lerp(pA, pB, 0.2), lerp(pD, pC, 0.2), 0.4);
+                    const hl2 = lerp(lerp(pA, pB, 0.8), lerp(pD, pC, 0.8), 0.4);
+                    ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#fef08a'; ctx.shadowBlur = 12;
+                    ctx.beginPath(); ctx.arc(hl1.x, hl1.y, 2.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(hl2.x, hl2.y, 2.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else if (fIndex === 2) { // Taillights
+                    const tl1 = lerp(lerp(pA, pB, 0.15), lerp(pD, pC, 0.15), 0.3);
+                    const tl2 = lerp(lerp(pA, pB, 0.85), lerp(pD, pC, 0.85), 0.3);
+                    ctx.fillStyle = '#f87171'; ctx.shadowColor = '#dc2626'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(tl1.x, tl1.y, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(tl2.x, tl2.y, 2, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            };
+
+            const drawWheelDetails = (fIndex, pA, pB, pC, pD) => {
+                if (fIndex === 1 || fIndex === 3) drawInsetPoly(pA, pB, pC, pD, 0.4, '#94a3b8'); // Hubcaps
+            };
+
+            const drawRotatedBox = (cx, cy, cz, l, w, h, boxAngle, colors, drawFaceDetails = null) => {
+                const pts = [
+                    { x: l / 2, y: -w / 2 }, // front-left
+                    { x: l / 2, y: w / 2 }, // front-right
+                    { x: -l / 2, y: w / 2 }, // back-right
+                    { x: -l / 2, y: -w / 2 }  // back-left
+                ].map(p => {
+                    const rx = p.x * Math.cos(boxAngle) - p.y * Math.sin(boxAngle);
+                    const ry = p.x * Math.sin(boxAngle) + p.y * Math.cos(boxAngle);
+                    return { x: cx + rx, y: cy + ry };
+                });
+
+                const top = pts.map(p => toIso(p.x, p.y, cz + h));
+                const bot = pts.map(p => toIso(p.x, p.y, cz));
+
+                const faces = [
+                    { p1: 0, p2: 1, c: colors.front, index: 0 },
+                    { p1: 1, p2: 2, c: colors.right, index: 1 },
+                    { p1: 2, p2: 3, c: colors.back, index: 2 },
+                    { p1: 3, p2: 0, c: colors.left, index: 3 }
+                ];
+
+                faces.forEach((f) => { f.z = bot[f.p1].y + bot[f.p2].y; });
+                faces.sort((a, b) => a.z - b.z);
+
+                faces.forEach(f => {
+                    ctx.fillStyle = f.c; ctx.beginPath();
+                    ctx.moveTo(top[f.p1].x, top[f.p1].y); ctx.lineTo(top[f.p2].x, top[f.p2].y);
+                    ctx.lineTo(bot[f.p2].x, bot[f.p2].y); ctx.lineTo(bot[f.p1].x, bot[f.p1].y); ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
+                    if (drawFaceDetails) drawFaceDetails(f.index, top[f.p1], top[f.p2], bot[f.p2], bot[f.p1]);
+                });
+
+                ctx.fillStyle = colors.top; ctx.beginPath();
+                ctx.moveTo(top[0].x, top[0].y); ctx.lineTo(top[1].x, top[1].y);
+                ctx.lineTo(top[2].x, top[2].y); ctx.lineTo(top[3].x, top[3].y); ctx.fill(); ctx.stroke();
+                if (drawFaceDetails) drawFaceDetails(4, top[0], top[1], top[2], top[3]);
+            };
+
+            const bounce = Math.abs(Math.sin(frames * 0.4)) * 1.5;
             obj(pos.x + pos.y, () => {
-                const wPos = toIso(pos.x, pos.y, bounce + 10);
                 const shadow = toIso(pos.x, pos.y, 0);
-
                 ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.beginPath(); ctx.ellipse(shadow.x, shadow.y, 8 - bounce * 0.3, 4 - bounce * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(shadow.x, shadow.y, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
 
-                ctx.fillStyle = currentPhase.hasDesire ? '#F43F5E' : '#94A3B8';
-                ctx.shadowColor = currentPhase.hasDesire ? '#FB7185' : 'transparent';
-                ctx.shadowBlur = currentPhase.hasDesire ? 15 : 0;
-                ctx.beginPath(); ctx.arc(wPos.x, wPos.y, 6, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(wPos.x, wPos.y - 2, 2.5, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowBlur = 0;
+                const hue = currentPhase.hasDesire ? 343 : 215;
+                const sat = currentPhase.hasDesire ? 85 : 20;
+                const bodyColors = {
+                    top: `hsl(${hue}, ${sat}%, 55%)`, front: `hsl(${hue}, ${sat}%, 45%)`,
+                    right: `hsl(${hue}, ${sat}%, 35%)`, back: `hsl(${hue}, ${sat}%, 25%)`, left: `hsl(${hue}, ${sat}%, 35%)`
+                };
+                const wheelColors = { top: '#334155', front: '#0f172a', right: '#1e293b', back: '#020617', left: '#1e293b' };
+
+                // Local Z-Sorting for car components
+                const carRenderables = [];
+                const addCarPart = (zDepth, fn) => carRenderables.push({ depth: zDepth, draw: fn });
+
+                const wheels = [{ lx: 8, ly: -6.5 }, { lx: 8, ly: 6.5 }, { lx: -8, ly: -6.5 }, { lx: -8, ly: 6.5 }];
+                wheels.forEach(w => {
+                    const wp = getWorldPos(w.lx, w.ly);
+                    addCarPart(wp.x + wp.y, () => drawRotatedBox(wp.x, wp.y, bounce, 7, 3, 5, angle, wheelColors, drawWheelDetails));
+                });
+
+                addCarPart(pos.x + pos.y, () => drawRotatedBox(pos.x, pos.y, bounce + 2.5, 26, 14, 7, angle, bodyColors, drawBodyDetails));
+
+                const cp = getWorldPos(-2, 0);
+                addCarPart(cp.x + cp.y + 10, () => drawRotatedBox(cp.x, cp.y, bounce + 9.5, 14, 12, 6, angle, bodyColors, drawCabinDetails));
+
+                carRenderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
             });
 
             if (frames % 5 === 0) {
-                // Emit from bakery awning block
                 aromaParticles.push({
                     x: bakX + bakW + 12, y: bakY + bakH / 2, z: bakZ + 10,
                     vx: (Math.random() * 2.5) + 0.8, vy: (Math.random() * 1.2) + 0.5,
@@ -569,11 +676,10 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 }
             });
 
-            // Draw all sorted objects
             renderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
 
             t += 0.0022;
-            if (t >= 1.25) { t = 0; walkerTrail = []; emotionParticles = []; }
+            if (t >= 1.25) { t = 0; trail = []; emotionParticles = []; }
             animationFrameId = requestAnimationFrame(render);
         };
 
@@ -581,7 +687,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         return () => cancelAnimationFrame(animationFrameId);
     }, [phase]);
 
-    // Determine width classes
     const widthClass = isSuperExpanded
         ? styles.canvasMaxWidthSuper
         : (isExpanded ? styles.canvasMaxWidthExpanded : styles.canvasMaxWidthNormal);
