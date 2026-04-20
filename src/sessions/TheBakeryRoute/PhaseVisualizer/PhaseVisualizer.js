@@ -288,9 +288,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                         ctx.bezierCurveTo(-36, -18, -36, 6, -36, 6); ctx.bezierCurveTo(-36, 24, -12, 36, 0, 48);
                         ctx.bezierCurveTo(12, 36, 36, 24, 36, 6); ctx.bezierCurveTo(36, 6, 36, -18, 18, -18);
                         ctx.bezierCurveTo(6, -18, 0, -4, 0, 0); ctx.fill(); ctx.restore();
-
-                        ctx.strokeStyle = `rgba(251, 113, 133, ${ep.life * 0.4})`; ctx.lineWidth = 1.5;
-                        ctx.beginPath(); ctx.moveTo(pos.x, pos.y); ctx.lineTo(BAKERY.x, BAKERY.y); ctx.stroke();
                     } else {
                         ctx.fillStyle = '#64748B'; ctx.beginPath(); ctx.arc(ep.x, ep.y, 4 * ep.scale, 0, Math.PI * 2); ctx.fill();
                         ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ep.x, ep.y, 10 * ep.scale - ep.life * 2, 0, Math.PI * 2); ctx.stroke();
