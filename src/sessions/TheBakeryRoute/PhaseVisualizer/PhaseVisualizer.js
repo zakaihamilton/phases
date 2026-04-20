@@ -268,7 +268,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(pos.x, pos.y - bounce, 4, 0, Math.PI * 2); ctx.fill();
             ctx.shadowBlur = 0;
 
-            if (isNearBakery && frames % (currentPhase.hasDesire ? 5 : 12) === 0) {
+            if (isNearBakery && frames % (currentPhase.hasDesire ? 20 : 40) === 0) {
                 emotionParticles.push({
                     x: pos.x, y: pos.y - 18 - bounce,
                     vx: currentPhase.hasDesire ? (Math.random() * 2 + 0.8) : (Math.random() * -0.8 - 0.5),
@@ -281,7 +281,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ep.x += ep.vx; ep.y += ep.vy; ep.life -= 0.012;
                 if (ep.life <= 0) emotionParticles.splice(index, 1);
                 else {
-                    ctx.globalAlpha = ep.life;
+                    ctx.globalAlpha = ep.life * 0.4;
                     if (ep.type === 'desire') {
                         ctx.save(); ctx.translate(ep.x, ep.y); ctx.scale(ep.scale, ep.scale); ctx.fillStyle = '#FDA4AF';
                         ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -4, -6, -18, -18, -18);
