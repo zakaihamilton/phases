@@ -155,7 +155,6 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             grassTufts.forEach(grass => {
                 ctx.beginPath();
                 ctx.moveTo(grass.x, grass.y);
-                // Draw flat line segment to simulate texture
                 ctx.lineTo(grass.x + 8, grass.y + 8);
                 ctx.stroke();
             });
@@ -245,7 +244,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 });
             });
 
-            // Buildings
+            // Buildings (Improved)
             buildings.forEach(b => {
                 obj(b.x + b.w / 2 + b.y + b.h / 2, () => {
                     const topL = toIso(b.x, b.y, b.z);
@@ -253,22 +252,83 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     const botR = toIso(b.x + b.w, b.y + b.h, b.z);
                     const botL = toIso(b.x, b.y + b.h, b.z);
 
+                    const gTopR = toIso(b.x + b.w, b.y, 0);
+                    const gBotR = toIso(b.x + b.w, b.y + b.h, 0);
+                    const gBotL = toIso(b.x, b.y + b.h, 0);
+
+                    // Ground Shadow
+                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                    const shadowL = toIso(b.x - 15, b.y + b.h + 15, 0);
+                    const shadowR = toIso(b.x + b.w - 5, b.y + b.h + 20, 0);
+                    ctx.beginPath(); ctx.moveTo(gBotL.x, gBotL.y); ctx.lineTo(gBotR.x, gBotR.y);
+                    ctx.lineTo(shadowR.x, shadowR.y); ctx.lineTo(shadowL.x, shadowL.y); ctx.fill();
+
                     // Screen Left face
                     ctx.fillStyle = b.colors[2];
                     ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
-                    ctx.lineTo(toIso(b.x + b.w, b.y + b.h, 0).x, toIso(b.x + b.w, b.y + b.h, 0).y);
-                    ctx.lineTo(toIso(b.x + b.w, b.y, 0).x, toIso(b.x + b.w, b.y, 0).y); ctx.fill();
+                    ctx.lineTo(gBotR.x, gBotR.y); ctx.lineTo(gTopR.x, gTopR.y); ctx.fill();
 
                     // Screen Right face
                     ctx.fillStyle = b.colors[1];
                     ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
-                    ctx.lineTo(toIso(b.x + b.w, b.y + b.h, 0).x, toIso(b.x + b.w, b.y + b.h, 0).y);
-                    ctx.lineTo(toIso(b.x, b.y + b.h, 0).x, toIso(b.x, b.y + b.h, 0).y); ctx.fill();
+                    ctx.lineTo(gBotR.x, gBotR.y); ctx.lineTo(gBotL.x, gBotL.y); ctx.fill();
+
+                    // Windows on Screen Right face
+                    const winRows = Math.floor(b.z / 25);
+                    const winCols = Math.floor(b.w / 18);
+                    for (let r = 0; r < winRows; r++) {
+                        for (let c = 0; c < winCols; c++) {
+                            // Pseudo-randomly light up some windows
+                            const isLit = (b.x + b.y + r + c) % 7 === 0;
+                            ctx.fillStyle = isLit ? 'rgba(253, 224, 71, 0.45)' : 'rgba(255, 255, 255, 0.03)';
+
+                            const wZ = 20 + r * 22;
+                            const wX = b.x + 8 + c * 16;
+
+                            const wTL = toIso(wX, b.y + b.h, wZ + 12);
+                            const wTR = toIso(wX + 8, b.y + b.h, wZ + 12);
+                            const wBR = toIso(wX + 8, b.y + b.h, wZ);
+                            const wBL = toIso(wX, b.y + b.h, wZ);
+
+                            ctx.beginPath(); ctx.moveTo(wTL.x, wTL.y); ctx.lineTo(wTR.x, wTR.y);
+                            ctx.lineTo(wBR.x, wBR.y); ctx.lineTo(wBL.x, wBL.y); ctx.fill();
+                        }
+                    }
+
+                    // Windows on Screen Left face
+                    const winColsL = Math.floor(b.h / 18);
+                    for (let r = 0; r < winRows; r++) {
+                        for (let c = 0; c < winColsL; c++) {
+                            const isLit = (b.x + b.y + r + c * 2) % 9 === 0;
+                            ctx.fillStyle = isLit ? 'rgba(253, 224, 71, 0.3)' : 'rgba(255, 255, 255, 0.015)';
+
+                            const wZ = 20 + r * 22;
+                            const wY = b.y + 8 + c * 16;
+
+                            const wTL = toIso(b.x + b.w, wY, wZ + 12);
+                            const wTR = toIso(b.x + b.w, wY + 8, wZ + 12);
+                            const wBR = toIso(b.x + b.w, wY + 8, wZ);
+                            const wBL = toIso(b.x + b.w, wY, wZ);
+
+                            ctx.beginPath(); ctx.moveTo(wTL.x, wTL.y); ctx.lineTo(wTR.x, wTR.y);
+                            ctx.lineTo(wBR.x, wBR.y); ctx.lineTo(wBL.x, wBL.y); ctx.fill();
+                        }
+                    }
 
                     // Top face
                     ctx.fillStyle = b.colors[0];
                     ctx.beginPath(); ctx.moveTo(topL.x, topL.y); ctx.lineTo(topR.x, topR.y);
                     ctx.lineTo(botR.x, botR.y); ctx.lineTo(botL.x, botL.y); ctx.fill();
+
+                    // Roof Trim
+                    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                    const pad = 4;
+                    const iTopL = toIso(b.x + pad, b.y + pad, b.z);
+                    const iTopR = toIso(b.x + b.w - pad, b.y + pad, b.z);
+                    const iBotR = toIso(b.x + b.w - pad, b.y + b.h - pad, b.z);
+                    const iBotL = toIso(b.x + pad, b.y + b.h - pad, b.z);
+                    ctx.beginPath(); ctx.moveTo(iTopL.x, iTopL.y); ctx.lineTo(iTopR.x, iTopR.y);
+                    ctx.lineTo(iBotR.x, iBotR.y); ctx.lineTo(iBotL.x, iBotL.y); ctx.fill();
                 });
             });
 
@@ -356,18 +416,56 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ctx.shadowBlur = 0;
             });
 
-            // Trees
+            // Trees (Improved)
             trees.forEach(tree => {
                 obj(tree.x + tree.y, () => {
-                    const trunkH = 20;
-                    const trunk = toIso(tree.x, tree.y, 0);
+                    const trunkH = 15 + tree.size * 0.3;
+                    const base = toIso(tree.x, tree.y, 0);
                     const trunkTop = toIso(tree.x, tree.y, trunkH);
-                    const canopy = toIso(tree.x, tree.y, trunkH + tree.size * 0.5);
+                    const canopyCenter = toIso(tree.x, tree.y, trunkH + tree.size * 0.4);
 
-                    ctx.strokeStyle = '#451a03'; ctx.lineWidth = 4;
-                    ctx.beginPath(); ctx.moveTo(trunk.x, trunk.y); ctx.lineTo(trunkTop.x, trunkTop.y); ctx.stroke();
-                    ctx.fillStyle = tree.color; ctx.beginPath(); ctx.arc(canopy.x, canopy.y, tree.size * 0.8, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(canopy.x - tree.size * 0.2, canopy.y + tree.size * 0.2, tree.size * 0.5, 0, Math.PI * 2); ctx.fill();
+                    // Tree Ground Shadow
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(base.x, base.y, tree.size * 0.8, tree.size * 0.4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Tapered Trunk
+                    ctx.fillStyle = '#451a03';
+                    ctx.beginPath();
+                    const trunkBottomW = 3 + tree.size * 0.15;
+                    const trunkTopW = 1.5 + tree.size * 0.08;
+                    ctx.moveTo(base.x - trunkBottomW, base.y);
+                    ctx.lineTo(base.x + trunkBottomW, base.y);
+                    ctx.lineTo(trunkTop.x + trunkTopW, trunkTop.y);
+                    ctx.lineTo(trunkTop.x - trunkTopW, trunkTop.y);
+                    ctx.fill();
+
+                    // Canopy (Clustered overlapping circles)
+                    const clusters = [
+                        { dx: -0.3, dy: 0, dz: -0.2, s: 0.7 },
+                        { dx: 0.3, dy: 0, dz: -0.2, s: 0.7 },
+                        { dx: 0, dy: -0.3, dz: -0.2, s: 0.75 },
+                        { dx: 0, dy: 0, dz: 0.15, s: 0.85 },
+                        { dx: 0, dy: 0, dz: 0, s: 1.0 } // Center cluster
+                    ];
+
+                    clusters.forEach(c => {
+                        const cx = canopyCenter.x + c.dx * tree.size;
+                        const cy = canopyCenter.y + c.dy * tree.size - c.dz * tree.size;
+
+                        // Base color
+                        ctx.fillStyle = tree.color;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, tree.size * 0.65 * c.s, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Soft highlight
+                        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                        ctx.beginPath();
+                        ctx.arc(cx - tree.size * 0.15 * c.s, cy - tree.size * 0.15 * c.s, tree.size * 0.4 * c.s, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
                 });
             });
 
