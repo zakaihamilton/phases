@@ -6,6 +6,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
     const canvasRef = useRef(null);
     const phaseRef = useRef(phase);
 
+    // Track the latest phase WITHOUT triggering a hard re-render of the canvas effect below
     useEffect(() => {
         phaseRef.current = phase;
     }, [phase]);
@@ -93,12 +94,36 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             x: Math.random() * W, y: Math.random() * H, size: Math.random() * 70 + 50, speed: Math.random() * 0.2 + 0.1
         }));
 
+        const parseColor = (colorStr) => {
+            if (!colorStr) return [96, 165, 250];
+            const s = colorStr.toLowerCase().trim();
+            if (s.startsWith('rgb')) {
+                const match = s.match(/\d+(\.\d+)?/g);
+                if (match && match.length >= 3) {
+                    return [parseFloat(match[0]), parseFloat(match[1]), parseFloat(match[2])];
+                }
+            }
+            if (s.startsWith('#')) {
+                let hex = s.slice(1);
+                if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                if (hex.length >= 6) {
+                    return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+                }
+            }
+            return [96, 165, 250];
+        };
+
         let t = 0;
         let trail = [];
         let aromaParticles = [];
         let emotionParticles = [];
         let frames = 0;
         let lastPhaseId = phaseRef.current.id;
+
+        // Smooth transition trackers
+        let currentDesireLevel = phaseRef.current.hasDesire ? 1 : 0;
+        let currentDetourLevel = phaseRef.current.hasDetour ? 1 : 0;
+        let currentColorRGB = parseColor(phaseRef.current.glowColor);
 
         const getBezierXY = (t, curve) => {
             const { p0, p1, p2, p3 } = curve;
@@ -131,6 +156,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             frames++;
             const currentPhase = phaseRef.current;
 
+            // Trigger reset of car journey if the phase identity changes
             if (currentPhase.id !== lastPhaseId) {
                 t = 0;
                 trail = [];
@@ -138,6 +164,20 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 emotionParticles = [];
                 lastPhaseId = currentPhase.id;
             }
+
+            // Smoothly Lerp Visual States
+            const targetDesire = currentPhase.hasDesire ? 1 : 0;
+            currentDesireLevel += (targetDesire - currentDesireLevel) * 0.05;
+
+            const targetDetour = currentPhase.hasDetour ? 1 : 0;
+            currentDetourLevel += (targetDetour - currentDetourLevel) * 0.05;
+
+            const targetColorRGB = parseColor(currentPhase.glowColor);
+            currentColorRGB[0] += (targetColorRGB[0] - currentColorRGB[0]) * 0.05;
+            currentColorRGB[1] += (targetColorRGB[1] - currentColorRGB[1]) * 0.05;
+            currentColorRGB[2] += (targetColorRGB[2] - currentColorRGB[2]) * 0.05;
+
+            const bodyColor = `rgb(${Math.round(currentColorRGB[0])}, ${Math.round(currentColorRGB[1])}, ${Math.round(currentColorRGB[2])})`;
 
             // === 1. Background ===
             ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -160,19 +200,30 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             });
             ctx.globalAlpha = 1.0;
 
-            // Paths
-            if (currentPhase.hasDetour) {
+            // Smooth Detour Path Transition
+            if (currentDetourLevel > 0.01) {
+                ctx.globalAlpha = currentDetourLevel;
                 drawPath(detourCurve, 36, '#1e293b');
                 drawPath(detourCurve, 3, '#334155', true);
-            } else {
+            }
+            if (currentDetourLevel < 0.99) {
+                ctx.globalAlpha = 1 - currentDetourLevel;
                 ctx.beginPath(); ctx.moveTo(detourCurve.p0.x, detourCurve.p0.y);
                 ctx.bezierCurveTo(detourCurve.p1.x, detourCurve.p1.y, detourCurve.p2.x, detourCurve.p2.y, detourCurve.p3.x, detourCurve.p3.y);
                 ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3; ctx.setLineDash([8, 12]); ctx.stroke(); ctx.setLineDash([]);
             }
+            ctx.globalAlpha = 1.0;
 
+            // Main Path
             drawPath(mainCurve, 36, '#1e293b');
             drawPath(mainCurve, 30, '#0f172a');
-            drawPath(mainCurve, 5, currentPhase.hasDesire ? 'rgba(217, 119, 6, 0.6)' : 'rgba(71, 85, 105, 0.5)', true);
+
+            // Smoothly shift dashed line path color based on Desire state
+            const pR = 71 + (217 - 71) * currentDesireLevel;
+            const pG = 85 + (119 - 85) * currentDesireLevel;
+            const pB = 105 + (6 - 105) * currentDesireLevel;
+            const pA = 0.5 + (0.6 - 0.5) * currentDesireLevel;
+            drawPath(mainCurve, 5, `rgba(${pR}, ${pG}, ${pB}, ${pA})`, true);
 
             // Crosswalks
             ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
@@ -460,7 +511,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 });
             });
 
-            // Car pos
+            // === Car Core Render Logic ===
             const currentT = Math.min(t, 1.0);
             const pos = getBezierXY(currentT, mainCurve);
 
@@ -479,15 +530,20 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 y: pos.y + localX * Math.sin(angle) + localY * Math.cos(angle)
             });
 
+            // Smoothly shift tires tracks color
             if (frames % 3 === 0) {
                 const tW = 5.5;
-                const rearPos = getWorldPos(-8, 0); // Start tracks at rear wheels
+                const rearPos = getWorldPos(-8, 0);
                 trail.push({
                     lx: rearPos.x - Math.sin(angle) * tW, ly: rearPos.y + Math.cos(angle) * tW,
                     rx: rearPos.x + Math.sin(angle) * tW, ry: rearPos.y - Math.cos(angle) * tW,
                     life: 1
                 });
             }
+
+            const trR = 148 + (244 - 148) * currentDesireLevel;
+            const trG = 163 + (63 - 163) * currentDesireLevel;
+            const trB = 184 + (94 - 184) * currentDesireLevel;
 
             trail.forEach((tr, index) => {
                 tr.life -= 0.025;
@@ -496,14 +552,13 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                     obj(tr.lx + tr.ly, () => {
                         const trL = toIso(tr.lx, tr.ly, 1);
                         const trR = toIso(tr.rx, tr.ry, 1);
-                        ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`;
+                        ctx.fillStyle = `rgba(${trR}, ${trG}, ${trB}, ${tr.life * 0.4})`;
                         ctx.beginPath(); ctx.arc(trL.x, trL.y, 2, 0, Math.PI * 2); ctx.fill();
                         ctx.beginPath(); ctx.arc(trR.x, trR.y, 2, 0, Math.PI * 2); ctx.fill();
                     });
                 }
             });
 
-            // Enhanced Face Detailing Functions
             const drawInsetPoly = (pA, pB, pC, pD, insetT, color) => {
                 const cx = (pA.x + pB.x + pC.x + pD.x) / 4;
                 const cy = (pA.y + pB.y + pC.y + pD.y) / 4;
@@ -514,7 +569,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             };
 
             const drawCabinDetails = (fIndex, pA, pB, pC, pD) => {
-                if (fIndex === 4) return; // Roof
+                if (fIndex === 4) return;
                 const winColor = 'rgba(200, 230, 255, 0.8)';
                 const frameColor = 'rgba(20, 30, 40, 0.9)';
                 drawInsetPoly(pA, pB, pC, pD, 0.2, frameColor);
@@ -529,15 +584,15 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
 
             const drawBodyDetails = (fIndex, pA, pB, pC, pD) => {
                 const lerp = (p1, p2, t) => ({ x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t });
-                if (fIndex === 0) { // Headlights
-                    drawInsetPoly(pA, pB, pC, pD, 0.35, '#111'); // Grill
+                if (fIndex === 0) {
+                    drawInsetPoly(pA, pB, pC, pD, 0.35, '#111');
                     const hl1 = lerp(lerp(pA, pB, 0.2), lerp(pD, pC, 0.2), 0.4);
                     const hl2 = lerp(lerp(pA, pB, 0.8), lerp(pD, pC, 0.8), 0.4);
                     ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#fef08a'; ctx.shadowBlur = 12;
                     ctx.beginPath(); ctx.arc(hl1.x, hl1.y, 2.5, 0, Math.PI * 2); ctx.fill();
                     ctx.beginPath(); ctx.arc(hl2.x, hl2.y, 2.5, 0, Math.PI * 2); ctx.fill();
                     ctx.shadowBlur = 0;
-                } else if (fIndex === 2) { // Taillights
+                } else if (fIndex === 2) {
                     const tl1 = lerp(lerp(pA, pB, 0.15), lerp(pD, pC, 0.15), 0.3);
                     const tl2 = lerp(lerp(pA, pB, 0.85), lerp(pD, pC, 0.85), 0.3);
                     ctx.fillStyle = '#f87171'; ctx.shadowColor = '#dc2626'; ctx.shadowBlur = 10;
@@ -548,86 +603,93 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             };
 
             const drawWheelDetails = (fIndex, pA, pB, pC, pD) => {
-                if (fIndex === 1 || fIndex === 3) drawInsetPoly(pA, pB, pC, pD, 0.4, '#94a3b8'); // Hubcaps
-            };
-
-            const drawRotatedBox = (cx, cy, cz, l, w, h, boxAngle, colors, drawFaceDetails = null) => {
-                const pts = [
-                    { x: l / 2, y: -w / 2 }, // front-left
-                    { x: l / 2, y: w / 2 }, // front-right
-                    { x: -l / 2, y: w / 2 }, // back-right
-                    { x: -l / 2, y: -w / 2 }  // back-left
-                ].map(p => {
-                    const rx = p.x * Math.cos(boxAngle) - p.y * Math.sin(boxAngle);
-                    const ry = p.x * Math.sin(boxAngle) + p.y * Math.cos(boxAngle);
-                    return { x: cx + rx, y: cy + ry };
-                });
-
-                const top = pts.map(p => toIso(p.x, p.y, cz + h));
-                const bot = pts.map(p => toIso(p.x, p.y, cz));
-
-                // If `colors` is an object, we use explicit face coloring. 
-                // If it's a string, we set the string as the base color and apply transparent black/white overlay for shading.
-                const isObj = typeof colors === 'object';
-                const faces = [
-                    { p1: 0, p2: 1, c: isObj ? colors.front : colors, over: isObj ? null : 'rgba(0,0,0,0.1)', index: 0 },
-                    { p1: 1, p2: 2, c: isObj ? colors.right : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 1 },
-                    { p1: 2, p2: 3, c: isObj ? colors.back : colors, over: isObj ? null : 'rgba(0,0,0,0.5)', index: 2 },
-                    { p1: 3, p2: 0, c: isObj ? colors.left : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 3 }
-                ];
-
-                faces.forEach((f) => { f.z = bot[f.p1].y + bot[f.p2].y; });
-                faces.sort((a, b) => a.z - b.z);
-
-                faces.forEach(f => {
-                    ctx.fillStyle = f.c; ctx.beginPath();
-                    ctx.moveTo(top[f.p1].x, top[f.p1].y); ctx.lineTo(top[f.p2].x, top[f.p2].y);
-                    ctx.lineTo(bot[f.p2].x, bot[f.p2].y); ctx.lineTo(bot[f.p1].x, bot[f.p1].y); ctx.fill();
-
-                    if (f.over) { ctx.fillStyle = f.over; ctx.fill(); }
-
-                    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
-                    if (drawFaceDetails) drawFaceDetails(f.index, top[f.p1], top[f.p2], bot[f.p2], bot[f.p1]);
-                });
-
-                ctx.fillStyle = isObj ? colors.top : colors; ctx.beginPath();
-                ctx.moveTo(top[0].x, top[0].y); ctx.lineTo(top[1].x, top[1].y);
-                ctx.lineTo(top[2].x, top[2].y); ctx.lineTo(top[3].x, top[3].y); ctx.fill();
-
-                if (!isObj) { ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill(); }
-
-                ctx.stroke();
-                if (drawFaceDetails) drawFaceDetails(4, top[0], top[1], top[2], top[3]);
+                if (fIndex === 1 || fIndex === 3) drawInsetPoly(pA, pB, pC, pD, 0.4, '#94a3b8');
             };
 
             const bounce = Math.abs(Math.sin(frames * 0.4)) * 1.5;
+
+            // Generate full Z-sorted car representation
             obj(pos.x + pos.y, () => {
                 const shadow = toIso(pos.x, pos.y, 0);
                 ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 ctx.beginPath(); ctx.ellipse(shadow.x, shadow.y, 18, 10, 0, 0, Math.PI * 2); ctx.fill();
 
-                // Assign the glow phase color directly as the car color
-                const bodyColor = currentPhase.glowColor || '#60a5fa';
                 const wheelColors = { top: '#334155', front: '#0f172a', right: '#1e293b', back: '#020617', left: '#1e293b' };
+                const carFaces = [];
 
-                // Local Z-Sorting for car components
-                const carRenderables = [];
-                const addCarPart = (zDepth, fn) => carRenderables.push({ depth: zDepth, draw: fn });
+                // Flattens individual 3D boxes into isolated depth-sorted faces 
+                // This permanently eliminates overlap glitches as the car rounds the track
+                const flattenRotatedBoxFaces = (cx, cy, cz, l, w, h, boxAngle, colors, drawFaceDetails = null) => {
+                    const pts = [
+                        { x: l / 2, y: -w / 2 },
+                        { x: l / 2, y: w / 2 },
+                        { x: -l / 2, y: w / 2 },
+                        { x: -l / 2, y: -w / 2 }
+                    ].map(p => {
+                        const rx = p.x * Math.cos(boxAngle) - p.y * Math.sin(boxAngle);
+                        const ry = p.x * Math.sin(boxAngle) + p.y * Math.cos(boxAngle);
+                        return { x: cx + rx, y: cy + ry };
+                    });
 
-                const wheels = [{ lx: 8, ly: -6.5 }, { lx: 8, ly: 6.5 }, { lx: -8, ly: -6.5 }, { lx: -8, ly: 6.5 }];
+                    const top = pts.map(p => toIso(p.x, p.y, cz + h));
+                    const bot = pts.map(p => toIso(p.x, p.y, cz));
+
+                    const isObj = typeof colors === 'object';
+                    const faces = [
+                        { p1: 0, p2: 1, c: isObj ? colors.front : colors, over: isObj ? null : 'rgba(0,0,0,0.1)', index: 0, nx: Math.cos(boxAngle), ny: Math.sin(boxAngle) },
+                        { p1: 1, p2: 2, c: isObj ? colors.right : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 1, nx: -Math.sin(boxAngle), ny: Math.cos(boxAngle) },
+                        { p1: 2, p2: 3, c: isObj ? colors.back : colors, over: isObj ? null : 'rgba(0,0,0,0.5)', index: 2, nx: -Math.cos(boxAngle), ny: -Math.sin(boxAngle) },
+                        { p1: 3, p2: 0, c: isObj ? colors.left : colors, over: isObj ? null : 'rgba(0,0,0,0.3)', index: 3, nx: Math.sin(boxAngle), ny: -Math.cos(boxAngle) }
+                    ];
+
+                    const boxBaseDepth = cx + cy;
+
+                    faces.forEach(f => {
+                        // Flawless true 3D isometric normal culling
+                        if (f.nx + f.ny > -0.05) {
+                            carFaces.push({
+                                depth: boxBaseDepth + (cz + h / 2) * 1.5,
+                                draw: () => {
+                                    ctx.fillStyle = f.c; ctx.beginPath();
+                                    ctx.moveTo(top[f.p1].x, top[f.p1].y); ctx.lineTo(top[f.p2].x, top[f.p2].y);
+                                    ctx.lineTo(bot[f.p2].x, bot[f.p2].y); ctx.lineTo(bot[f.p1].x, bot[f.p1].y); ctx.fill();
+                                    if (f.over) { ctx.fillStyle = f.over; ctx.fill(); }
+                                    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5; ctx.stroke();
+                                    if (drawFaceDetails) drawFaceDetails(f.index, top[f.p1], top[f.p2], bot[f.p2], bot[f.p1]);
+                                }
+                            });
+                        }
+                    });
+
+                    carFaces.push({
+                        depth: boxBaseDepth + (cz + h) * 1.5,
+                        draw: () => {
+                            ctx.fillStyle = isObj ? colors.top : colors; ctx.beginPath();
+                            ctx.moveTo(top[0].x, top[0].y); ctx.lineTo(top[1].x, top[1].y);
+                            ctx.lineTo(top[2].x, top[2].y); ctx.lineTo(top[3].x, top[3].y); ctx.fill();
+                            if (!isObj) { ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fill(); }
+                            ctx.stroke();
+                            if (drawFaceDetails) drawFaceDetails(4, top[0], top[1], top[2], top[3]);
+                        }
+                    });
+                };
+
+                // Pushed wheels out slightly to avoid intersecting the main body
+                const wheels = [{ lx: 8, ly: -7.5 }, { lx: 8, ly: 7.5 }, { lx: -8, ly: -7.5 }, { lx: -8, ly: 7.5 }];
                 wheels.forEach(w => {
                     const wp = getWorldPos(w.lx, w.ly);
-                    addCarPart(wp.x + wp.y, () => drawRotatedBox(wp.x, wp.y, bounce, 7, 3, 5, angle, wheelColors, drawWheelDetails));
+                    flattenRotatedBoxFaces(wp.x, wp.y, bounce, 7, 3, 5, angle, wheelColors, drawWheelDetails);
                 });
 
-                addCarPart(pos.x + pos.y, () => drawRotatedBox(pos.x, pos.y, bounce + 2.5, 26, 14, 7, angle, bodyColor, drawBodyDetails));
-
+                flattenRotatedBoxFaces(pos.x, pos.y, bounce + 2.5, 26, 14, 7, angle, bodyColor, drawBodyDetails);
                 const cp = getWorldPos(-2, 0);
-                addCarPart(cp.x + cp.y + 10, () => drawRotatedBox(cp.x, cp.y, bounce + 9.5, 14, 12, 6, angle, bodyColor, drawCabinDetails));
+                flattenRotatedBoxFaces(cp.x, cp.y, bounce + 9.5, 14, 12, 6, angle, bodyColor, drawCabinDetails);
 
-                carRenderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
+                // Execute drawing sequentially based purely on geometry depth
+                carFaces.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
             });
 
+            // === Spawning Systems ===
             if (frames % 5 === 0) {
                 aromaParticles.push({
                     x: bakX + bakW + 12, y: bakY + bakH / 2, z: bakZ + 10,
@@ -684,6 +746,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
 
             renderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
 
+            // T continues looping infinitely, ignoring external state changes
             t += 0.0022;
             if (t >= 1.25) { t = 0; trail = []; emotionParticles = []; }
             animationFrameId = requestAnimationFrame(render);
@@ -691,7 +754,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
 
         render();
         return () => cancelAnimationFrame(animationFrameId);
-    }, [phase]);
+    }, []); // Empty dependency array allows persistent loop required for smooth tweening
 
     const widthClass = isSuperExpanded
         ? styles.canvasMaxWidthSuper
@@ -701,7 +764,10 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         <div className={`${styles.canvasWrapper} ${widthClass}`}>
             <div
                 className={styles.canvasGlow}
-                style={{ background: `radial-gradient(circle at center, ${phase.glowColor} 0%, transparent 70%)` }}
+                style={{
+                    background: `radial-gradient(circle at center, ${phase.glowColor} 0%, transparent 70%)`,
+                    transition: 'background 1s ease'
+                }}
             />
 
             <canvas
