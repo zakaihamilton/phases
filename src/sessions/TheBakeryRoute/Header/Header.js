@@ -7,7 +7,6 @@ const Header = () => {
         <header className={styles.header}>
             <button onClick={() => window.location.hash = 'launcher'} className={styles.backButton}>
                 <ArrowLeft size={20} />
-                <span>Back to Hub</span>
             </button>
             <div className={styles.headerContent}>
                 <div className={styles.headerTagline}>

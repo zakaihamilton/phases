@@ -2,12 +2,12 @@ import React from 'react';
 import { Route, ChevronDown, Info } from 'lucide-react';
 import styles from './DescriptionPanel.module.css';
 
-const DescriptionPanel = ({ 
-    phase, 
-    isSidebarOpen, 
-    isDescriptionOpen, 
-    setIsDescriptionOpen, 
-    isHorizontallyCollapsed 
+const DescriptionPanel = ({
+    phase,
+    isSidebarOpen,
+    isDescriptionOpen,
+    setIsDescriptionOpen,
+    isHorizontallyCollapsed
 }) => {
     return (
         <div className={`${styles.descPane} ${isSidebarOpen ? styles.descPaneSidebarOpen : (isDescriptionOpen ? styles.descPaneDescOpen : styles.descPaneDescClosed)
@@ -38,8 +38,15 @@ const DescriptionPanel = ({
                 }`}>
                 <div className={`${styles.descInner} ${isHorizontallyCollapsed ? styles.descInnerCollapsed : ''}`}>
                     <p
+                        key={phase.id}
                         className={styles.descCondition}
-                        style={{ background: phase.gradientHorizontal, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                        style={{ 
+                            backgroundImage: phase.gradientHorizontal,
+                            WebkitBackgroundClip: 'text',
+                            backgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            color: 'transparent'
+                        }}
                     >
                         Condition: {phase.choice} & {phase.intention}
                     </p>

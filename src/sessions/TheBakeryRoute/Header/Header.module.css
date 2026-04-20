@@ -43,6 +43,7 @@
     line-height: 1.1;
     background: linear-gradient(to bottom right, #ffffff, #e2e8f0, #64748b);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -74,6 +75,9 @@
 }
 
 .backButton {
+    position: absolute;
+    left: 15px;
+    top: 15px;
     display: flex;
     align-items: center;
     gap: 0.5rem;

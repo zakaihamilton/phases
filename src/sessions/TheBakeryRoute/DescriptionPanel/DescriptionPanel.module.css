@@ -212,6 +212,9 @@
     letter-spacing: 0.1em;
     font-size: 0.875rem;
     margin-bottom: 1.5rem;
+    text-align: center;
+    display: inline-block;
+    width: 100%;
 }
 
 .descText {
