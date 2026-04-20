@@ -58,8 +58,46 @@ export function useNavigation() {
             else if (e.key === "ArrowLeft") performNav("left");
             else if (e.key === "ArrowRight") performNav("right");
         };
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        const handleTouchStart = (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        };
+
+        const handleTouchEnd = (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+
+            if (Math.max(absX, absY) < 40) return; // threshold
+
+            if (absX > absY) {
+                // Horizontal swipe (Inverted: direction matches swipe)
+                if (dx > 0) performNav("right");
+                else performNav("left");
+            } else {
+                // Vertical swipe (Inverted: direction matches swipe)
+                if (dy > 0) performNav("down");
+                else performNav("up");
+            }
+        };
+
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        window.addEventListener("touchstart", handleTouchStart, { passive: true });
+        window.addEventListener("touchend", handleTouchEnd, { passive: true });
+        
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("touchstart", handleTouchStart);
+            window.removeEventListener("touchend", handleTouchEnd);
+        };
     }, []);
 
     const navTo = (direction) => {
