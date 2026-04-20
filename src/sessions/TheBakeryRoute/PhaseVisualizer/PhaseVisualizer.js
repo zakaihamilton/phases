@@ -11,12 +11,20 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
     }, [phase]);
 
     useEffect(() => {
+        const toIso = (originalX, originalY, z = 0) => {
+            const x = originalY;
+            const y = originalX;
+            return {
+                x: 0.7 * x - 0.7 * y + 470,
+                y: 0.45 * x + 0.45 * y - 40 - z
+            };
+        };
+
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         let animationFrameId;
 
-        // Logical resolution (Internal drawing coordinates)
-        const W = 800; // Increased to 800
+        const W = 800;
         const H = 600;
 
         const scale = window.devicePixelRatio || 2;
@@ -63,10 +71,11 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
         ];
 
         const buildings = [
-            { x: 280, y: 290, w: 70, h: 90, color: '#0f172a' }, { x: 140, y: 270, w: 60, h: 70, color: '#1e293b' },
-            { x: 380, y: 170, w: 50, h: 60, color: '#0f172a' }, { x: 440, y: 410, w: 60, h: 50, color: '#1e293b' },
-            { x: 60, y: 180, w: 50, h: 80, color: '#1e293b' }, { x: 540, y: 380, w: 65, h: 70, color: '#0f172a' },
-            { x: 660, y: 250, w: 55, h: 65, color: '#1e293b' }, { x: 500, y: 150, w: 60, h: 80, color: '#0f172a' }
+            { x: 280, y: 320, w: 70, h: 90, z: 120, colors: ['#1e293b', '#0f172a', '#020617'] },
+            { x: 180, y: 220, w: 60, h: 70, z: 90, colors: ['#334155', '#1e293b', '#0f172a'] },
+            { x: 380, y: 170, w: 50, h: 60, z: 100, colors: ['#1e293b', '#0f172a', '#020617'] },
+            { x: 480, y: 410, w: 60, h: 50, z: 80, colors: ['#334155', '#1e293b', '#0f172a'] },
+            { x: 250, y: 120, w: 50, h: 60, z: 110, colors: ['#475569', '#334155', '#1e293b'] }
         ];
 
         const streetLights = [
@@ -130,38 +139,29 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 lastPhaseId = currentPhase.id;
             }
 
+            // === 1. Background ===
+            ctx.setTransform(scale, 0, 0, scale, 0, 0); // Reset transform
             ctx.fillStyle = '#020b06';
             ctx.fillRect(0, 0, W, H);
 
+            // === 2. Flat Ground Layer ===
+            ctx.save();
+            ctx.setTransform(scale * -0.7, scale * 0.45, scale * 0.7, scale * 0.45, scale * 470, scale * -40);
+
+            // Grass tufts
             ctx.strokeStyle = '#064e3b';
             ctx.lineWidth = 1.5;
             ctx.globalAlpha = 0.5;
             grassTufts.forEach(grass => {
-                ctx.beginPath(); ctx.moveTo(grass.x, grass.y); ctx.lineTo(grass.x + grass.tilt, grass.y - grass.height); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(grass.x, grass.y);
+                // Draw flat line segment to simulate texture
+                ctx.lineTo(grass.x + 8, grass.y + 8);
+                ctx.stroke();
             });
             ctx.globalAlpha = 1.0;
 
-            ctx.fillStyle = 'rgba(148, 163, 184, 0.035)';
-            mistPatches.forEach(mist => {
-                mist.x += mist.speed;
-                if (mist.x > W + mist.size * 2) { mist.x = -mist.size * 2; mist.y = Math.random() * H; }
-                ctx.beginPath(); ctx.ellipse(mist.x, mist.y, mist.size, mist.size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(mist.x + mist.size * 0.5, mist.y - mist.size * 0.2, mist.size * 0.8, mist.size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
-            });
-
-            fireflies.forEach(f => {
-                f.phase += f.twinkleSpeed; f.x += f.vx; f.y += f.vy;
-                if (f.x < 0) f.x = W; if (f.x > W) f.x = 0; if (f.y < 0) f.y = H; if (f.y > H) f.y = 0;
-                ctx.fillStyle = `rgba(163, 230, 53, ${Math.abs(Math.sin(f.phase)) * 0.9 + 0.1})`;
-                ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2); ctx.fill();
-            });
-
-            buildings.forEach(b => {
-                ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.w, b.h);
-                ctx.fillStyle = '#334155';
-                for (let i = 0; i < 3; i++) { for (let j = 0; j < 4; j++) { ctx.fillRect(b.x + 10 + i * 18, b.y + 10 + j * 18, 10, 10); } }
-            });
-
+            // Paths
             if (currentPhase.hasDetour) {
                 drawPath(detourCurve, 36, '#1e293b');
                 drawPath(detourCurve, 3, '#334155', true);
@@ -175,6 +175,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
             drawPath(mainCurve, 30, '#0f172a');
             drawPath(mainCurve, 5, currentPhase.hasDesire ? 'rgba(217, 119, 6, 0.6)' : 'rgba(71, 85, 105, 0.5)', true);
 
+            // Crosswalks
             ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
             crosswalks.forEach(cw => {
                 for (let i = 0; i < cw.count; i++) {
@@ -183,68 +184,205 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 }
             });
 
-            benches.forEach(bench => {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bench.x + 3, bench.y + 3, bench.w, bench.h);
-                ctx.fillStyle = bench.color; ctx.fillRect(bench.x, bench.y, bench.w, bench.h);
-                ctx.fillStyle = '#451a03';
-                if (bench.w > bench.h) ctx.fillRect(bench.x, bench.y, bench.w, 3);
-                else ctx.fillRect(bench.x, bench.y, 3, bench.h);
-            });
-
-            trees.forEach(tree => {
-                ctx.fillStyle = tree.color; ctx.beginPath(); ctx.arc(tree.x, tree.y, tree.size, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(tree.x - 3, tree.y - 3, tree.size - 6, 0, Math.PI * 2); ctx.fill();
-            });
-
-            streetLights.forEach(light => {
-                ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(light.x, light.y, 4, 0, Math.PI * 2); ctx.fill();
-                const gradient = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, 50);
-                gradient.addColorStop(0, 'rgba(253, 224, 71, 0.35)');
-                gradient.addColorStop(1, 'rgba(253, 224, 71, 0)');
-                ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(light.x, light.y, 50, 0, Math.PI * 2); ctx.fill();
-            });
-
+            // Ground glows
             const hGlow = ctx.createRadialGradient(HOME.x, HOME.y, 0, HOME.x, HOME.y, 80);
             hGlow.addColorStop(0, 'rgba(59, 130, 246, 0.25)'); hGlow.addColorStop(1, 'transparent');
             ctx.fillStyle = hGlow; ctx.beginPath(); ctx.arc(HOME.x, HOME.y, 80, 0, Math.PI * 2); ctx.fill();
 
-            ctx.fillStyle = '#1e3a8a'; ctx.fillRect(HOME.x - 30, HOME.y - 25, 60, 50);
-            ctx.fillStyle = '#1e40af'; ctx.beginPath(); ctx.moveTo(HOME.x - 35, HOME.y - 25); ctx.lineTo(HOME.x, HOME.y - 55); ctx.lineTo(HOME.x + 35, HOME.y - 25); ctx.fill();
-            ctx.fillStyle = '#60a5fa'; ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 15; ctx.fillRect(HOME.x - 12, HOME.y - 6, 24, 18); ctx.shadowBlur = 0;
-
-            ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(START.x, START.y, 24, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.arc(START.x, START.y, 18, 0, Math.PI * 2); ctx.fill();
-
-            ctx.fillStyle = '#78350f'; ctx.fillRect(BAKERY.x - 35, BAKERY.y - 30, 70, 60);
-            for (let i = 0; i < 7; i++) {
-                ctx.fillStyle = i % 2 === 0 ? '#ef4444' : '#fef2f2';
-                ctx.fillRect(BAKERY.x - 35 + (i * 10), BAKERY.y - 35, 10, 18);
-            }
-            ctx.fillStyle = '#fef08a'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 25 + Math.sin(frames * 0.08) * 10;
-            ctx.fillRect(BAKERY.x - 24, BAKERY.y - 12, 48, 30); ctx.shadowBlur = 0;
-            ctx.fillStyle = '#b45309';
-            ctx.beginPath(); ctx.arc(BAKERY.x - 12, BAKERY.y + 6, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(BAKERY.x + 12, BAKERY.y + 6, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(BAKERY.x, BAKERY.y + 12, 6, 0, Math.PI * 2); ctx.fill();
-
-            if (frames % 5 === 0) {
-                aromaParticles.push({
-                    x: BAKERY.x - 12, y: BAKERY.y - 24,
-                    vx: (Math.random() * -2.5) - 0.8, vy: (Math.random() * -1.2) - 0.5,
-                    life: 1, size: Math.random() * 18 + 18, spin: Math.random() * Math.PI * 2
-                });
-            }
-
-            aromaParticles.forEach((p, index) => {
-                p.x += p.vx; p.y += p.vy; p.life -= 0.005; p.spin += 0.02; p.vx += Math.sin(frames * 0.02 + p.y) * 0.04;
-                if (p.life <= 0) aromaParticles.splice(index, 1);
-                else {
-                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.spin); ctx.beginPath();
-                    ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(251, 191, 36, ${p.life * 0.18})`; ctx.fill(); ctx.restore();
-                }
+            streetLights.forEach(light => {
+                const gradient = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, 50);
+                gradient.addColorStop(0, 'rgba(253, 224, 71, 0.2)');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient; ctx.beginPath(); ctx.arc(light.x, light.y, 50, 0, Math.PI * 2); ctx.fill();
             });
 
+            ctx.restore(); // END GROUND TRANSFORM
+
+            // === 3. Generate isometric renderables (Z-Sorted) ===
+            const renderables = [];
+            const obj = (depth, fn) => renderables.push({ depth, draw: fn });
+
+            // Mist patches (flat but floating slightly)
+            mistPatches.forEach(mist => {
+                mist.x += mist.speed;
+                if (mist.x > W + mist.size * 2) { mist.x = -mist.size * 2; mist.y = Math.random() * H; }
+                obj(mist.x + mist.y, () => {
+                    const pos = toIso(mist.x, mist.y, -10);
+                    ctx.fillStyle = 'rgba(148, 163, 184, 0.035)';
+                    ctx.beginPath(); ctx.ellipse(pos.x, pos.y, mist.size, mist.size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+                });
+            });
+
+            // Fireflies
+            fireflies.forEach(f => {
+                f.phase += f.twinkleSpeed; f.x += f.vx; f.y += f.vy;
+                if (f.x < 0) f.x = W; if (f.x > W) f.x = 0; if (f.y < 0) f.y = H; if (f.y > H) f.y = 0;
+                obj(f.x + f.y, () => {
+                    const pos = toIso(f.x, f.y, 20 + Math.sin(f.phase) * 10);
+                    ctx.fillStyle = `rgba(163, 230, 53, ${Math.abs(Math.sin(f.phase)) * 0.9 + 0.1})`;
+                    ctx.beginPath(); ctx.arc(pos.x, pos.y, f.size, 0, Math.PI * 2); ctx.fill();
+                });
+            });
+
+            // Benches
+            benches.forEach(bench => {
+                obj(bench.x + bench.w / 2 + bench.y + bench.h / 2, () => {
+                    const z = 8;
+                    const bl = toIso(bench.x, bench.y + bench.h, z);
+                    const br = toIso(bench.x + bench.w, bench.y + bench.h, z);
+                    const tl = toIso(bench.x, bench.y, z);
+                    const tr = toIso(bench.x + bench.w, bench.y, z);
+                    const drop = toIso(bench.x, bench.y, 0).y - toIso(bench.x, bench.y, z).y;
+
+                    ctx.fillStyle = '#451a03'; // legs
+                    ctx.fillRect(tl.x - 1, tl.y, 2, drop);
+                    ctx.fillRect(tr.x - 1, tr.y, 2, drop);
+                    ctx.fillRect(bl.x - 1, bl.y, 2, drop);
+                    ctx.fillRect(br.x - 1, br.y, 2, drop);
+
+                    ctx.fillStyle = bench.color; // top
+                    ctx.beginPath(); ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y); ctx.fill();
+                });
+            });
+
+            // Buildings
+            buildings.forEach(b => {
+                obj(b.x + b.w / 2 + b.y + b.h / 2, () => {
+                    const topL = toIso(b.x, b.y, b.z);
+                    const topR = toIso(b.x + b.w, b.y, b.z);
+                    const botR = toIso(b.x + b.w, b.y + b.h, b.z);
+                    const botL = toIso(b.x, b.y + b.h, b.z);
+
+                    // Screen Left face
+                    ctx.fillStyle = b.colors[2];
+                    ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
+                    ctx.lineTo(toIso(b.x + b.w, b.y + b.h, 0).x, toIso(b.x + b.w, b.y + b.h, 0).y);
+                    ctx.lineTo(toIso(b.x + b.w, b.y, 0).x, toIso(b.x + b.w, b.y, 0).y); ctx.fill();
+
+                    // Screen Right face
+                    ctx.fillStyle = b.colors[1];
+                    ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
+                    ctx.lineTo(toIso(b.x + b.w, b.y + b.h, 0).x, toIso(b.x + b.w, b.y + b.h, 0).y);
+                    ctx.lineTo(toIso(b.x, b.y + b.h, 0).x, toIso(b.x, b.y + b.h, 0).y); ctx.fill();
+
+                    // Top face
+                    ctx.fillStyle = b.colors[0];
+                    ctx.beginPath(); ctx.moveTo(topL.x, topL.y); ctx.lineTo(topR.x, topR.y);
+                    ctx.lineTo(botR.x, botR.y); ctx.lineTo(botL.x, botL.y); ctx.fill();
+                });
+            });
+
+            // Home
+            const homeW = 60, homeH = 50, homeZ = 50;
+            const homeX = 370, homeY = 20;
+            obj(homeX + homeW / 2 + homeY + homeH / 2, () => {
+                const z = homeZ;
+                const topR = toIso(homeX + homeW, homeY, z);
+                const botR = toIso(homeX + homeW, homeY + homeH, z);
+                const botL = toIso(homeX, homeY + homeH, z);
+                const pk = toIso(homeX + homeW / 2, homeY + homeH / 2, z + 25);
+
+                ctx.fillStyle = '#172554';
+                ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
+                ctx.lineTo(toIso(homeX + homeW, homeY + homeH, 0).x, toIso(homeX + homeW, homeY + homeH, 0).y);
+                ctx.lineTo(toIso(homeX + homeW, homeY, 0).x, toIso(homeX + homeW, homeY, 0).y); ctx.fill();
+
+                ctx.fillStyle = '#1e3a8a';
+                ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
+                ctx.lineTo(toIso(homeX + homeW, homeY + homeH, 0).x, toIso(homeX + homeW, homeY + homeH, 0).y);
+                ctx.lineTo(toIso(homeX, homeY + homeH, 0).x, toIso(homeX, homeY + homeH, 0).y); ctx.fill();
+
+                ctx.fillStyle = '#2563eb'; ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y); ctx.lineTo(pk.x, pk.y); ctx.fill();
+                ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y); ctx.lineTo(pk.x, pk.y); ctx.fill();
+
+                // Door (Screen right face)
+                ctx.fillStyle = '#60a5fa'; ctx.shadowColor = '#93c5fd'; ctx.shadowBlur = 10;
+                const doorTL = toIso(homeX + homeW / 2 - 8, homeY + homeH, 18);
+                const doorTR = toIso(homeX + homeW / 2 + 8, homeY + homeH, 18);
+                ctx.beginPath(); ctx.moveTo(doorTL.x, doorTL.y); ctx.lineTo(doorTR.x, doorTR.y);
+                ctx.lineTo(toIso(homeX + homeW / 2 + 8, homeY + homeH, 0).x, toIso(homeX + homeW / 2 + 8, homeY + homeH, 0).y);
+                ctx.lineTo(toIso(homeX + homeW / 2 - 8, homeY + homeH, 0).x, toIso(homeX + homeW / 2 - 8, homeY + homeH, 0).y); ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Bakery
+            const bakW = 70, bakH = 60, bakZ = 50;
+            const bakX = 585, bakY = 270;
+            obj(bakX + bakW / 2 + bakY + bakH / 2, () => {
+                const z = bakZ;
+                const topL = toIso(bakX, bakY, z);
+                const topR = toIso(bakX + bakW, bakY, z);
+                const botR = toIso(bakX + bakW, bakY + bakH, z);
+                const botL = toIso(bakX, bakY + bakH, z);
+
+                // Screen Left Face
+                ctx.fillStyle = '#451a03';
+                ctx.beginPath(); ctx.moveTo(topR.x, topR.y); ctx.lineTo(botR.x, botR.y);
+                ctx.lineTo(toIso(bakX + bakW, bakY + bakH, 0).x, toIso(bakX + bakW, bakY + bakH, 0).y);
+                ctx.lineTo(toIso(bakX + bakW, bakY, 0).x, toIso(bakX + bakW, bakY, 0).y); ctx.fill();
+
+                // Screen Right Face
+                ctx.fillStyle = '#78350f';
+                ctx.beginPath(); ctx.moveTo(botL.x, botL.y); ctx.lineTo(botR.x, botR.y);
+                ctx.lineTo(toIso(bakX + bakW, bakY + bakH, 0).x, toIso(bakX + bakW, bakY + bakH, 0).y);
+                ctx.lineTo(toIso(bakX, bakY + bakH, 0).x, toIso(bakX, bakY + bakH, 0).y); ctx.fill();
+
+                // Top
+                ctx.fillStyle = '#92400e';
+                ctx.beginPath(); ctx.moveTo(topL.x, topL.y); ctx.lineTo(topR.x, topR.y);
+                ctx.lineTo(botR.x, botR.y); ctx.lineTo(botL.x, botL.y); ctx.fill();
+
+                // Awning on SCREEN LEFT face (X = bakX + bakW)
+                const faceX = bakX + bakW;
+                for (let i = 0; i < 7; i++) {
+                    ctx.fillStyle = i % 2 === 0 ? '#ef4444' : '#fef2f2';
+                    const sliceH = bakH / 7;
+                    const aTL = toIso(faceX, bakY + i * sliceH, z - 8);
+                    const aTR = toIso(faceX, bakY + (i + 1) * sliceH, z - 8);
+                    // Protrude out in local X+ direction (Screen Left)
+                    const aBR = toIso(faceX + 15, bakY + (i + 1) * sliceH, z - 18);
+                    const aBL = toIso(faceX + 15, bakY + i * sliceH, z - 18);
+                    ctx.beginPath(); ctx.moveTo(aTL.x, aTL.y); ctx.lineTo(aTR.x, aTR.y);
+                    ctx.lineTo(aBR.x, aBR.y); ctx.lineTo(aBL.x, aBL.y); ctx.fill();
+                }
+
+                // Window glowing on SCREEN LEFT face
+                const wTL = toIso(faceX, bakY + bakH * 0.2, z - 25);
+                const wTR = toIso(faceX, bakY + bakH * 0.8, z - 25);
+                const wBR = toIso(faceX, bakY + bakH * 0.8, z - 45);
+                const wBL = toIso(faceX, bakY + bakH * 0.2, z - 45);
+                ctx.fillStyle = '#fef08a'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 20 + Math.sin(frames * 0.08) * 10;
+                ctx.beginPath(); ctx.moveTo(wTL.x, wTL.y); ctx.lineTo(wTR.x, wTR.y); ctx.lineTo(wBR.x, wBR.y); ctx.lineTo(wBL.x, wBL.y); ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Trees
+            trees.forEach(tree => {
+                obj(tree.x + tree.y, () => {
+                    const trunkH = 20;
+                    const trunk = toIso(tree.x, tree.y, 0);
+                    const trunkTop = toIso(tree.x, tree.y, trunkH);
+                    const canopy = toIso(tree.x, tree.y, trunkH + tree.size * 0.5);
+
+                    ctx.strokeStyle = '#451a03'; ctx.lineWidth = 4;
+                    ctx.beginPath(); ctx.moveTo(trunk.x, trunk.y); ctx.lineTo(trunkTop.x, trunkTop.y); ctx.stroke();
+                    ctx.fillStyle = tree.color; ctx.beginPath(); ctx.arc(canopy.x, canopy.y, tree.size * 0.8, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.arc(canopy.x - tree.size * 0.2, canopy.y + tree.size * 0.2, tree.size * 0.5, 0, Math.PI * 2); ctx.fill();
+                });
+            });
+
+            // Street Lights
+            streetLights.forEach(light => {
+                obj(light.x + light.y, () => {
+                    const base = toIso(light.x, light.y, 0);
+                    const top = toIso(light.x, light.y, 40);
+                    ctx.strokeStyle = '#475569'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(base.x, base.y); ctx.lineTo(top.x, top.y); ctx.stroke();
+                    ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.arc(top.x, top.y, 3, 0, Math.PI * 2); ctx.fill();
+                });
+            });
+
+            // Walker pos
             const currentT = Math.min(t, 1.0);
             const pos = getBezierXY(currentT, mainCurve);
             const isNearBakery = Math.hypot(pos.x - BAKERY.x, pos.y - BAKERY.y) < 140;
@@ -254,26 +392,59 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 tr.life -= 0.025;
                 if (tr.life <= 0) walkerTrail.splice(index, 1);
                 else {
-                    ctx.beginPath(); ctx.arc(tr.x, tr.y, 6 + (1 - tr.life) * 3, 0, Math.PI * 2);
-                    ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`; ctx.fill();
+                    obj(tr.x + tr.y, () => {
+                        const trPos = toIso(tr.x, tr.y, 2);
+                        ctx.beginPath(); ctx.arc(trPos.x, trPos.y, (6 + (1 - tr.life) * 3) * 0.7, 0, Math.PI * 2);
+                        ctx.fillStyle = currentPhase.hasDesire ? `rgba(244, 63, 94, ${tr.life * 0.4})` : `rgba(148, 163, 184, ${tr.life * 0.4})`; ctx.fill();
+                    });
                 }
             });
 
-            ctx.fillStyle = currentPhase.hasDesire ? '#F43F5E' : '#94A3B8';
-            ctx.shadowColor = currentPhase.hasDesire ? '#FB7185' : 'transparent';
-            ctx.shadowBlur = currentPhase.hasDesire ? 25 : 0;
+            const bounce = Math.abs(Math.sin(frames * 0.25)) * 6;
+            obj(pos.x + pos.y, () => {
+                const wPos = toIso(pos.x, pos.y, bounce + 10);
+                const shadow = toIso(pos.x, pos.y, 0);
 
-            const bounce = Math.abs(Math.sin(frames * 0.25)) * 4;
-            ctx.beginPath(); ctx.arc(pos.x, pos.y - bounce, 10, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(pos.x, pos.y - bounce, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath(); ctx.ellipse(shadow.x, shadow.y, 8 - bounce * 0.3, 4 - bounce * 0.15, 0, 0, Math.PI * 2); ctx.fill();
+
+                ctx.fillStyle = currentPhase.hasDesire ? '#F43F5E' : '#94A3B8';
+                ctx.shadowColor = currentPhase.hasDesire ? '#FB7185' : 'transparent';
+                ctx.shadowBlur = currentPhase.hasDesire ? 15 : 0;
+                ctx.beginPath(); ctx.arc(wPos.x, wPos.y, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(wPos.x, wPos.y - 2, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            if (frames % 5 === 0) {
+                // Emit from bakery awning block
+                aromaParticles.push({
+                    x: bakX + bakW + 12, y: bakY + bakH / 2, z: bakZ + 10,
+                    vx: (Math.random() * 2.5) + 0.8, vy: (Math.random() * 1.2) + 0.5,
+                    life: 1, size: Math.random() * 12 + 10, spin: Math.random() * Math.PI * 2
+                });
+            }
+
+            aromaParticles.forEach((p, index) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.005; p.spin += 0.02; p.vx += Math.sin(frames * 0.02 + p.y) * 0.04;
+                if (p.life <= 0) aromaParticles.splice(index, 1);
+                else {
+                    obj(p.x + p.y, () => {
+                        p.z = (p.z || bakZ + 10) + 0.3;
+                        const aPos = toIso(p.x, p.y, p.z);
+                        ctx.save(); ctx.translate(aPos.x, aPos.y); ctx.rotate(p.spin); ctx.beginPath();
+                        ctx.ellipse(0, 0, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(251, 191, 36, ${p.life * 0.18})`; ctx.fill(); ctx.restore();
+                    });
+                }
+            });
 
             if (isNearBakery && frames % (currentPhase.hasDesire ? 20 : 40) === 0) {
                 emotionParticles.push({
-                    x: pos.x, y: pos.y - 18 - bounce,
-                    vx: currentPhase.hasDesire ? (Math.random() * 2 + 0.8) : (Math.random() * -0.8 - 0.5),
-                    vy: Math.random() * -2.5 - 1.5,
-                    life: 1, type: currentPhase.hasDesire ? 'desire' : 'indifferent', scale: Math.random() * 0.6 + 0.6
+                    x: pos.x, y: pos.y, z: bounce + 18,
+                    vx: currentPhase.hasDesire ? (Math.random() * 1 + 0.5) : (Math.random() * -0.5 - 0.2),
+                    vy: Math.random() * -1.5 - 0.5,
+                    life: 1, type: currentPhase.hasDesire ? 'desire' : 'indifferent', scale: Math.random() * 0.5 + 0.5
                 });
             }
 
@@ -281,20 +452,27 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
                 ep.x += ep.vx; ep.y += ep.vy; ep.life -= 0.012;
                 if (ep.life <= 0) emotionParticles.splice(index, 1);
                 else {
-                    ctx.globalAlpha = ep.life * 0.4;
-                    if (ep.type === 'desire') {
-                        ctx.save(); ctx.translate(ep.x, ep.y); ctx.scale(ep.scale, ep.scale); ctx.fillStyle = '#FDA4AF';
-                        ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -4, -6, -18, -18, -18);
-                        ctx.bezierCurveTo(-36, -18, -36, 6, -36, 6); ctx.bezierCurveTo(-36, 24, -12, 36, 0, 48);
-                        ctx.bezierCurveTo(12, 36, 36, 24, 36, 6); ctx.bezierCurveTo(36, 6, 36, -18, 18, -18);
-                        ctx.bezierCurveTo(6, -18, 0, -4, 0, 0); ctx.fill(); ctx.restore();
-                    } else {
-                        ctx.fillStyle = '#64748B'; ctx.beginPath(); ctx.arc(ep.x, ep.y, 4 * ep.scale, 0, Math.PI * 2); ctx.fill();
-                        ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ep.x, ep.y, 10 * ep.scale - ep.life * 2, 0, Math.PI * 2); ctx.stroke();
-                    }
-                    ctx.globalAlpha = 1;
+                    obj(ep.x + ep.y, () => {
+                        ep.z = (ep.z || 0) + 1;
+                        const ePos = toIso(ep.x, ep.y, ep.z + 15);
+                        ctx.globalAlpha = ep.life * 0.4;
+                        if (ep.type === 'desire') {
+                            ctx.save(); ctx.translate(ePos.x, ePos.y); ctx.scale(ep.scale * 0.7, ep.scale * 0.7); ctx.fillStyle = '#FDA4AF';
+                            ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -4, -6, -18, -18, -18);
+                            ctx.bezierCurveTo(-36, -18, -36, 6, -36, 6); ctx.bezierCurveTo(-36, 24, -12, 36, 0, 48);
+                            ctx.bezierCurveTo(12, 36, 36, 24, 36, 6); ctx.bezierCurveTo(36, 6, 36, -18, 18, -18);
+                            ctx.bezierCurveTo(6, -18, 0, -4, 0, 0); ctx.fill(); ctx.restore();
+                        } else {
+                            ctx.fillStyle = '#64748B'; ctx.beginPath(); ctx.arc(ePos.x, ePos.y, 3 * ep.scale, 0, Math.PI * 2); ctx.fill();
+                            ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(ePos.x, ePos.y, 8 * ep.scale - ep.life * 2, 0, Math.PI * 2); ctx.stroke();
+                        }
+                        ctx.globalAlpha = 1;
+                    });
                 }
             });
+
+            // Draw all sorted objects
+            renderables.sort((a, b) => a.depth - b.depth).forEach(r => r.draw());
 
             t += 0.0022;
             if (t >= 1.25) { t = 0; walkerTrail = []; emotionParticles = []; }
@@ -303,7 +481,7 @@ const PhaseVisualizer = ({ phase, isExpanded, isSuperExpanded, isDescriptionOpen
 
         render();
         return () => cancelAnimationFrame(animationFrameId);
-    }, []);
+    }, [phase]);
 
     // Determine width classes
     const widthClass = isSuperExpanded
