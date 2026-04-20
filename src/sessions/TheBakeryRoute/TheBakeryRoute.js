@@ -8,7 +8,18 @@ import { useNavigation } from './Navigation';
 import BackButton from "./BackButton";
 
 export default function TheBakeryRoute() {
-    const [activePhaseId, setActivePhaseId] = useState(1);
+    const [activePhaseId, setActivePhaseId] = useState(() => {
+        if (typeof window === 'undefined') return 1;
+        const hash = window.location.hash.replace('#', '');
+        const parts = hash.split('/');
+        if (parts[0] === 'bakery-route' && parts[1]) {
+            const id = parseInt(parts[1], 10);
+            if (!isNaN(id) && PHASES.some(p => p.id === id)) {
+                return id;
+            }
+        }
+        return 1;
+    });
 
     // Sidebar and Description are now conceptually "always open" in a floating state, 
     // but we can retain the toggles if the user wants to minimize them.
@@ -25,18 +36,7 @@ export default function TheBakeryRoute() {
         setIsDescriptionOpen
     });
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'ArrowRight') {
-                setActivePhaseId((prev) => Math.min(prev + 1, PHASES.length));
-            } else if (e.key === 'ArrowLeft') {
-                setActivePhaseId((prev) => Math.max(prev - 1, 1));
-            }
-        };
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
 
     const activePhase = PHASES.find(p => p.id === activePhaseId);
 

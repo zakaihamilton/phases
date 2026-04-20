@@ -2,20 +2,55 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { MAPPED_DATA, FLAT_DATA } from './Data.js';
 
 export function useNavigation() {
-    const [activePath, setActivePath] = useState({ p: 0, s: 0 });
+    const [activePath, setActivePath] = useState(() => {
+        if (typeof window === 'undefined') return { p: 0, s: 0 };
+        const hash = window.location.hash.replace('#', '');
+        const parts = hash.split('/');
+        if (parts[0] === 'concentric-circles' && parts[1]) {
+            const id = parts[1];
+            const index = FLAT_DATA.findIndex(d => d.id === id);
+            if (index !== -1) {
+                const data = FLAT_DATA[index];
+                return { p: data.pIdx, s: data.sIdx };
+            }
+        }
+        return { p: 0, s: 0 };
+    });
     const lastNavTime = useRef(0);
     const navThrottleMs = 150; // Minimum time between navigation steps
 
-    // Initial load from hash
+    // Initial load and hash change listener
     useEffect(() => {
-        const hash = window.location.hash.replace('#', '');
-        if (hash) {
-            const index = FLAT_DATA.findIndex(d => d.id === hash);
-            if (index !== -1) {
-                const data = FLAT_DATA[index];
-                setActivePath({ p: data.pIdx, s: data.sIdx });
+        const syncFromHash = () => {
+            const hash = window.location.hash.replace('#', '');
+            const parts = hash.split('/');
+            if (parts[0] === 'concentric-circles') {
+                const id = parts[1];
+                let targetPath = null;
+                
+                if (id) {
+                    const index = FLAT_DATA.findIndex(d => d.id === id);
+                    if (index !== -1) {
+                        const data = FLAT_DATA[index];
+                        targetPath = { p: data.pIdx, s: data.sIdx };
+                    }
+                } else {
+                    // Default to first phase if no ID provided
+                    targetPath = { p: 0, s: 0 };
+                }
+
+                if (targetPath) {
+                    setActivePath(prev => {
+                        if (prev.p === targetPath.p && prev.s === targetPath.s) return prev;
+                        return targetPath;
+                    });
+                }
             }
-        }
+        };
+
+        syncFromHash();
+        window.addEventListener('hashchange', syncFromHash);
+        return () => window.removeEventListener('hashchange', syncFromHash);
     }, []);
 
     // Update hash on path change

@@ -21,6 +21,37 @@ export function useNavigation({
     isDescriptionOpen,
     setIsDescriptionOpen
 }) {
+    // Initial load and hash change listener
+    useEffect(() => {
+        const syncFromHash = () => {
+            const hash = window.location.hash.replace('#', '');
+            const parts = hash.split('/');
+            if (parts[0] === 'bakery-route') {
+                const id = parseInt(parts[1], 10);
+                if (!isNaN(id)) {
+                    if (phases.some(p => p.id === id)) {
+                        setActivePhaseId(id);
+                    }
+                } else if (!parts[1]) {
+                    // Default to first phase if no ID provided
+                    setActivePhaseId(phases[0].id);
+                }
+            }
+        };
+
+        syncFromHash();
+        window.addEventListener('hashchange', syncFromHash);
+        return () => window.removeEventListener('hashchange', syncFromHash);
+    }, [phases, setActivePhaseId]);
+
+    // Update hash on activePhaseId change
+    useEffect(() => {
+        const newHash = `#bakery-route/${activePhaseId}`;
+        if (window.location.hash !== newHash) {
+            window.history.replaceState(null, '', newHash);
+        }
+    }, [activePhaseId]);
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             // Return to launcher on Escape
@@ -29,15 +60,15 @@ export function useNavigation({
                 return;
             }
 
-            // Phase navigation with Up/Down arrows
-            if (e.key === "ArrowUp") {
+            // Phase navigation with Left/Right arrows
+            if (e.key === "ArrowLeft") {
                 e.preventDefault();
                 setActivePhaseId(prev => {
                     const currentIndex = phases.findIndex(p => p.id === prev);
                     const nextIndex = Math.max(0, currentIndex - 1);
                     return phases[nextIndex].id;
                 });
-            } else if (e.key === "ArrowDown") {
+            } else if (e.key === "ArrowRight") {
                 e.preventDefault();
                 setActivePhaseId(prev => {
                     const currentIndex = phases.findIndex(p => p.id === prev);
@@ -46,19 +77,13 @@ export function useNavigation({
                 });
             }
 
-            // Panel toggling with Left/Right arrows
-            if (e.key === "ArrowLeft") {
-                if (isDescriptionOpen) {
-                    setIsDescriptionOpen(false);
-                } else if (!isSidebarOpen) {
-                    setIsSidebarOpen(true);
-                }
-            } else if (e.key === "ArrowRight") {
-                if (isSidebarOpen) {
-                    setIsSidebarOpen(false);
-                } else if (!isDescriptionOpen) {
-                    setIsDescriptionOpen(true);
-                }
+            // Description panel visibility with Up/Down arrows
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+                setIsDescriptionOpen(true);
+            } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                setIsDescriptionOpen(false);
             }
         };
 
