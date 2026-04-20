@@ -22,7 +22,7 @@ export function useNavigation() {
     useEffect(() => {
         const activeItem = FLAT_DATA.find(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
         if (activeItem) {
-            const newHash = `#concentric-circle/${activeItem.id}`;
+            const newHash = `#concentric-circles/${activeItem.id}`;
             if (window.location.hash !== newHash) {
                 window.history.replaceState(null, '', newHash);
             }
