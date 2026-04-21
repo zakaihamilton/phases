@@ -1,4 +1,3 @@
-// SimulationCanvas.js
 import React, { useEffect, useRef } from 'react';
 import styles from './SimulationCanvas.module.css';
 import { calculateTargets } from '../Rules';
@@ -19,19 +18,18 @@ const SimulationCanvas = ({ activeSequence }) => {
         let animationFrameId;
         let time = 0;
 
-        // Core Physics State
         const pState = {
             infinityAlpha: 0,
             zoomLevel: 1,
-            subVesselOpacities: [
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]
-            ],
+            subVesselOpacities: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             lightOpacities: [0, 0, 0, 0],
-            restrictionOpacities: [0, 0, 0, 0],
+            restrictionOpacities: [0, 0, 0, 0, 0],
             voidOpacity: 0,
             kavProgress: 0,
             reflectProgress: 0,
-            outerPhasesOpacity: 1 // NEW
+            outerPhasesOpacity: 1,
+            windowProgress: 0,
+            windowFillProgress: 0
         };
 
         const resize = () => {
@@ -54,16 +52,13 @@ const SimulationCanvas = ({ activeSequence }) => {
             const cx = w / 2;
             const cy = h / 2;
 
-            // 1. Engine Math
             const targets = calculateTargets(sequence || []);
             applyEasing(pState, targets, 0.015);
 
-            // 2. Clear Screen
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
 
-            // 3. Draw Sub-Components
             drawRootLight(ctx, cx, cy, w, h, time, pState);
 
             ctx.save();
@@ -74,10 +69,11 @@ const SimulationCanvas = ({ activeSequence }) => {
             const maxR = Math.min(w, h) * 0.35;
             drawEmanations(ctx, cx, cy, time, pState, maxR);
 
+            // Critical: Pass time so animations don't output NaN
             drawKav(ctx, cx, cy, w, h, pState, maxR, time);
 
-            ctx.restore(); // Restores the camera zoom
-            // Loop
+            ctx.restore();
+
             animationFrameId = requestAnimationFrame(render);
         };
 
@@ -91,11 +87,7 @@ const SimulationCanvas = ({ activeSequence }) => {
 
     return (
         <div className={styles.root} style={{ width: '100%', height: '100%' }}>
-            <canvas
-                ref={canvasRef}
-                className={styles.canvas}
-                style={{ width: '100%', height: '100%', display: 'block' }}
-            />
+            <canvas ref={canvasRef} className={styles.canvas} style={{ width: '100%', height: '100%', display: 'block' }} />
         </div>
     );
 };

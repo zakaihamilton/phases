@@ -23,26 +23,17 @@ export const drawRootLight = (ctx, cx, cy, w, h, time, pState) => {
 };
 
 export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
-    const phaseRgbs = [
-        [255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]
-    ];
-
-    const subPhaseRgbs = [
-        [180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]
-    ];
+    const phaseRgbs = [[255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]];
+    const subPhaseRgbs = [[180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]];
 
     for (let i = 0; i < 4; i++) {
-        // Apply the fade-out to ALL phases (including Phase 4) so only the Void and Restriction Rings remain
         const phaseMasterOpacity = pState.outerPhasesOpacity;
-
-        // Optimization: If the outer rings are fully faded out, don't waste CPU drawing them!
         if (phaseMasterOpacity <= 0.01 && i < 3) continue;
 
         const r = maxR * (1 - (i * 0.22));
         const breatheRadius = Math.max(0, r + Math.sin(time * 1.5 + i) * 2);
         const mainRgb = phaseRgbs[i];
 
-        // 1. Draw Inner Light
         const lightOpacity = pState.lightOpacities[i] * phaseMasterOpacity;
         if (lightOpacity > 0.01) {
             ctx.beginPath();
@@ -55,8 +46,6 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
             ctx.globalAlpha = 1;
         }
 
-        // 2. Draw The Void (Tzimtzum)
-        // The void does NOT multiply by phaseMasterOpacity, so it stays pure black
         if (i === 3 && pState.voidOpacity > 0.01) {
             ctx.beginPath();
             ctx.arc(cx, cy, Math.max(0, r), 0, Math.PI * 2);
@@ -64,10 +53,8 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
             ctx.fill();
         }
 
-        // 3. Draw Sub-Phase Vessel Boundaries
         for (let j = 0; j < 4; j++) {
             const layerOpacity = pState.subVesselOpacities[i][j] * phaseMasterOpacity;
-
             if (layerOpacity > 0.01) {
                 ctx.beginPath();
                 const layerRadius = Math.max(0, breatheRadius - (j * 4 / pState.zoomLevel));
@@ -87,12 +74,10 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
             }
         }
 
-        // 4. Draw Restriction Rings (Masach)
         if (i === 3) {
-            for (let j = 0; j < 5; j++) { // <-- Change loop to 5
+            for (let j = 0; j < 5; j++) {
                 if (pState.restrictionOpacities[j] > 0.01) {
                     ctx.beginPath();
-                    // Perfect 10% inward steps: 0.9, 0.8, 0.7, 0.6, 0.5
                     const restrictRadiusScale = 1 - ((j + 1) * 0.10);
                     const restrictR = r * restrictRadiusScale;
                     const restrictBreatheR = Math.max(0, restrictR + Math.sin(time * 1.5 + i + j) * 1.5);
@@ -118,13 +103,10 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
     const phase4Radius = maxR * (1 - (3 * 0.22));
     const startY = cy - phase4Radius;
-
-    // THE BUG FIX: The Screen is locked exactly to the 5th Ring (0.50)
     const screenY = cy - (phase4Radius * 0.50);
-
     const currentY = startY + (screenY - startY) * pState.kavProgress;
 
-    // 1. UPWARD REFLECTED LIGHT (OHR CHOZER) - THE VESSEL
+    // 1. REFLECTED LIGHT (OHR CHOZER)
     if (pState.reflectProgress > 0.01) {
         const currentReflectY = screenY - (screenY - startY) * pState.reflectProgress;
 
@@ -148,7 +130,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         ctx.stroke();
     }
 
-    // 2. DOWNWARD DIRECT LIGHT (OHR YASHAR)
+    // 2. DIRECT LIGHT (OHR YASHAR)
     ctx.beginPath();
     ctx.moveTo(cx, startY);
     ctx.lineTo(cx, currentY);
@@ -166,14 +148,12 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     ctx.lineWidth = 1.5 / pState.zoomLevel;
     ctx.stroke();
 
-    // 3. THE MASACH (SCREEN) & ZIVUG D'HAKAA (STRIKING SPARKS)
+    // 3. THE MASACH (SCREEN) & SPARKS
     if (pState.kavProgress > 0.99) {
         ctx.beginPath();
-        // Width updated to match the 0.50 scale
         const screenWidth = (phase4Radius * 0.50) * 0.4;
         ctx.moveTo(cx - screenWidth, screenY);
         ctx.lineTo(cx + screenWidth, screenY);
-
         ctx.strokeStyle = `rgba(100, 200, 255, ${pState.kavProgress})`;
         ctx.lineWidth = 3 / pState.zoomLevel;
         ctx.shadowBlur = 15;
@@ -182,40 +162,68 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
         ctx.save();
         ctx.translate(cx, screenY);
-
         const numSparks = 24;
         for (let i = 0; i < numSparks; i++) {
             const baseAngle = (Math.PI * 2 / numSparks) * i;
             const jitter = Math.sin(time * 15 + i) * 0.5;
-            const angle = baseAngle + jitter;
-
             const flicker = Math.random() * Math.sin(time * 30 + i * 100);
 
             if (flicker > 0) {
                 const length = (4 + flicker * 25) / pState.zoomLevel;
-
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-
+                ctx.lineTo(Math.cos(baseAngle + jitter) * length, Math.sin(baseAngle + jitter) * length);
                 const isCore = Math.random() > 0.5;
-                ctx.strokeStyle = isCore
-                    ? `rgba(255, 255, 255, ${Math.random()})`
-                    : `rgba(255, 200, 50, ${Math.random()})`;
+                ctx.strokeStyle = isCore ? `rgba(255, 255, 255, ${Math.random()})` : `rgba(255, 200, 50, ${Math.random()})`;
                 ctx.lineWidth = (isCore ? 1.5 : 3) / pState.zoomLevel;
                 ctx.stroke();
             }
         }
-
         ctx.beginPath();
-        const coreBreathe = 3 + Math.random() * 4;
-        ctx.arc(0, 0, coreBreathe / pState.zoomLevel, 0, Math.PI * 2);
+        ctx.arc(0, 0, (3 + Math.random() * 4) / pState.zoomLevel, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.shadowBlur = 15;
         ctx.shadowColor = 'rgba(255, 255, 255, 1)';
         ctx.fill();
-
         ctx.restore();
+    }
+
+    // 4. THE WINDOW (CHALON) & CIRCLE OF CROWN FILL
+    if (pState.windowProgress > 0.01) {
+        const crownRadius = phase4Radius * 0.90;
+        const wisdomRadius = phase4Radius * 0.80; // NEW: The inner boundary to block the light
+
+        const breatheRadius = Math.max(0, crownRadius + Math.sin(time * 1.5 + 3 + 0) * 1.5);
+
+        // Vibrant Blue/Silver Window Lining
+        ctx.beginPath();
+        ctx.arc(cx, cy, breatheRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(100, 200, 255, ${pState.windowProgress})`;
+        ctx.lineWidth = 15 / pState.zoomLevel;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = 'rgba(100, 200, 255, 1)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, breatheRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${pState.windowProgress})`;
+        ctx.lineWidth = 4 / pState.zoomLevel;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+
+        // High-Opacity Gold Direct Light Fill
+        if (pState.windowFillProgress > 0.01) {
+            ctx.beginPath();
+
+            // GEOMETRY FIX: Draw the outer boundary clockwise, 
+            // and the inner boundary counter-clockwise (true).
+            // This hollows out the center, creating a perfect annulus (donut).
+            ctx.arc(cx, cy, crownRadius, 0, Math.PI * 2, false);
+            ctx.arc(cx, cy, wisdomRadius, 0, Math.PI * 2, true);
+
+            ctx.fillStyle = `rgba(255, 220, 50, ${pState.windowFillProgress * 0.6})`;
+            ctx.fill();
+        }
     }
 
     ctx.restore();

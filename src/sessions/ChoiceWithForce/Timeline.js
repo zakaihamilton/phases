@@ -49,7 +49,19 @@ const rawStates = [
     { name: "Ohr Chozer: Wisdom", description: "Wisdom of Reflection ascends and clothes Beauty of Direct Light.", action: 'KAV_REFLECT' },
     { name: "Ohr Chozer: Understanding", description: "Understanding of Reflection ascends and clothes Understanding of Direct Light.", action: 'KAV_REFLECT' },
     { name: "Ohr Chozer: Beauty", description: "Beauty of Reflection ascends and clothes Wisdom of Direct Light.", action: 'KAV_REFLECT' },
-    { name: "Ohr Chozer: Kingdom", description: "Kingdom of Reflection completes the vessel, clothing Crown of Direct Light.", action: 'KAV_REFLECT' }
+    { name: "Ohr Chozer: Kingdom", description: "Kingdom of Reflection completes the vessel, clothing Crown of Direct Light.", action: 'KAV_REFLECT' },
+
+    // --- THE WINDOW (CHALON) & NEW VESSEL ---
+    {
+        name: "The Window (Chalon)",
+        description: "The Reflected Light spreads outward, lining the Circle of Crown to form a window for expansion.",
+        action: 'WINDOW_FORM'
+    },
+    {
+        name: "Filling the Crown",
+        description: "The Direct Light expands through the window, filling the Circle of Crown within the new lining.",
+        action: 'WINDOW_FILL'
+    }
 ];
 
 export const SpiritualStates = rawStates.map((state, index) => {
