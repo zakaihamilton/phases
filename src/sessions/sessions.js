@@ -1,8 +1,9 @@
 import {
-    CircleDot, Route
+    CircleDot, Route, Layers
 } from 'lucide-react';
 import ConcentricCircles from './ConcentricCircles';
 import TheBakeryRoute from './TheBakeryRoute';
+import ChoiceWithForce from "./ChoiceWithForce";
 
 const sessions = [
     {
@@ -21,6 +22,14 @@ const sessions = [
         icon: Route,
         component: TheBakeryRoute
     },
+    {
+        date: "",
+        id: 'choice-with-force',
+        label: "TES 2 - Choice with Force",
+        description: "Layering Concepts",
+        icon: Layers,
+        component: ChoiceWithForce
+    }
 ];
 
 export default sessions;
