@@ -63,15 +63,12 @@ const SimulationCanvas = ({ activeRules }) => {
             const cx = w / 2;
             const cy = h / 2;
 
-            // --- DELEGATE LOGIC TO RULES.JS ---
             RulesArray.forEach(rule => {
                 if (rule.applyState) {
                     rule.applyState(pState, rules.has(rule.id), rules);
                 }
             });
-            // ----------------------------------
 
-            // Drawing Phase
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
