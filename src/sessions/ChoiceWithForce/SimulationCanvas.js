@@ -103,11 +103,6 @@ const SimulationCanvas = ({ activeRules }) => {
             const screenPosition = 0.833;
             const screenY = topY + totalDist * screenPosition;
 
-            if (rules.has('ATTRACTION')) {
-                const pulse = Math.sin(time * 4) * 0.3 + 0.7;
-                drawOrb(cx, botY, Math.max(0, 120 * pulse), `rgba(220, 20, 40, 0.5)`, `rgba(220, 20, 40, 0)`, 1);
-            }
-
             if (pState.beamProgress > 0) {
                 const currentY = topY + totalDist * pState.beamProgress;
                 ctx.save();
