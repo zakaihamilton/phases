@@ -3,17 +3,17 @@ import styles from './Sidebar.module.css';
 import RuleToggle from './RuleToggle';
 import { Power, Settings } from 'lucide-react';
 
-const Sidebar = ({ AVAILABLE_RULES, activeRules, toggleRule, clearRules }) => {
+const Sidebar = ({ Rules, activeRules, toggleRule, clearRules }) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowDown') {
-                setSelectedIndex((prev) => (prev + 1) % AVAILABLE_RULES.length);
+                setSelectedIndex((prev) => (prev + 1) % Rules.length);
             } else if (e.key === 'ArrowUp') {
-                setSelectedIndex((prev) => (prev - 1 + AVAILABLE_RULES.length) % AVAILABLE_RULES.length);
+                setSelectedIndex((prev) => (prev - 1 + Rules.length) % Rules.length);
             } else if (e.key === 'Enter') {
-                const rule = AVAILABLE_RULES[selectedIndex];
+                const rule = Rules[selectedIndex];
                 if (rule) {
                     toggleRule(rule.id);
                 }
@@ -22,7 +22,7 @@ const Sidebar = ({ AVAILABLE_RULES, activeRules, toggleRule, clearRules }) => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [AVAILABLE_RULES, selectedIndex, toggleRule]);
+    }, [Rules, selectedIndex, toggleRule]);
 
     return (
         <div className={styles.sidebar}>
@@ -39,7 +39,7 @@ const Sidebar = ({ AVAILABLE_RULES, activeRules, toggleRule, clearRules }) => {
             </div>
 
             <div className={styles.rulesList}>
-                {AVAILABLE_RULES.map((rule, index) => {
+                {Rules.map((rule, index) => {
                     const isActive = activeRules.has(rule.id);
                     const isFocused = index === selectedIndex;
                     return (

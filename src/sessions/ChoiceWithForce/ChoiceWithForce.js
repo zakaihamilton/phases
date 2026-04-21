@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styles from './ChoiceWithForce.module.css';
 import Sidebar from './Sidebar/Sidebar';
 import SimulationCanvas from './SimulationCanvas';
-import AVAILABLE_RULES from './Rules';
+import Rules from './Rules';
 
 export default function ChoiceWithForce() {
     const [activeRules, setActiveRules] = useState(new Set());
@@ -24,7 +24,7 @@ export default function ChoiceWithForce() {
     return (
         <div className={styles.root}>
             <Sidebar
-                AVAILABLE_RULES={AVAILABLE_RULES}
+                Rules={Rules}
                 activeRules={activeRules}
                 toggleRule={toggleRule}
                 clearRules={clearRules}

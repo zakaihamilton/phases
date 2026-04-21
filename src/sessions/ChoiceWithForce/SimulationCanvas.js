@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import styles from './SimulationCanvas.module.css';
+import RulesArray from './Rules'; // Import the rules array
 
 const SimulationCanvas = ({ activeRules }) => {
     const canvasRef = useRef(null);
@@ -62,54 +63,15 @@ const SimulationCanvas = ({ activeRules }) => {
             const cx = w / 2;
             const cy = h / 2;
 
-            // Rule: Infinity
-            const targetInfinity = rules.has('INFINITY') ? 1 : 0;
-            pState.infinityAlpha += (targetInfinity - pState.infinityAlpha) * 0.05;
-
-            // Rule: Igulim (Vessel Structure)
-            const targetIgulim = rules.has('IGULIM') ? 1 : 0;
-            pState.igulimProgress += (targetIgulim - pState.igulimProgress) * 0.05;
-            pState.strokes += (targetIgulim - pState.strokes) * 0.05;
-
-            // Rule: Fill vs Restriction
-            const targetFill = rules.has('FILL') ? 1 : 0;
-            const isRestricted = rules.has('RESTRICTION');
-
-            for (let i = 0; i < 4; i++) {
-                if (isRestricted) {
-                    pState.fills[i] += (0 - pState.fills[i]) * 0.05;
-                } else {
-                    pState.fills[i] += (targetFill - pState.fills[i]) * 0.05;
+            // --- DELEGATE LOGIC TO RULES.JS ---
+            RulesArray.forEach(rule => {
+                if (rule.applyState) {
+                    rule.applyState(pState, rules.has(rule.id), rules);
                 }
-            }
+            });
+            // ----------------------------------
 
-            // Rule: Screen
-            const targetScreen = rules.has('SCREEN') ? 1 : 0;
-            pState.screenAlpha += (targetScreen - pState.screenAlpha) * 0.05;
-
-            // Rule: Attraction (Beam Physics)
-            const screenPosition = 0.833;
-            const targetBeamRaw = rules.has('ATTRACTION') ? 1 : 0;
-            const actualBeamTarget = rules.has('SCREEN') ? Math.min(targetBeamRaw, screenPosition) : targetBeamRaw;
-
-            if (pState.beamProgress < actualBeamTarget) {
-                pState.beamProgress += (actualBeamTarget - pState.beamProgress) * 0.1 + 0.005;
-                if (pState.beamProgress > actualBeamTarget) pState.beamProgress = actualBeamTarget;
-            } else {
-                pState.beamProgress += (actualBeamTarget - pState.beamProgress) * 0.1;
-            }
-
-            // Rule: Reflected Light
-            const isHittingScreen = pState.beamProgress >= screenPosition - 0.01;
-            const targetReflect = (rules.has('REFLECTION') && rules.has('SCREEN') && rules.has('ATTRACTION') && isHittingScreen) ? 1 : 0;
-
-            if (pState.reflectProgress < targetReflect) {
-                pState.reflectProgress += (targetReflect - pState.reflectProgress) * 0.04 + 0.002;
-                if (pState.reflectProgress > targetReflect) pState.reflectProgress = targetReflect;
-            } else {
-                pState.reflectProgress += (targetReflect - pState.reflectProgress) * 0.1;
-            }
-
+            // Drawing Phase
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
@@ -141,6 +103,7 @@ const SimulationCanvas = ({ activeRules }) => {
             const topY = h * 0.2;
             const botY = h * 0.8;
             const totalDist = botY - topY;
+            const screenPosition = 0.833;
             const screenY = topY + totalDist * screenPosition;
 
             if (rules.has('ATTRACTION')) {
