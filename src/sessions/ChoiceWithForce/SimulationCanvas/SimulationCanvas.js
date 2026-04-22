@@ -24,6 +24,7 @@ const SimulationCanvas = ({ activeSequence }) => {
 
         const pState = {
             infinityAlpha: 0,
+            rootOpacities: [0, 0, 0, 0, 0], // NEW: 5 Layers of Infinity
             zoomLevel: 1,
             subVesselOpacities: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
             lightOpacities: [0, 0, 0, 0],

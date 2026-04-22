@@ -1,7 +1,12 @@
 // Timeline.js
 
 const rawStates = [
-    { name: "Root Phase", description: "The Light of Crown (Keter). The Infinite Light fills the background.", action: 'ROOT' },
+    // --- ROOT PHASE (EIN SOF & THE FOUR KINGDOMS) ---
+    { name: "Root Phase: Energy", description: "Crown of Root (Energy / Shoresh). The pure, boundless force.", action: 'ROOT_0' },
+    { name: "Root Phase: Still", description: "Wisdom of Root (Still / Domem). The initial potential of the Infinite.", action: 'ROOT_1' },
+    { name: "Root Phase: Vegetative", description: "Understanding of Root (Vegetative / Tzomeach). Expansion within the Infinite.", action: 'ROOT_2' },
+    { name: "Root Phase: Animate", description: "Beauty of Root (Animate / Chai). Life force within the Infinite.", action: 'ROOT_3' },
+    { name: "Root Phase: Speaking", description: "Kingdom of Root (Speaking / Medaber). The Infinite completes its internal structure.", action: 'ROOT_4' },
 
     // --- PHASE 1 TO 4 ---
     { name: "Phase 1: Crown of Wisdom", description: "Kingdom of Crown coarsens to become the vessel for Crown of Wisdom.", action: 'COARSEN' },

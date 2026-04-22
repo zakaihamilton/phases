@@ -2,6 +2,7 @@
 
 const phaseRgbs = [[255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]];
 const subPhaseRgbs = [[180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]];
+const hues = ['180, 180, 180', '255, 235, 59', '33, 150, 243', '244, 67, 54', '76, 175, 80'];
 
 const BLENDED_COLORS = phaseRgbs.map(mainRgb => {
     return subPhaseRgbs.map(subRgb => {
@@ -44,7 +45,15 @@ export const drawRootLight = (ctx, cx, cy, w, h, time, pState) => {
     if (pState.infinityAlpha <= 0.01) return;
     const breathe = Math.sin(time * 2) * 0.05 + 1;
     const maxRadius = Math.max(0, Math.max(w, h) * 0.75 * breathe);
-    drawOrb(ctx, cx, cy, maxRadius, 'rgba(180, 180, 180, 0.4)', 'rgba(100, 100, 100, 0)', pState.infinityAlpha);
+
+    // Render the 5 Layers of Infinity (Energy -> Speaking)
+    for (let i = 0; i < 5; i++) {
+        if (pState.rootOpacities[i] > 0.01) {
+            // Each subsequent layer steps inward by 8% to create the concentric depth
+            const r = maxRadius * (1 - (i * 0.08));
+            drawOrb(ctx, cx, cy, r, `rgba(${hues[i]}, 0.3)`, `rgba(0, 0, 0, 0)`, pState.rootOpacities[i]);
+        }
+    }
 };
 
 export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
@@ -121,8 +130,6 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     const roshLightY = roshTopY + (roshBottomY - roshTopY) * pState.kavProgress;
     const gufLightY = gufTopY + (gufBottomY - gufTopY) * pState.gufLightProgress;
     const sofLightY = sofTopY + (sofBottomY - sofTopY) * pState.sofLightProgress;
-
-    const hues = ['180, 180, 180', '255, 235, 59', '33, 150, 243', '244, 67, 54', '76, 175, 80'];
 
     // GRADIENTS
     const buildGradients = (topY, bottomY) => {
@@ -242,15 +249,11 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     if (pState.kavProgress > 0.79) {
         const screenWidth = (phase4Radius * 0.50) * 0.5;
 
-        // This function dynamically cascades the origin points of the lines, causing them to 
-        // physically stretch downwards out of the base screen, while drawing vertical side-walls
-        // to form a continuous, expanding rectangular receptacle!
         const drawExpandingScreen = (topY, bottomY, progressesArray) => {
             const sectionHeight = (bottomY - topY) / 5;
             let previousY = topY;
             let lowestY = topY;
 
-            // Internal dropping rungs
             for (let i = 0; i < 5; i++) {
                 const targetY = topY + ((i + 1) * sectionHeight);
                 const currentY = previousY + (targetY - previousY) * progressesArray[i];
@@ -264,7 +267,6 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
                 if (currentY > lowestY) lowestY = currentY;
             }
 
-            // Expanding Vertical Screen Walls connecting the Peh/Tabur to the lowest expanding rung
             if (lowestY > topY + 0.1) {
                 ctx.beginPath();
                 ctx.moveTo(cx - screenWidth, topY); ctx.lineTo(cx - screenWidth, lowestY);
