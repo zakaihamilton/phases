@@ -36,7 +36,8 @@ const SimulationCanvas = ({ activeSequence }) => {
             outerPhasesOpacity: 1,
             windowProgress: 0,
             windowFillProgress: 0,
-            screenExpandProgress: 0
+            screenExpandProgress: 0,
+            gufLightProgress: 0
         };
 
         const resize = () => {

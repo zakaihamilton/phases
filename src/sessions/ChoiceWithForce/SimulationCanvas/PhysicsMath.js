@@ -18,10 +18,9 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
 
     pState.kavProgress += (targets.kavProgress - pState.kavProgress) * easeSpeed;
     pState.reflectProgress += (targets.reflectProgress - pState.reflectProgress) * easeSpeed;
-
     pState.windowProgress += (targets.windowProgress - pState.windowProgress) * easeSpeed;
     pState.windowFillProgress += (targets.windowFillProgress - pState.windowFillProgress) * easeSpeed;
 
-    // Smooth transition for the accordion expansion
     pState.screenExpandProgress += (targets.screenExpandProgress - pState.screenExpandProgress) * easeSpeed;
+    pState.gufLightProgress += (targets.gufLightProgress - pState.gufLightProgress) * easeSpeed; // NEW
 };

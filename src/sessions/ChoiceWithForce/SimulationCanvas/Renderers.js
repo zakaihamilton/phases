@@ -110,108 +110,108 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
 
+    // GEOMETRY
     const phase4Radius = maxR * (1 - (3 * 0.22));
-    const startY = cy - phase4Radius;
+    const startY = cy - phase4Radius; // Top of Rosh
+    const baseScreenY = cy - (phase4Radius * 0.50); // Peh (Mouth) / Bottom of Rosh
+    const maxExpandedScreenY = cy - (phase4Radius * 0.10); // Bottom of Guf
 
-    // NEW ACCORDION LOGIC: The screen dynamically drops near the center (scale 0.10)
-    const baseScreenY = cy - (phase4Radius * 0.50);
-    const maxExpandedScreenY = cy - (phase4Radius * 0.10);
     const dynamicScreenY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.screenExpandProgress || 0);
 
-    const currentY = startY + (dynamicScreenY - startY) * pState.kavProgress;
+    const roshLightY = startY + (baseScreenY - startY) * pState.kavProgress;
+    const gufLightY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.gufLightProgress || 0);
 
-    const hues = [
-        '180, 180, 180', // 0: Crown
-        '255, 235, 59',  // 1: Wisdom
-        '33, 150, 243',  // 2: Understanding
-        '244, 67, 54',   // 3: Beauty
-        '76, 175, 80'    // 4: Kingdom
-    ];
+    const hues = ['180, 180, 180', '255, 235, 59', '33, 150, 243', '244, 67, 54', '76, 175, 80'];
 
-    // Gradients (Dynamically stretching to the new bottom screen)
-    const dlGrad = ctx.createLinearGradient(cx, startY, cx, dynamicScreenY);
-    dlGrad.addColorStop(0, `rgb(${hues[0]})`);
-    dlGrad.addColorStop(0.25, `rgb(${hues[1]})`);
-    dlGrad.addColorStop(0.5, `rgb(${hues[2]})`);
-    dlGrad.addColorStop(0.75, `rgb(${hues[3]})`);
-    dlGrad.addColorStop(1, `rgb(${hues[4]})`);
+    // ROSH GRADIENTS
+    const dlGradRosh = ctx.createLinearGradient(cx, startY, cx, baseScreenY);
+    const rlGradRosh = ctx.createLinearGradient(cx, baseScreenY, cx, startY);
+    for (let i = 0; i < 5; i++) {
+        dlGradRosh.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+        rlGradRosh.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+    }
 
-    const rlGrad = ctx.createLinearGradient(cx, dynamicScreenY, cx, startY);
-    rlGrad.addColorStop(0, `rgb(${hues[0]})`);
-    rlGrad.addColorStop(0.25, `rgb(${hues[1]})`);
-    rlGrad.addColorStop(0.5, `rgb(${hues[2]})`);
-    rlGrad.addColorStop(0.75, `rgb(${hues[3]})`);
-    rlGrad.addColorStop(1, `rgb(${hues[4]})`);
+    // GUF GRADIENTS
+    const dlGradGuf = ctx.createLinearGradient(cx, baseScreenY, cx, maxExpandedScreenY);
+    const rlGradGuf = ctx.createLinearGradient(cx, maxExpandedScreenY, cx, baseScreenY);
+    for (let i = 0; i < 5; i++) {
+        dlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+        rlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+    }
 
-    // 1. REFLECTED LIGHT (Stretches downwards seamlessly!)
+    // 1. REFLECTED LIGHT (VESSELS)
     if (pState.reflectProgress > 0.01) {
-        const currentReflectY = dynamicScreenY - (dynamicScreenY - startY) * pState.reflectProgress;
+        // ROSH Vessel
+        const currentReflectY = baseScreenY - (baseScreenY - startY) * pState.reflectProgress;
         ctx.save();
         ctx.globalAlpha = pState.reflectProgress;
+        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, currentReflectY);
+        ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(cx, dynamicScreenY);
-        ctx.lineTo(cx, currentReflectY);
-        ctx.strokeStyle = rlGrad;
-        ctx.lineWidth = 32 / pState.zoomLevel;
-        ctx.stroke();
+        ctx.moveTo(cx - (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
+        ctx.moveTo(cx + (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
+        ctx.restore();
 
-        ctx.beginPath();
-        ctx.moveTo(cx - (15 / pState.zoomLevel), dynamicScreenY);
-        ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
-        ctx.moveTo(cx + (15 / pState.zoomLevel), dynamicScreenY);
-        ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 1.5 / pState.zoomLevel;
-        ctx.stroke();
+        // GUF Vessel
+        if (pState.gufLightProgress > 0.01) {
+            ctx.save();
+            ctx.globalAlpha = pState.gufLightProgress;
+            ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
+            ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(cx - (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx - (15 / pState.zoomLevel), gufLightY);
+            ctx.moveTo(cx + (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx + (15 / pState.zoomLevel), gufLightY);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // 2. DIRECT LIGHT (OHR YASHAR)
+    // ROSH Light
+    ctx.save();
+    ctx.globalAlpha = pState.kavProgress;
+    ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
+    ctx.strokeStyle = dlGradRosh; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
+    ctx.restore();
+
+    // GUF Light
+    if (pState.gufLightProgress > 0.01) {
+        ctx.save();
+        ctx.globalAlpha = pState.gufLightProgress;
+        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
+        ctx.strokeStyle = dlGradGuf; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
         ctx.restore();
     }
 
-    // 2. DIRECT LIGHT
-    ctx.save();
-    ctx.globalAlpha = pState.kavProgress;
-    ctx.beginPath();
-    ctx.moveTo(cx, startY);
-    ctx.lineTo(cx, currentY);
-    ctx.strokeStyle = dlGrad;
-    ctx.lineWidth = 12 / pState.zoomLevel;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(cx, startY);
-    ctx.lineTo(cx, currentY);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = 1.5 / pState.zoomLevel;
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. THE MASACH (SCREEN) - ACCORDION EXPANSION
+    // 3. THE MASACH (SCREEN) - ACCORDION EXPANSION & SPARKS
     if (pState.kavProgress > 0.99) {
         const screenWidth = (phase4Radius * 0.50) * 0.4;
 
-        // Loop 5 times to create the internal phases (Crown to Kingdom)
+        // Draw the 5 Accordion Lines
         for (let i = 0; i < 5; i++) {
-            // When progress is 0, they all sit tightly overlapping at baseScreenY.
-            // As progress approaches 1, they spread out down to dynamicScreenY.
             const lineY = baseScreenY + (dynamicScreenY - baseScreenY) * (i / 4);
-
             ctx.beginPath();
             ctx.moveTo(cx - screenWidth, lineY);
             ctx.lineTo(cx + screenWidth, lineY);
-
-            // Color code the 5 horizontal screens to the 5 Sefirot
-            ctx.strokeStyle = `rgba(${hues[i]}, ${pState.kavProgress})`;
+            ctx.strokeStyle = `rgba(${hues[i]}, 1)`;
             ctx.lineWidth = 3 / pState.zoomLevel;
             ctx.stroke();
         }
 
-        // The Sparks perfectly ride the bottom-most screen as it descends
+        // The Sparks ride the tip of the Light!
+        const activeTipY = pState.gufLightProgress > 0.01 ? gufLightY : baseScreenY;
+
         ctx.save();
-        ctx.translate(cx, dynamicScreenY);
+        ctx.translate(cx, activeTipY);
         const numSparks = 18;
         for (let i = 0; i < numSparks; i++) {
             const baseAngle = (Math.PI * 2 / numSparks) * i;
             const flicker = Math.sin(time * 30 + i * 100);
-
             if (flicker > 0) {
                 const length = (4 + flicker * 20) / pState.zoomLevel;
                 ctx.beginPath();
@@ -240,13 +240,8 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         ctx.save();
         ctx.globalAlpha = pState.windowProgress;
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, bOuter, 0, Math.PI * 2);
-        drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, bInner, 0, Math.PI * 2);
-        drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
+        ctx.beginPath(); ctx.arc(cx, cy, bOuter, 0, Math.PI * 2); drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
+        ctx.beginPath(); ctx.arc(cx, cy, bInner, 0, Math.PI * 2); drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
 
         if (pState.windowFillProgress > 0.01) {
             ctx.beginPath();
