@@ -1,4 +1,5 @@
 // Renderers.js
+// Componentized drawing logic for clean modularity
 
 const phaseRgbs = [[255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]];
 const subPhaseRgbs = [[180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]];
@@ -53,11 +54,10 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
         const breatheRadius = Math.max(0, r + Math.sin(time * 1.5 + i) * 2);
         const mainRgb = phaseRgbs[i];
 
-        const lightOpacity = pState.lightOpacities[i] * phaseMasterOpacity;
-        if (lightOpacity > 0.01) {
+        if (pState.lightOpacities[i] > 0.01) {
             ctx.beginPath(); ctx.arc(cx, cy, Math.max(0, r), 0, Math.PI * 2);
             ctx.fillStyle = `rgba(${mainRgb[0]}, ${mainRgb[1]}, ${mainRgb[2]}, 0.25)`;
-            ctx.globalAlpha = lightOpacity; ctx.globalCompositeOperation = 'screen'; ctx.fill();
+            ctx.globalAlpha = pState.lightOpacities[i] * phaseMasterOpacity; ctx.globalCompositeOperation = 'screen'; ctx.fill();
             ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
         }
         if (i === 3 && pState.voidOpacity > 0.01) {
@@ -65,96 +65,107 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
             ctx.fillStyle = `rgba(0, 0, 0, ${pState.voidOpacity})`; ctx.fill();
         }
         for (let j = 0; j < 4; j++) {
-            const layerOpacity = pState.subVesselOpacities[i][j] * phaseMasterOpacity;
-            if (layerOpacity > 0.01) {
+            if (pState.subVesselOpacities[i][j] * phaseMasterOpacity > 0.01) {
                 const layerRadius = Math.max(0, breatheRadius - (j * 4 / pState.zoomLevel));
                 ctx.beginPath(); ctx.arc(cx, cy, layerRadius, 0, Math.PI * 2);
-                drawGlowStroke(ctx, BLENDED_COLORS[i][j], layerOpacity, 2 / pState.zoomLevel, 2);
+                drawGlowStroke(ctx, BLENDED_COLORS[i][j], pState.subVesselOpacities[i][j] * phaseMasterOpacity, 2 / pState.zoomLevel, 2);
             }
         }
         if (i === 3) {
             for (let j = 0; j < 5; j++) {
-                const layerOp = pState.restrictionOpacities[j];
-                if (layerOp > 0.01) {
+                if (pState.restrictionOpacities[j] > 0.01) {
                     const restrictRadiusScale = 1 - (j * 0.10);
-                    const restrictR = r * restrictRadiusScale;
-                    const restrictBreatheR = Math.max(0, restrictR + Math.sin(time * 1.5 + i + j) * 1.5);
+                    const restrictBreatheR = Math.max(0, r * restrictRadiusScale + Math.sin(time * 1.5 + i + j) * 1.5);
                     ctx.beginPath(); ctx.arc(cx, cy, restrictBreatheR, 0, Math.PI * 2);
-                    drawGlowStroke(ctx, '220, 230, 255', layerOp * 0.9, 2 / pState.zoomLevel, 2);
+                    drawGlowStroke(ctx, '220, 230, 255', pState.restrictionOpacities[j] * 0.9, 2 / pState.zoomLevel, 2);
                 }
             }
         }
     }
 };
 
-export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen'; // This causes the overlapping lines to burn intensely bright!
+// MODULAR COMPONENTS
+const buildGradients = (ctx, cx, topY, bottomY) => {
+    const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
+    const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
+    for (let i = 0; i < 5; i++) {
+        dlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`); rlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+    }
+    return { dlGrad, rlGrad };
+};
 
+const drawWalls = (ctx, cx, topY, bottomY, opacity, zoomLevel) => {
+    ctx.beginPath();
+    ctx.moveTo(cx - (24 / zoomLevel), bottomY); ctx.lineTo(cx - (24 / zoomLevel), topY);
+    ctx.moveTo(cx + (24 / zoomLevel), bottomY); ctx.lineTo(cx + (24 / zoomLevel), topY);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.9})`; ctx.lineWidth = 2 / zoomLevel; ctx.stroke();
+};
+
+const drawDirectLight = (ctx, cx, topY, bottomY, grad, opacityModifier, zoomLevel) => {
+    ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
+    ctx.strokeStyle = grad; ctx.lineWidth = 20 / zoomLevel; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * opacityModifier})`; ctx.lineWidth = 2.5 / zoomLevel; ctx.stroke();
+};
+
+const drawSparks = (ctx, cx, yPos, opacity, time, zoomLevel) => {
+    if (opacity <= 0.01) return;
+    ctx.save(); ctx.globalAlpha = opacity; ctx.translate(cx, yPos);
+    for (let i = 0; i < 24; i++) {
+        const baseAngle = (Math.PI * 2 / 24) * i;
+        const flicker = Math.sin(time * 30 + i * 100);
+        if (flicker > 0) {
+            const length = (6 + flicker * 25) / zoomLevel;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(baseAngle) * length, Math.sin(baseAngle) * length);
+            ctx.strokeStyle = i % 2 === 0 ? `rgba(255, 255, 255, 0.8)` : `rgba(${hues[4]}, 0.6)`;
+            ctx.lineWidth = (i % 2 === 0 ? 2 : 3) / zoomLevel; ctx.stroke();
+        }
+    }
+    ctx.beginPath(); ctx.arc(0, 0, 6 / zoomLevel, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill(); ctx.restore();
+};
+
+// MAIN CONTROLLER
+export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    // We loop over all 5 purification layers and draw them right on top of each other!
+    // Render all 5 Nested Purification Layers simultaneously on top of each other!
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
 
-        // k=0 is Base, k=1 is Beauty, etc.
         const levelValue = 4 - k;
-        const SefirahFraction = (levelValue + 1) / 5; // 1.0 down to 0.20
-        const RoshReflectFraction = levelValue / 4;   // 1.0 down to 0.0
+        const SefirahFraction = (levelValue + 1) / 5;
+        const RoshReflectFraction = levelValue / 4;
 
-        // ROSH
+        // Geometry Engine computes static geometric boundaries for this specific nested layer
         const roshTopY = cy - phase4Radius;
-        const roshBottomY = cy - (phase4Radius * 0.50); // Peh (Mouth stays fixed)
+        const roshBottomY = cy - (phase4Radius * 0.50);
         const roshStrikeY = roshTopY + (roshBottomY - roshTopY) * 0.80;
 
-        // GUF (Inner Navels shrink dynamically upwards per layer)
         const gufTopY = roshBottomY;
         const gufMaxBottomY = cy - (phase4Radius * 0.25);
         const activeGufBottomY = gufTopY + (gufMaxBottomY - gufTopY) * SefirahFraction;
         const activeGufStrikeY = gufTopY + (activeGufBottomY - gufTopY) * 0.80;
 
-        // SOF (Inner Ends originate from the lifted Navel)
         const sofTopY = activeGufBottomY;
         const sofMaxBottomY = cy - (phase4Radius * 0.06);
         const activeSofBottomY = sofTopY + (sofMaxBottomY - sofTopY) * SefirahFraction;
         const activeSofStrikeY = sofTopY + (activeSofBottomY - sofTopY) * 0.80;
 
-        const roshLightY = roshTopY + (roshBottomY - roshTopY) * layer.kavProgress;
-        const gufLightY = gufTopY + (activeGufBottomY - gufTopY) * layer.gufLightProgress;
-        const sofLightY = sofTopY + (activeSofBottomY - sofTopY) * layer.sofLightProgress;
-
-        const buildGradients = (topY, bottomY) => {
-            const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
-            const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
-            for (let i = 0; i < 5; i++) {
-                dlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`);
-                rlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`);
-            }
-            return { dlGrad, rlGrad };
-        };
-
-        const { dlGrad: dlGradRosh, rlGrad: rlGradRosh } = buildGradients(roshTopY, roshBottomY);
-        const { dlGrad: dlGradGuf, rlGrad: rlGradGuf } = buildGradients(gufTopY, activeGufBottomY);
-        const { dlGrad: dlGradSof, rlGrad: rlGradSof } = buildGradients(sofTopY, activeSofBottomY);
-
-        const drawWalls = (topY, bottomY, opacity) => {
-            ctx.beginPath();
-            ctx.moveTo(cx - (24 / pState.zoomLevel), bottomY); ctx.lineTo(cx - (24 / pState.zoomLevel), topY);
-            ctx.moveTo(cx + (24 / pState.zoomLevel), bottomY); ctx.lineTo(cx + (24 / pState.zoomLevel), topY);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
-            ctx.lineWidth = 2 / pState.zoomLevel; ctx.stroke();
-        };
+        const { dlGrad: dlGradRosh, rlGrad: rlGradRosh } = buildGradients(ctx, cx, roshTopY, roshBottomY);
+        const { dlGrad: dlGradGuf, rlGrad: rlGradGuf } = buildGradients(ctx, cx, gufTopY, activeGufBottomY);
+        const { dlGrad: dlGradSof, rlGrad: rlGradSof } = buildGradients(ctx, cx, sofTopY, activeSofBottomY);
 
         // 1. REFLECTED LIGHT
         if (layer.reflectProgress > 0.01) {
             const crownReflectProgress = Math.min(layer.reflectProgress * 5, 1);
             const currentTopY_Crown = roshBottomY - (roshBottomY - roshStrikeY) * crownReflectProgress;
-
             ctx.save(); ctx.globalAlpha = layer.reflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, roshBottomY); ctx.lineTo(cx, currentTopY_Crown);
             ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-            drawWalls(currentTopY_Crown, roshBottomY, layer.reflectProgress);
+            drawWalls(ctx, cx, currentTopY_Crown, roshBottomY, layer.reflectProgress, pState.zoomLevel);
 
             if (layer.reflectProgress > 0.20) {
                 const upwardReflectProgress = (layer.reflectProgress - 0.20) / 0.80;
@@ -162,7 +173,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
                 const currentTopY_Rest = roshStrikeY - (roshStrikeY - activeRoshReflectTopY) * upwardReflectProgress;
                 ctx.beginPath(); ctx.moveTo(cx, roshStrikeY); ctx.lineTo(cx, currentTopY_Rest);
                 ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-                drawWalls(currentTopY_Rest, roshStrikeY, layer.reflectProgress);
+                drawWalls(ctx, cx, currentTopY_Rest, roshStrikeY, layer.reflectProgress, pState.zoomLevel);
             }
             ctx.restore();
         }
@@ -170,11 +181,10 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         if (layer.gufReflectProgress > 0.01) {
             const crownReflectProgress = Math.min(layer.gufReflectProgress * 5, 1);
             const currentTopY_Crown = activeGufBottomY - (activeGufBottomY - activeGufStrikeY) * crownReflectProgress;
-
             ctx.save(); ctx.globalAlpha = layer.gufReflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, activeGufBottomY); ctx.lineTo(cx, currentTopY_Crown);
             ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-            drawWalls(currentTopY_Crown, activeGufBottomY, layer.gufReflectProgress);
+            drawWalls(ctx, cx, currentTopY_Crown, activeGufBottomY, layer.gufReflectProgress, pState.zoomLevel);
 
             if (layer.gufReflectProgress > 0.20) {
                 const upwardReflectProgress = (layer.gufReflectProgress - 0.20) / 0.80;
@@ -182,7 +192,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
                 const currentTopY_Rest = activeGufStrikeY - (activeGufStrikeY - shyOfMouthY) * upwardReflectProgress;
                 ctx.beginPath(); ctx.moveTo(cx, activeGufStrikeY); ctx.lineTo(cx, currentTopY_Rest);
                 ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-                drawWalls(currentTopY_Rest, activeGufStrikeY, layer.gufReflectProgress);
+                drawWalls(ctx, cx, currentTopY_Rest, activeGufStrikeY, layer.gufReflectProgress, pState.zoomLevel);
             }
             ctx.restore();
         }
@@ -190,11 +200,10 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         if (layer.sofReflectProgress > 0.01) {
             const crownReflectProgress = Math.min(layer.sofReflectProgress * 5, 1);
             const currentTopY_Crown = activeSofBottomY - (activeSofBottomY - activeSofStrikeY) * crownReflectProgress;
-
             ctx.save(); ctx.globalAlpha = layer.sofReflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, activeSofBottomY); ctx.lineTo(cx, currentTopY_Crown);
             ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-            drawWalls(currentTopY_Crown, activeSofBottomY, layer.sofReflectProgress);
+            drawWalls(ctx, cx, currentTopY_Crown, activeSofBottomY, layer.sofReflectProgress, pState.zoomLevel);
 
             if (layer.sofReflectProgress > 0.20) {
                 const upwardReflectProgress = (layer.sofReflectProgress - 0.20) / 0.80;
@@ -202,30 +211,23 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
                 const currentTopY_Rest = activeSofStrikeY - (activeSofStrikeY - shyOfTaburY) * upwardReflectProgress;
                 ctx.beginPath(); ctx.moveTo(cx, activeSofStrikeY); ctx.lineTo(cx, currentTopY_Rest);
                 ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
-                drawWalls(currentTopY_Rest, activeSofStrikeY, layer.sofReflectProgress);
+                drawWalls(ctx, cx, currentTopY_Rest, activeSofStrikeY, layer.sofReflectProgress, pState.zoomLevel);
             }
             ctx.restore();
         }
 
         // 2. DIRECT LIGHT
-        const drawDirectLight = (topY, bottomY, grad, opacityModifier = 1) => {
-            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
-            ctx.strokeStyle = grad; ctx.lineWidth = 20 / pState.zoomLevel; ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * opacityModifier})`; ctx.lineWidth = 2.5 / pState.zoomLevel; ctx.stroke();
-        };
-
         ctx.save(); ctx.globalAlpha = layer.kavProgress;
-        drawDirectLight(roshTopY, roshLightY, dlGradRosh); ctx.restore();
+        drawDirectLight(ctx, cx, roshTopY, roshTopY + (roshBottomY - roshTopY) * layer.kavProgress, dlGradRosh, 1, pState.zoomLevel); ctx.restore();
 
         if (layer.gufLightProgress > 0.01) {
             ctx.save(); ctx.globalAlpha = 1;
-            drawDirectLight(gufTopY, gufLightY, dlGradGuf); ctx.restore();
+            drawDirectLight(ctx, cx, gufTopY, gufTopY + (activeGufBottomY - gufTopY) * layer.gufLightProgress, dlGradGuf, 1, pState.zoomLevel); ctx.restore();
         }
 
         if (layer.sofLightProgress > 0.01) {
             ctx.save(); ctx.globalAlpha = 0.5;
-            drawDirectLight(sofTopY, sofLightY, dlGradSof, 0.5); ctx.restore();
+            drawDirectLight(ctx, cx, sofTopY, sofTopY + (activeSofBottomY - sofTopY) * layer.sofLightProgress, dlGradSof, 0.5, pState.zoomLevel); ctx.restore();
         }
 
         // 3. SCREENS & SPARKS
@@ -270,29 +272,12 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
                 ctx.strokeStyle = `rgba(100, 200, 255, ${layer.sofLightProgress})`; ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
             }
 
-            const drawSparks = (yPos, opacity) => {
-                if (opacity <= 0.01) return;
-                ctx.save(); ctx.globalAlpha = opacity; ctx.translate(cx, yPos);
-                for (let i = 0; i < 24; i++) {
-                    const baseAngle = (Math.PI * 2 / 24) * i;
-                    const flicker = Math.sin(time * 30 + i * 100);
-                    if (flicker > 0) {
-                        const length = (6 + flicker * 25) / pState.zoomLevel;
-                        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(baseAngle) * length, Math.sin(baseAngle) * length);
-                        ctx.strokeStyle = i % 2 === 0 ? `rgba(255, 255, 255, 0.8)` : `rgba(${hues[4]}, 0.6)`;
-                        ctx.lineWidth = (i % 2 === 0 ? 2 : 3) / pState.zoomLevel; ctx.stroke();
-                    }
-                }
-                ctx.beginPath(); ctx.arc(0, 0, 6 / pState.zoomLevel, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill(); ctx.restore();
-            };
-
-            drawSparks(roshStrikeY, layer.pehFlareOpacity);
-            drawSparks(activeGufStrikeY, layer.taburFlareOpacity);
-            drawSparks(activeSofStrikeY, layer.siyumFlareOpacity);
+            drawSparks(ctx, cx, roshStrikeY, layer.pehFlareOpacity, time, pState.zoomLevel);
+            drawSparks(ctx, cx, activeGufStrikeY, layer.taburFlareOpacity, time, pState.zoomLevel);
+            drawSparks(ctx, cx, activeSofStrikeY, layer.siyumFlareOpacity, time, pState.zoomLevel);
         }
 
-        // Window Fill only happens on the main/base layer to avoid stacking 5 times.
+        // Window Fill Only on Base Layer (k=0)
         if (k === 0 && layer.windowProgress > 0.01) {
             const crownOuterR = phase4Radius * 1.0; const crownInnerR = phase4Radius * 0.90;
             const bOuter = Math.max(0, crownOuterR + Math.sin(time * 1.5 + 3) * 1.5);

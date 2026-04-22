@@ -1,26 +1,21 @@
 // SimulationCanvas.js
+// Restored backwards compatibility with parent components via `activeSequence`
 
 import React, { useEffect, useRef } from 'react';
 import styles from './SimulationCanvas.module.css';
-import { calculateTargets } from '../Rules';
+import { SpiritualStates } from './Timeline';
+import { calculateTargets } from './Rules';
 import { applyEasing } from './PhysicsMath';
-import { drawRootLight, drawEmanations, drawKav } from './Renderers';
-
-const createLayerState = () => ({
-    kavProgress: 0, reflectProgress: 0, windowProgress: 0, windowFillProgress: 0,
-    gufExpandProgresses: [0, 0, 0, 0, 0], gufLightProgress: 0, gufReflectProgress: 0,
-    sofExpandProgresses: [0, 0, 0, 0, 0], sofLightProgress: 0, sofReflectProgress: 0,
-    pehFlareOpacity: 0, taburFlareOpacity: 0, siyumFlareOpacity: 0
-});
+import { drawRootLight, drawEmanations, drawWorldOfAdamKadmon } from './Renderers';
+import { getFreshState } from './Schema';
 
 const SimulationCanvas = ({ activeSequence }) => {
     const canvasRef = useRef(null);
-    const sequenceRef = useRef(activeSequence);
-    const targetsRef = useRef(calculateTargets(activeSequence || []));
+    const targetsRef = useRef(getFreshState());
 
     useEffect(() => {
-        sequenceRef.current = activeSequence;
-        targetsRef.current = calculateTargets(activeSequence || []);
+        // Active sequence directly maps to the rules compiler
+        targetsRef.current = calculateTargets(activeSequence, SpiritualStates);
     }, [activeSequence]);
 
     useEffect(() => {
@@ -29,13 +24,7 @@ const SimulationCanvas = ({ activeSequence }) => {
         let animationFrameId;
         let time = 0;
 
-        const pState = {
-            infinityAlpha: 0, rootOpacities: [0, 0, 0, 0, 0], zoomLevel: 1,
-            subVesselOpacities: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-            lightOpacities: [0, 0, 0, 0], restrictionOpacities: [0, 0, 0, 0, 0], voidOpacity: 0,
-            outerPhasesOpacity: 1,
-            layers: [createLayerState(), createLayerState(), createLayerState(), createLayerState(), createLayerState()]
-        };
+        const pState = getFreshState();
 
         const resize = () => {
             const dpr = window.devicePixelRatio || 1;
@@ -56,8 +45,7 @@ const SimulationCanvas = ({ activeSequence }) => {
             const cx = w / 2;
             const cy = h / 2;
 
-            const targets = targetsRef.current;
-            applyEasing(pState, targets, 0.015);
+            applyEasing(pState, targetsRef.current, 0.015);
 
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
@@ -72,7 +60,7 @@ const SimulationCanvas = ({ activeSequence }) => {
 
             const maxR = Math.min(w, h) * 0.35;
             drawEmanations(ctx, cx, cy, time, pState, maxR);
-            drawKav(ctx, cx, cy, w, h, pState, maxR, time);
+            drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time);
 
             ctx.restore();
             animationFrameId = requestAnimationFrame(render);

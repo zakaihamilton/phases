@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { SpiritualStates } from '../Timeline';
+import { SpiritualStates } from '../SimulationCanvas/Timeline';
 
 /**
  * Helper to get initial state from hash
@@ -28,7 +28,7 @@ export function useNavigation({
         const syncFromHash = () => {
             const hash = window.location.hash.replace('#', '');
             const parts = hash.split('/');
-            
+
             // Check if the hash matches this session
             if (parts[0] === 'choice-with-force') {
                 const id = parseInt(parts[1], 10);

@@ -1,7 +1,7 @@
 // EngineController.jsx
 import React, { useState } from 'react';
 import SimulationCanvas from './SimulationCanvas/SimulationCanvas';
-import { SpiritualStates } from './Timeline';
+import { SpiritualStates } from './SimulationCanvas/Timeline';
 import { useNavigation, getInitialStateIndex } from './hooks/useNavigation';
 import InfoPanel from './components/InfoPanel/InfoPanel';
 import NavigationControls from './components/NavigationControls/NavigationControls';
@@ -28,7 +28,7 @@ const EngineController = () => {
             <SimulationCanvas activeSequence={currentState.activeSequence} />
 
             {/* Top Info Panel */}
-            <InfoPanel 
+            <InfoPanel
                 name={currentState.name}
                 description={currentState.description}
                 currentIndex={currentStateIndex}
@@ -36,7 +36,7 @@ const EngineController = () => {
             />
 
             {/* Bottom Navigation Controls */}
-            <NavigationControls 
+            <NavigationControls
                 currentIndex={currentStateIndex}
                 total={SpiritualStates.length}
                 onNext={handleNext}
