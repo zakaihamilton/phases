@@ -5,8 +5,8 @@ import styles from './SimulationCanvas.module.css';
 import { SpiritualStates } from './Timeline';
 import { calculateTargets } from './Rules';
 import { applyEasing } from './PhysicsMath';
-import { drawRootLight, drawEmanations } from './RenderBackground'; // UPDATED IMPORT
-import { drawWorldOfAdamKadmon } from './RenderAdamKadmon'; // UPDATED IMPORT
+import { drawRootLight, drawEmanations } from './RenderBackground';
+import { drawWorldOfAdamKadmon } from './RenderAdamKadmon';
 import { getFreshState } from './Schema';
 
 const SimulationCanvas = ({ activeSequence }) => {
@@ -46,24 +46,29 @@ const SimulationCanvas = ({ activeSequence }) => {
 
             applyEasing(pState, targetsRef.current, 0.015);
 
+            // 1. Draw the static void background
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
-
-            drawRootLight(ctx, cx, cy, w, h, time, pState);
 
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
 
+            // --- TRUE 2.5D ISOMETRIC CAMERA TILT ---
             if (pState.tiltProgress > 0.01) {
-                ctx.translate(35 * pState.tiltProgress, 10 * pState.tiltProgress);
+                // Rotate slightly to the right (Yaw)
+                ctx.rotate((Math.PI / 16) * pState.tiltProgress);
+                // Squash the Y-axis to turn the flat circles into a 3D floor (Pitch)
+                ctx.scale(1, 1 - (0.45 * pState.tiltProgress));
             }
 
             ctx.translate(-cx, -cy);
 
             const maxR = Math.min(w, h) * 0.35;
 
+            // 2. Draw EVERYTHING inside the newly tilted 3D space
+            drawRootLight(ctx, cx, cy, w, h, time, pState);
             drawEmanations(ctx, cx, cy, time, pState, maxR);
             drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time);
 

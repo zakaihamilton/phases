@@ -5,15 +5,16 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    ctx.translate((200 / pState.zoomLevel) * pState.tiltProgress, 0);
-
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
 
         ctx.save();
 
-        ctx.translate(-k * (100 / pState.zoomLevel) * pState.tiltProgress, 0);
+        // --- 3D Z-AXIS ELEVATION ---
+        // Because the whole world is rotated and squashed in SimulationCanvas, 
+        // translating along the Y-axis pulls the layer straight "up" out of the floor!
+        ctx.translate(0, -k * (90 / pState.zoomLevel) * pState.tiltProgress);
 
         const levelValue = 4 - k;
         const SefFraction = (levelValue + 1) / 5;
