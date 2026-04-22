@@ -1,3 +1,5 @@
+// SimulationCanvas.js
+
 import React, { useEffect, useRef } from 'react';
 import styles from './SimulationCanvas.module.css';
 import { calculateTargets } from '../Rules';
@@ -7,14 +9,10 @@ import { drawRootLight, drawEmanations, drawKav } from './Renderers';
 const SimulationCanvas = ({ activeSequence }) => {
     const canvasRef = useRef(null);
     const sequenceRef = useRef(activeSequence);
-
-    // PERFORMANCE FIX: Pre-calculate the targets and store them in a ref.
-    // This stops the engine from parsing the rules array 60 times a second!
     const targetsRef = useRef(calculateTargets(activeSequence || []));
 
     useEffect(() => {
         sequenceRef.current = activeSequence;
-        // Only recalculate the math exactly when the timeline changes
         targetsRef.current = calculateTargets(activeSequence || []);
     }, [activeSequence]);
 
@@ -36,8 +34,9 @@ const SimulationCanvas = ({ activeSequence }) => {
             outerPhasesOpacity: 1,
             windowProgress: 0,
             windowFillProgress: 0,
-            screenExpandProgress: 0,
-            gufLightProgress: 0
+            flareOpacity: 0,                       // NEW
+            gufExpandProgresses: [0, 0, 0, 0, 0],  // NEW
+            gufLightProgress: 0                    // NEW
         };
 
         const resize = () => {
@@ -59,7 +58,6 @@ const SimulationCanvas = ({ activeSequence }) => {
             const cx = w / 2;
             const cy = h / 2;
 
-            // PERFORMANCE FIX: Read from the pre-calculated target ref
             const targets = targetsRef.current;
             applyEasing(pState, targets, 0.015);
 
@@ -79,12 +77,10 @@ const SimulationCanvas = ({ activeSequence }) => {
             drawKav(ctx, cx, cy, w, h, pState, maxR, time);
 
             ctx.restore();
-
             animationFrameId = requestAnimationFrame(render);
         };
 
         render();
-
         return () => {
             window.removeEventListener('resize', resize);
             cancelAnimationFrame(animationFrameId);

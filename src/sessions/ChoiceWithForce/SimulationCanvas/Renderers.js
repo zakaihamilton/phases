@@ -113,17 +113,15 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     // GEOMETRY
     const phase4Radius = maxR * (1 - (3 * 0.22));
     const startY = cy - phase4Radius; // Top of Rosh
-    const baseScreenY = cy - (phase4Radius * 0.50); // Peh (Mouth) / Bottom of Rosh
+    const baseScreenY = cy - (phase4Radius * 0.50); // Peh (Mouth)
     const maxExpandedScreenY = cy - (phase4Radius * 0.10); // Bottom of Guf
-
-    const dynamicScreenY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.screenExpandProgress || 0);
 
     const roshLightY = startY + (baseScreenY - startY) * pState.kavProgress;
     const gufLightY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.gufLightProgress || 0);
 
     const hues = ['180, 180, 180', '255, 235, 59', '33, 150, 243', '244, 67, 54', '76, 175, 80'];
 
-    // ROSH GRADIENTS
+    // ROSH GRADIENTS (Maintains form perfectly above the mouth)
     const dlGradRosh = ctx.createLinearGradient(cx, startY, cx, baseScreenY);
     const rlGradRosh = ctx.createLinearGradient(cx, baseScreenY, cx, startY);
     for (let i = 0; i < 5; i++) {
@@ -131,103 +129,106 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         rlGradRosh.addColorStop(i * 0.25, `rgb(${hues[i]})`);
     }
 
-    // GUF GRADIENTS
+    // GUF GRADIENT (purely downward direct light)
     const dlGradGuf = ctx.createLinearGradient(cx, baseScreenY, cx, maxExpandedScreenY);
-    const rlGradGuf = ctx.createLinearGradient(cx, maxExpandedScreenY, cx, baseScreenY);
     for (let i = 0; i < 5; i++) {
         dlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
-        rlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
     }
 
-    // 1. REFLECTED LIGHT (VESSELS)
+    // 1. REFLECTED LIGHT (ROSH VESSEL ONLY)
     if (pState.reflectProgress > 0.01) {
-        // ROSH Vessel
         const currentReflectY = baseScreenY - (baseScreenY - startY) * pState.reflectProgress;
         ctx.save();
         ctx.globalAlpha = pState.reflectProgress;
         ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, currentReflectY);
         ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+
         ctx.beginPath();
         ctx.moveTo(cx - (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
         ctx.moveTo(cx + (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
         ctx.restore();
-
-        // GUF Vessel
-        if (pState.gufLightProgress > 0.01) {
-            ctx.save();
-            ctx.globalAlpha = pState.gufLightProgress;
-            ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
-            ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(cx - (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx - (15 / pState.zoomLevel), gufLightY);
-            ctx.moveTo(cx + (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx + (15 / pState.zoomLevel), gufLightY);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
-            ctx.restore();
-        }
     }
 
     // 2. DIRECT LIGHT (OHR YASHAR)
-    // ROSH Light
+    // ROSH
     ctx.save();
     ctx.globalAlpha = pState.kavProgress;
     ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
     ctx.strokeStyle = dlGradRosh; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
+
     ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
     ctx.restore();
 
-    // GUF Light
+    // GUF (Direct Light purely spreading downwards)
     if (pState.gufLightProgress > 0.01) {
         ctx.save();
-        ctx.globalAlpha = pState.gufLightProgress;
+        ctx.globalAlpha = 1;
         ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
         ctx.strokeStyle = dlGradGuf; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
+
         ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
         ctx.restore();
     }
 
-    // 3. THE MASACH (SCREEN) - ACCORDION EXPANSION & SPARKS
+    // 3. THE MASACH & SPARKS
     if (pState.kavProgress > 0.99) {
         const screenWidth = (phase4Radius * 0.50) * 0.4;
 
-        // Draw the 5 Accordion Lines
+        // The Root Masach at the Peh (always stays)
+        ctx.beginPath();
+        ctx.moveTo(cx - screenWidth, baseScreenY);
+        ctx.lineTo(cx + screenWidth, baseScreenY);
+        ctx.strokeStyle = `rgba(100, 200, 255, ${pState.kavProgress})`;
+        ctx.lineWidth = 3 / pState.zoomLevel;
+        ctx.stroke();
+
+        // The 5 Sequential Lines dropping to form the Guf
+        const sectionHeight = (maxExpandedScreenY - baseScreenY) / 5;
         for (let i = 0; i < 5; i++) {
-            const lineY = baseScreenY + (dynamicScreenY - baseScreenY) * (i / 4);
-            ctx.beginPath();
-            ctx.moveTo(cx - screenWidth, lineY);
-            ctx.lineTo(cx + screenWidth, lineY);
-            ctx.strokeStyle = `rgba(${hues[i]}, 1)`;
-            ctx.lineWidth = 3 / pState.zoomLevel;
-            ctx.stroke();
-        }
+            if (pState.gufExpandProgresses[i] > 0.001) {
+                // Line drops from the final position of the previous line (or base for i=0)
+                const startLineY = baseScreenY + (i * sectionHeight);
+                const finalLineY = baseScreenY + ((i + 1) * sectionHeight);
+                const lineY = startLineY + (finalLineY - startLineY) * pState.gufExpandProgresses[i];
 
-        // The Sparks ride the tip of the Light!
-        const activeTipY = pState.gufLightProgress > 0.01 ? gufLightY : baseScreenY;
-
-        ctx.save();
-        ctx.translate(cx, activeTipY);
-        const numSparks = 18;
-        for (let i = 0; i < numSparks; i++) {
-            const baseAngle = (Math.PI * 2 / numSparks) * i;
-            const flicker = Math.sin(time * 30 + i * 100);
-            if (flicker > 0) {
-                const length = (4 + flicker * 20) / pState.zoomLevel;
                 ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(Math.cos(baseAngle) * length, Math.sin(baseAngle) * length);
-                const isCore = i % 2 === 0;
-                ctx.strokeStyle = isCore ? `rgba(255, 255, 255, 0.8)` : `rgba(${hues[4]}, 0.6)`;
-                ctx.lineWidth = (isCore ? 1.5 : 3) / pState.zoomLevel;
+                ctx.moveTo(cx - screenWidth, lineY);
+                ctx.lineTo(cx + screenWidth, lineY);
+                ctx.strokeStyle = `rgba(${hues[i]}, ${pState.gufExpandProgresses[i]})`;
+                ctx.lineWidth = 3 / pState.zoomLevel;
                 ctx.stroke();
             }
         }
-        ctx.beginPath();
-        ctx.arc(0, 0, 4 / pState.zoomLevel, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fill();
-        ctx.restore();
+
+        // Sparks (Zivug d'Hakaa) - Now explicitly fades out when Guf begins!
+        if (pState.flareOpacity > 0.01) {
+            ctx.save();
+            ctx.globalAlpha = pState.flareOpacity; // Fades out
+            ctx.translate(cx, baseScreenY); // Locked to the Peh (Mouth)
+            const numSparks = 18;
+            for (let i = 0; i < numSparks; i++) {
+                const baseAngle = (Math.PI * 2 / numSparks) * i;
+                const flicker = Math.sin(time * 30 + i * 100);
+                if (flicker > 0) {
+                    const length = (4 + flicker * 20) / pState.zoomLevel;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(baseAngle) * length, Math.sin(baseAngle) * length);
+                    const isCore = i % 2 === 0;
+                    ctx.strokeStyle = isCore ? `rgba(255, 255, 255, 0.8)` : `rgba(${hues[4]}, 0.6)`;
+                    ctx.lineWidth = (isCore ? 1.5 : 3) / pState.zoomLevel;
+                    ctx.stroke();
+                }
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, 4 / pState.zoomLevel, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fill();
+            ctx.restore();
+        }
     }
 
     // 4. THE WINDOW & CIRCLE FILL

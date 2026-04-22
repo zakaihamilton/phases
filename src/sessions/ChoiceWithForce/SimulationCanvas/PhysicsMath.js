@@ -1,4 +1,5 @@
 // PhysicsMath.js
+
 export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
     pState.infinityAlpha += (targets.infinityAlpha - pState.infinityAlpha) * easeSpeed;
     pState.zoomLevel += (targets.zoomLevel - pState.zoomLevel) * easeSpeed;
@@ -14,6 +15,8 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
 
     for (let i = 0; i < 5; i++) {
         pState.restrictionOpacities[i] += (targets.restrictionOpacities[i] - pState.restrictionOpacities[i]) * easeSpeed;
+        // Ease the 5 individual Guf lines dropping
+        pState.gufExpandProgresses[i] += (targets.gufExpandProgresses[i] - pState.gufExpandProgresses[i]) * easeSpeed;
     }
 
     pState.kavProgress += (targets.kavProgress - pState.kavProgress) * easeSpeed;
@@ -21,6 +24,6 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
     pState.windowProgress += (targets.windowProgress - pState.windowProgress) * easeSpeed;
     pState.windowFillProgress += (targets.windowFillProgress - pState.windowFillProgress) * easeSpeed;
 
-    pState.screenExpandProgress += (targets.screenExpandProgress - pState.screenExpandProgress) * easeSpeed;
-    pState.gufLightProgress += (targets.gufLightProgress - pState.gufLightProgress) * easeSpeed; // NEW
+    pState.flareOpacity += (targets.flareOpacity - pState.flareOpacity) * easeSpeed;
+    pState.gufLightProgress += (targets.gufLightProgress - pState.gufLightProgress) * easeSpeed;
 };

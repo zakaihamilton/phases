@@ -1,4 +1,5 @@
 // Rules.js
+
 export const calculateTargets = (activeSequence) => {
     const targets = {
         infinityAlpha: 0,
@@ -11,8 +12,9 @@ export const calculateTargets = (activeSequence) => {
         outerPhasesOpacity: 1,
         windowProgress: 0,
         windowFillProgress: 0,
-        screenExpandProgress: 0,
-        gufLightProgress: 0, // NEW: Tracks the light falling into the body
+        flareOpacity: 0, // NEW: Controls the striking sparks
+        gufExpandProgresses: [0, 0, 0, 0, 0], // NEW: 5 distinct drops
+        gufLightProgress: 0, // NEW: Single descending light beam
         zoomLevel: 1
     };
 
@@ -24,8 +26,7 @@ export const calculateTargets = (activeSequence) => {
         if (action === 'ROOT') targets.infinityAlpha = 1;
         else if (action === 'COARSEN') {
             if (coarsenCount === 4 || currentVesselIndex === -1) { currentVesselIndex++; coarsenCount = 0; }
-            targets.subVesselOpacities[currentVesselIndex][coarsenCount] = 1;
-            coarsenCount++;
+            targets.subVesselOpacities[currentVesselIndex][coarsenCount] = 1; coarsenCount++;
         }
         else if (action === 'LIGHT') { targets.lightOpacities[currentVesselIndex] = 1; coarsenCount = 4; }
         else if (action === 'RESTRICT_COARSEN') { targets.restrictionOpacities[restrictCount] = 1; restrictCount++; }
@@ -35,16 +36,26 @@ export const calculateTargets = (activeSequence) => {
         else if (action === 'WINDOW_FORM') { targets.windowProgress = 1; }
         else if (action === 'WINDOW_FILL') { targets.windowProgress = 1; targets.windowFillProgress = 1; }
 
-        // --- GUF SEPARATION ---
+        // The Body Actions
         else if (action === 'GUF_EXPAND') {
             targets.windowProgress = 1; targets.windowFillProgress = 1;
-            gufExpandCount++; targets.screenExpandProgress = gufExpandCount * 0.20;
+            targets.gufExpandProgresses[gufExpandCount] = 1; // Unfurls one by one
+            gufExpandCount++;
         }
         else if (action === 'GUF_FILL') {
-            targets.windowProgress = 1; targets.windowFillProgress = 1; targets.screenExpandProgress = 1;
-            gufFillCount++; targets.gufLightProgress = gufFillCount * 0.20;
+            targets.windowProgress = 1; targets.windowFillProgress = 1;
+            targets.gufExpandProgresses = [1, 1, 1, 1, 1];
+            gufFillCount++;
+            targets.gufLightProgress = gufFillCount * 0.20; // Pushes the light down 20%
         }
     });
+
+    // The Flare is ON when the light strikes, but completely disappears when Guf begins
+    if (kavDescendCount >= 5 && gufExpandCount === 0 && gufFillCount === 0) {
+        targets.flareOpacity = 1;
+    } else {
+        targets.flareOpacity = 0;
+    }
 
     const zoomIndex = currentVesselIndex >= 0 ? currentVesselIndex : 0;
     if (zoomIndex === 3) targets.zoomLevel = 2.8;
