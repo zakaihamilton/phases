@@ -36,10 +36,34 @@ export const drawRootLight = (ctx, cx, cy, w, h, time, pState) => {
     const breathe = Math.sin(time * 2) * 0.05 + 1;
     const maxRadius = Math.max(0, Math.max(w, h) * 0.75 * breathe);
 
+    // 1. Draw the Base Infinite Root Circles
     for (let i = 0; i < 5; i++) {
         if (pState.rootOpacities[i] > 0.01) {
             const r = maxRadius * (1 - (i * 0.08));
             drawOrb(ctx, cx, cy, r, `rgba(${hues[i]}, 0.3)`, `rgba(0, 0, 0, 0)`, pState.rootOpacities[i]);
+        }
+    }
+
+    // 2. Draw the corresponding Windows/Fills as the Partzufim Purify
+    for (let k = 0; k < 5; k++) {
+        const layer = pState.layers[k];
+        if (layer.windowProgress > 0.01) {
+            const r = maxRadius * (1 - (k * 0.08));
+            const innerR = r - 15; // 15px gap to create a distinct lining
+
+            ctx.save();
+            ctx.globalAlpha = layer.windowProgress;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); drawGlowStroke(ctx, hues[k], 0.9, 4, 2);
+            ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI * 2); drawGlowStroke(ctx, hues[k], 0.9, 4, 2);
+
+            if (layer.windowFillProgress > 0.01) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2, false);
+                ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
+                ctx.fillStyle = `rgba(${hues[k]}, ${layer.windowFillProgress * 0.6})`;
+                ctx.fill();
+            }
+            ctx.restore();
         }
     }
 };
@@ -83,7 +107,6 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
     }
 };
 
-// MODULAR COMPONENTS
 const buildGradients = (ctx, cx, topY, bottomY) => {
     const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
     const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
@@ -129,8 +152,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    // Shift the entire stack to the right by 200px so that when the 5 nested layers 
-    // spread out to the left (100px each), the whole group stays visually centered!
     ctx.translate((200 / pState.zoomLevel) * pState.tiltProgress, 0);
 
     for (let k = 0; k < 5; k++) {
@@ -139,7 +160,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
 
         ctx.save();
 
-        // Shift each nested layer horizontally to the left so all faces can be seen side-by-side
         ctx.translate(-k * (100 / pState.zoomLevel) * pState.tiltProgress, 0);
 
         const levelValue = 4 - k;
@@ -280,21 +300,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             drawSparks(ctx, cx, activeSofStrikeY, layer.siyumFlareOpacity, time, pState.zoomLevel);
         }
 
-        if (k === 0 && layer.windowProgress > 0.01) {
-            const crownOuterR = phase4Radius * 1.0; const crownInnerR = phase4Radius * 0.90;
-            const bOuter = Math.max(0, crownOuterR + Math.sin(time * 1.5 + 3) * 1.5);
-            const bInner = Math.max(0, crownInnerR + Math.sin(time * 1.5 + 3.5) * 1.5);
-
-            ctx.save(); ctx.globalAlpha = layer.windowProgress;
-            ctx.beginPath(); ctx.arc(cx, cy, bOuter, 0, Math.PI * 2); drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
-            ctx.beginPath(); ctx.arc(cx, cy, bInner, 0, Math.PI * 2); drawGlowStroke(ctx, hues[0], 0.8, 4 / pState.zoomLevel, 2);
-
-            if (layer.windowFillProgress > 0.01) {
-                ctx.beginPath(); ctx.arc(cx, cy, crownOuterR, 0, Math.PI * 2, false); ctx.arc(cx, cy, crownInnerR, 0, Math.PI * 2, true);
-                ctx.fillStyle = `rgba(200, 200, 200, ${layer.windowFillProgress * 0.75})`; ctx.fill();
-            }
-            ctx.restore();
-        }
         ctx.restore();
     }
     ctx.restore();

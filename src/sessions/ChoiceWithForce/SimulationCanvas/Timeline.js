@@ -46,6 +46,7 @@ const buildTimeline = () => {
     });
 
     const purifications = ["Kingdom (Galgalta)", "Beauty", "Understanding", "Wisdom", "Crown"];
+    const circleNames = ["Crown", "Wisdom", "Understanding", "Beauty", "Kingdom"];
 
     for (let lyr = 0; lyr < 5; lyr++) {
         const pName = purifications[lyr];
@@ -57,7 +58,12 @@ const buildTimeline = () => {
                 action: `PURIFY_START_${lyr}`,
                 stateModifiers: mod(s => {
                     s.layers[lyr] = JSON.parse(JSON.stringify(s.layers[lyr]));
-                    s.tiltProgress = 1; // Trigger true 2.5D Isometric perspective!
+
+                    // Gradual tilt mapping (25% per layer)
+                    s.tiltProgress = lyr / 4;
+
+                    // Note: zoomLevel manipulation has been entirely removed here.
+                    // The camera will stay locked at the close-up 4.2 scale during the tilt!
                 })
             });
         }
@@ -78,10 +84,18 @@ const buildTimeline = () => {
             });
         }
 
-        if (lyr === 0) {
-            timeline.push({ name: "The Window", description: "Forming window.", action: 'WINDOW_FORM', stateModifiers: mod(s => { s.layers[0].windowProgress = 1; }) });
-            timeline.push({ name: "Filling the Crown", description: "Filling window.", action: 'WINDOW_FILL', stateModifiers: mod(s => { s.layers[0].windowFillProgress = 1; }) });
-        }
+        timeline.push({
+            name: `Window of ${circleNames[lyr]}`,
+            description: `Forming the window lining for the circle of ${circleNames[lyr]}.`,
+            action: `WINDOW_FORM_${lyr}`,
+            stateModifiers: mod(s => { s.layers[lyr].windowProgress = 1; })
+        });
+        timeline.push({
+            name: `Filling ${circleNames[lyr]}`,
+            description: `Filling the circle of ${circleNames[lyr]}.`,
+            action: `WINDOW_FILL_${lyr}`,
+            stateModifiers: mod(s => { s.layers[lyr].windowFillProgress = 1; })
+        });
 
         for (let step = 0; step < 5; step++) {
             timeline.push({
