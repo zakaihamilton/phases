@@ -1,0 +1,118 @@
+.container {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.controlsGroup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 10px 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.navButton {
+    background: none;
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.8;
+}
+
+.navButton:hover:not(:disabled) {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.navButton:active:not(:disabled) {
+    transform: translateY(0px) scale(0.98);
+}
+
+.navButton:disabled {
+    opacity: 0.2;
+    cursor: default;
+}
+
+.buttonText {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+}
+
+.icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.5px;
+}
+
+.centerInfo {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hintText {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.progressBar {
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
+    background-size: 200% 100%;
+    animation: pulse 4s infinite linear;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pulse {
+    0% { background-position: 100% 0%; }
+    100% { background-position: -100% 0%; }
+}
+
+@media (max-width: 600px) {
+    .container {
+        bottom: 20px;
+        width: calc(100vw - 40px);
+    }
+    
+    .buttonText {
+        display: none;
+    }
+    
+    .navButton {
+        padding: 10px 16px;
+    }
+}

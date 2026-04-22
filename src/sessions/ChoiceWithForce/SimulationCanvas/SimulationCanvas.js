@@ -8,8 +8,14 @@ const SimulationCanvas = ({ activeSequence }) => {
     const canvasRef = useRef(null);
     const sequenceRef = useRef(activeSequence);
 
+    // PERFORMANCE FIX: Pre-calculate the targets and store them in a ref.
+    // This stops the engine from parsing the rules array 60 times a second!
+    const targetsRef = useRef(calculateTargets(activeSequence || []));
+
     useEffect(() => {
         sequenceRef.current = activeSequence;
+        // Only recalculate the math exactly when the timeline changes
+        targetsRef.current = calculateTargets(activeSequence || []);
     }, [activeSequence]);
 
     useEffect(() => {
@@ -45,14 +51,14 @@ const SimulationCanvas = ({ activeSequence }) => {
 
         const render = () => {
             time += 0.01;
-            const sequence = sequenceRef.current;
             const dpr = window.devicePixelRatio || 1;
             const w = canvas.width / dpr;
             const h = canvas.height / dpr;
             const cx = w / 2;
             const cy = h / 2;
 
-            const targets = calculateTargets(sequence || []);
+            // PERFORMANCE FIX: Read from the pre-calculated target ref
+            const targets = targetsRef.current;
             applyEasing(pState, targets, 0.015);
 
             ctx.globalCompositeOperation = 'source-over';
@@ -68,8 +74,6 @@ const SimulationCanvas = ({ activeSequence }) => {
 
             const maxR = Math.min(w, h) * 0.35;
             drawEmanations(ctx, cx, cy, time, pState, maxR);
-
-            // Critical: Pass time so animations don't output NaN
             drawKav(ctx, cx, cy, w, h, pState, maxR, time);
 
             ctx.restore();

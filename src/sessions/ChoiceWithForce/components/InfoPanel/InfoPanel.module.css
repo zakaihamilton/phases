@@ -1,0 +1,105 @@
+.container {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    width: 28vw;
+    height: 260px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    pointer-events: auto;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+}
+
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.indexLabel {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.indicatorContainer {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.dot {
+    width: 6px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 1px;
+    transition: all 0.3s ease;
+}
+
+.activeDot {
+    width: 16px;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.completedDot {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 200;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.divider {
+    height: 1px;
+    width: 40px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), transparent);
+    margin-bottom: 16px;
+}
+
+.description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 300;
+    margin: 0;
+}
+
+@media (max-width: 600px) {
+    .container {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 1.4rem;
+    }
+
+    .description {
+        font-size: 0.85rem;
+    }
+}
