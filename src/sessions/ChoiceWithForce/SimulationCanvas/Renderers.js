@@ -83,6 +83,7 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
     }
 };
 
+// MODULAR COMPONENTS
 const buildGradients = (ctx, cx, topY, bottomY) => {
     const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
     const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
@@ -125,18 +126,21 @@ const drawSparks = (ctx, cx, yPos, opacity, time, zoomLevel) => {
 
 // MAIN CONTROLLER
 export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
+    ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
+
+    // Shift the entire stack to the right by 200px so that when the 5 nested layers 
+    // spread out to the left (100px each), the whole group stays visually centered!
+    ctx.translate((200 / pState.zoomLevel) * pState.tiltProgress, 0);
 
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
 
-        ctx.save(); // ISOLATE THE CURRENT LAYER
+        ctx.save();
 
-        // Apply the 2.5D Isometric Tilt! Steps right and up.
-        ctx.translate(k * 75 * pState.tiltProgress, -k * 15 * pState.tiltProgress);
+        // Shift each nested layer horizontally to the left so all faces can be seen side-by-side
+        ctx.translate(-k * (100 / pState.zoomLevel) * pState.tiltProgress, 0);
 
         const levelValue = 4 - k;
         const SefirahFraction = (levelValue + 1) / 5;
@@ -291,8 +295,7 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             }
             ctx.restore();
         }
-
-        ctx.restore(); // END LAYER ISOLATION (Clears the translate!)
+        ctx.restore();
     }
-    ctx.restore(); // END WORLD
+    ctx.restore();
 };

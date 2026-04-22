@@ -1,5 +1,4 @@
 // SimulationCanvas.js
-// Restored backwards compatibility with parent components via `activeSequence`
 
 import React, { useEffect, useRef } from 'react';
 import styles from './SimulationCanvas.module.css';
@@ -14,7 +13,6 @@ const SimulationCanvas = ({ activeSequence }) => {
     const targetsRef = useRef(getFreshState());
 
     useEffect(() => {
-        // Active sequence directly maps to the rules compiler
         targetsRef.current = calculateTargets(activeSequence, SpiritualStates);
     }, [activeSequence]);
 
@@ -24,7 +22,7 @@ const SimulationCanvas = ({ activeSequence }) => {
         let animationFrameId;
         let time = 0;
 
-        const pState = getFreshState();
+        const pState = getFreshState(); 
 
         const resize = () => {
             const dpr = window.devicePixelRatio || 1;
@@ -51,16 +49,30 @@ const SimulationCanvas = ({ activeSequence }) => {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
 
+            // 1. Cosmic Background is drawn flat
             drawRootLight(ctx, cx, cy, w, h, time, pState);
 
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
+
+            // --- TRUE 2.5D ISOMETRIC TILT ---
+            if (pState.tiltProgress > 0.01) {
+                // Compress the X-axis to simulate viewing from a side angle
+                ctx.scale(1 - (0.35 * pState.tiltProgress), 1);
+                // Skew the Y-axis to tilt horizontal lines into 3D space, keeping vertical pillars straight
+                ctx.transform(1, 0.15 * pState.tiltProgress, 0, 1, 0, 0);
+            }
+
             ctx.translate(-cx, -cy);
 
             const maxR = Math.min(w, h) * 0.35;
+            
+            // The void boundaries tilt into 3D geometric ellipses perfectly
             drawEmanations(ctx, cx, cy, time, pState, maxR);
-            drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time);
+            
+            // The nested layers are drawn
+            drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time); 
 
             ctx.restore();
             animationFrameId = requestAnimationFrame(render);

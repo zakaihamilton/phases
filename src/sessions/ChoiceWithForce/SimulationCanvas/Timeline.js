@@ -57,8 +57,7 @@ const buildTimeline = () => {
                 action: `PURIFY_START_${lyr}`,
                 stateModifiers: mod(s => {
                     s.layers[lyr] = JSON.parse(JSON.stringify(s.layers[lyr]));
-                    s.tiltProgress = 1; // NEW: Triggers the camera pan!
-                    s.zoomLevel = 3.2;  // NEW: Zooms out to fit all 5 layers
+                    s.tiltProgress = 1; // Trigger true 2.5D Isometric perspective!
                 })
             });
         }
