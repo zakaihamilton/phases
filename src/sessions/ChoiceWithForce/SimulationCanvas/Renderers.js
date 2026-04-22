@@ -107,15 +107,14 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     const roshBottomY = cy - (phase4Radius * 0.50); // Peh
     const roshStrikeY = roshTopY + (roshBottomY - roshTopY) * 0.80;
 
-    // GUF (Interior)
+    // GUF
     const gufTopY = roshBottomY;
     const gufBottomY = cy - (phase4Radius * 0.25);  // Tabur
     const gufStrikeY = gufTopY + (gufBottomY - gufTopY) * 0.80;
 
-    // SOF (End)
+    // SOF 
     const sofTopY = gufBottomY;
-    // NEW: The Siyum explicitly stops 6% ABOVE the absolute center of the innermost circle (cy)
-    const sofBottomY = cy - (phase4Radius * 0.06);
+    const sofBottomY = cy - (phase4Radius * 0.06); // Siyum (Just above the center)
     const sofStrikeY = sofTopY + (sofBottomY - sofTopY) * 0.80;
 
     // LIGHT DESCENTS
@@ -140,7 +139,6 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     const { dlGrad: dlGradGuf, rlGrad: rlGradGuf } = buildGradients(gufTopY, gufBottomY);
     const { dlGrad: dlGradSof, rlGrad: rlGradSof } = buildGradients(sofTopY, sofBottomY);
 
-    // Reflected Light walls expanded to handle 48px width (half is 24px)
     const drawWalls = (topY, bottomY, opacity) => {
         ctx.beginPath();
         ctx.moveTo(cx - (24 / pState.zoomLevel), bottomY); ctx.lineTo(cx - (24 / pState.zoomLevel), topY);
@@ -158,14 +156,14 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
         ctx.save(); ctx.globalAlpha = pState.reflectProgress;
         ctx.beginPath(); ctx.moveTo(cx, roshBottomY); ctx.lineTo(cx, currentTopY_Crown);
-        ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+        ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
         drawWalls(currentTopY_Crown, roshBottomY, pState.reflectProgress);
 
         if (pState.reflectProgress > 0.20) {
             const upwardReflectProgress = (pState.reflectProgress - 0.20) / 0.80;
             const currentTopY_Rest = roshStrikeY - (roshStrikeY - roshTopY) * upwardReflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, roshStrikeY); ctx.lineTo(cx, currentTopY_Rest);
-            ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+            ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
             drawWalls(currentTopY_Rest, roshStrikeY, pState.reflectProgress);
         }
         ctx.restore();
@@ -177,7 +175,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
         ctx.save(); ctx.globalAlpha = pState.gufReflectProgress;
         ctx.beginPath(); ctx.moveTo(cx, gufBottomY); ctx.lineTo(cx, currentTopY_Crown);
-        ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+        ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
         drawWalls(currentTopY_Crown, gufBottomY, pState.gufReflectProgress);
 
         if (pState.gufReflectProgress > 0.20) {
@@ -185,7 +183,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
             const shyOfMouthY = gufTopY + (10 / pState.zoomLevel);
             const currentTopY_Rest = gufStrikeY - (gufStrikeY - shyOfMouthY) * upwardReflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, gufStrikeY); ctx.lineTo(cx, currentTopY_Rest);
-            ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+            ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
             drawWalls(currentTopY_Rest, gufStrikeY, pState.gufReflectProgress);
         }
         ctx.restore();
@@ -197,7 +195,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
         ctx.save(); ctx.globalAlpha = pState.sofReflectProgress;
         ctx.beginPath(); ctx.moveTo(cx, sofBottomY); ctx.lineTo(cx, currentTopY_Crown);
-        ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+        ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
         drawWalls(currentTopY_Crown, sofBottomY, pState.sofReflectProgress);
 
         if (pState.sofReflectProgress > 0.20) {
@@ -205,7 +203,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
             const shyOfTaburY = sofTopY + (10 / pState.zoomLevel);
             const currentTopY_Rest = sofStrikeY - (sofStrikeY - shyOfTaburY) * upwardReflectProgress;
             ctx.beginPath(); ctx.moveTo(cx, sofStrikeY); ctx.lineTo(cx, currentTopY_Rest);
-            ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke(); // Widened to 48
+            ctx.strokeStyle = rlGradSof; ctx.lineWidth = 48 / pState.zoomLevel; ctx.stroke();
             drawWalls(currentTopY_Rest, sofStrikeY, pState.sofReflectProgress);
         }
         ctx.restore();
@@ -213,11 +211,9 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
     // 2. DIRECT LIGHT (OHR YASHAR)
     const drawDirectLight = (topY, bottomY, grad, opacityModifier = 1) => {
-        // Main beam widened to 20px
         ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
         ctx.strokeStyle = grad; ctx.lineWidth = 20 / pState.zoomLevel; ctx.stroke();
 
-        // Inner white core brightened/thickened slightly to match
         ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
         ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * opacityModifier})`; ctx.lineWidth = 2.5 / pState.zoomLevel; ctx.stroke();
     };
@@ -234,7 +230,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         ctx.restore();
     }
 
-    // SOF (Half Opacity - Light of Mercy)
+    // SOF 
     if (pState.sofLightProgress > 0.01) {
         ctx.save();
         ctx.globalAlpha = 0.5;
@@ -244,20 +240,37 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
     // 3. THE SCREENS & SPARKS
     if (pState.kavProgress > 0.79) {
-        // Widened the horizontal screen to support the new 48px reflected light perfectly
         const screenWidth = (phase4Radius * 0.50) * 0.5;
 
-        const drawHorizontalLines = (topY, bottomY, progressesArray) => {
+        // This function dynamically cascades the origin points of the lines, causing them to 
+        // physically stretch downwards out of the base screen, while drawing vertical side-walls
+        // to form a continuous, expanding rectangular receptacle!
+        const drawExpandingScreen = (topY, bottomY, progressesArray) => {
             const sectionHeight = (bottomY - topY) / 5;
+            let previousY = topY;
+            let lowestY = topY;
+
+            // Internal dropping rungs
             for (let i = 0; i < 5; i++) {
+                const targetY = topY + ((i + 1) * sectionHeight);
+                const currentY = previousY + (targetY - previousY) * progressesArray[i];
+
                 if (progressesArray[i] > 0.001) {
-                    const startLineY = topY + (i * sectionHeight);
-                    const finalLineY = topY + ((i + 1) * sectionHeight);
-                    const lineY = startLineY + (finalLineY - startLineY) * progressesArray[i];
-                    ctx.beginPath(); ctx.moveTo(cx - screenWidth, lineY); ctx.lineTo(cx + screenWidth, lineY);
+                    ctx.beginPath(); ctx.moveTo(cx - screenWidth, currentY); ctx.lineTo(cx + screenWidth, currentY);
                     ctx.strokeStyle = `rgba(${hues[i]}, ${progressesArray[i]})`;
                     ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
                 }
+                previousY = currentY;
+                if (currentY > lowestY) lowestY = currentY;
+            }
+
+            // Expanding Vertical Screen Walls connecting the Peh/Tabur to the lowest expanding rung
+            if (lowestY > topY + 0.1) {
+                ctx.beginPath();
+                ctx.moveTo(cx - screenWidth, topY); ctx.lineTo(cx - screenWidth, lowestY);
+                ctx.moveTo(cx + screenWidth, topY); ctx.lineTo(cx + screenWidth, lowestY);
+                ctx.strokeStyle = `rgba(100, 200, 255, ${progressesArray[0]})`;
+                ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
             }
         };
 
@@ -265,15 +278,15 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         ctx.beginPath(); ctx.rect(cx - screenWidth, roshStrikeY, screenWidth * 2, roshBottomY - roshStrikeY);
         ctx.strokeStyle = `rgba(100, 200, 255, ${pState.kavProgress})`; ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
 
-        // Guf Lines & Rectangle
-        drawHorizontalLines(gufTopY, gufBottomY, pState.gufExpandProgresses);
+        // Guf Expanding Lines & Final Strike Rectangle
+        drawExpandingScreen(gufTopY, gufBottomY, pState.gufExpandProgresses);
         if (pState.gufLightProgress > 0.79) {
             ctx.beginPath(); ctx.rect(cx - screenWidth, gufStrikeY, screenWidth * 2, gufBottomY - gufStrikeY);
             ctx.strokeStyle = `rgba(100, 200, 255, ${pState.gufLightProgress})`; ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
         }
 
-        // Sof Lines & Rectangle
-        drawHorizontalLines(sofTopY, sofBottomY, pState.sofExpandProgresses);
+        // Sof Expanding Lines & Final Strike Rectangle
+        drawExpandingScreen(sofTopY, sofBottomY, pState.sofExpandProgresses);
         if (pState.sofLightProgress > 0.79) {
             ctx.beginPath(); ctx.rect(cx - screenWidth, sofStrikeY, screenWidth * 2, sofBottomY - sofStrikeY);
             ctx.strokeStyle = `rgba(100, 200, 255, ${pState.sofLightProgress})`; ctx.lineWidth = 3 / pState.zoomLevel; ctx.stroke();
@@ -283,18 +296,18 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         const drawSparks = (yPos, opacity) => {
             if (opacity <= 0.01) return;
             ctx.save(); ctx.globalAlpha = opacity; ctx.translate(cx, yPos);
-            for (let i = 0; i < 24; i++) { // Increased particle count to match wider beam
+            for (let i = 0; i < 24; i++) {
                 const baseAngle = (Math.PI * 2 / 24) * i;
                 const flicker = Math.sin(time * 30 + i * 100);
                 if (flicker > 0) {
-                    const length = (6 + flicker * 25) / pState.zoomLevel; // Sparks stretch slightly further
+                    const length = (6 + flicker * 25) / pState.zoomLevel;
                     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(baseAngle) * length, Math.sin(baseAngle) * length);
                     const isCore = i % 2 === 0;
                     ctx.strokeStyle = isCore ? `rgba(255, 255, 255, 0.8)` : `rgba(${hues[4]}, 0.6)`;
                     ctx.lineWidth = (isCore ? 2 : 3) / pState.zoomLevel; ctx.stroke();
                 }
             }
-            ctx.beginPath(); ctx.arc(0, 0, 6 / pState.zoomLevel, 0, Math.PI * 2); // Larger impact core
+            ctx.beginPath(); ctx.arc(0, 0, 6 / pState.zoomLevel, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill(); ctx.restore();
         };
 
