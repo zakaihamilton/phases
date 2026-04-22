@@ -5,14 +5,19 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    ctx.translate((250 / pState.zoomLevel) * pState.tiltProgress, 0);
+    // Reduced camera pan to match the tighter stagger
+    ctx.translate((120 / pState.zoomLevel) * pState.tiltProgress, 0);
 
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
 
         ctx.save();
-        ctx.translate(-k * (125 / pState.zoomLevel) * pState.tiltProgress, 0);
+
+        // --- TIGHTER HORIZONTAL PARALLAX ---
+        // Reduced from 125 to 60. The layers step gently to the left per purification, 
+        // keeping the 3D pipes closely nested instead of slanting out of control.
+        ctx.translate(-k * (60 / pState.zoomLevel) * pState.tiltProgress, 0);
 
         const levelValue = 4 - k;
         const SefFraction = (levelValue + 1) / 5;
@@ -33,7 +38,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
         const partzufColor = hues[k];
 
         // --- 1. MULTI-COLOR DIRECT LIGHT (Grows Top to Bottom) ---
-        // Automatically segments into Gray -> Yellow -> Blue -> Red -> Green
         if (layer.kavProgress > 0.01) {
             const directProgress = Math.min(1, layer.kavProgress / 0.80);
             drawMultiColorPipe(ctx, cx, rTop, rStr, 10, directProgress, pState.zoomLevel, false);
@@ -48,7 +52,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
         }
 
         // --- 2. MULTI-COLOR REFLECTED LIGHT (Grows Bottom to Top) ---
-        // Because destY < originY, the pipe naturally builds UPWARD starting from Gray -> Green
         if (layer.reflectProgress > 0.01) {
             const actY = rStr - (rStr - rTop) * RoshFraction;
             drawMultiColorPipe(ctx, cx, rStr, actY, 26, layer.reflectProgress, pState.zoomLevel, true);
@@ -63,7 +66,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
         }
 
         // --- 3. 3D VOLUMETRIC SCREENS (MASACH) ---
-        // Screens take on the distinct color of their specific Partzuf (k)
         if (layer.kavProgress > 0.79) {
             const sW = (phase4Radius * 0.50) * 0.5;
 

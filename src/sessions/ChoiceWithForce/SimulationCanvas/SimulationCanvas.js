@@ -71,11 +71,11 @@ const SimulationCanvas = ({ activeSequence }) => {
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
 
-            // --- GLOBE ROTATE EFFECT (YAW) ---
+            // --- GENTLER GLOBE ROTATE EFFECT ---
             if (pState.tiltProgress > 0.01) {
-                // By compressing only the X-axis, the circles visually rotate to the right like a globe.
-                // Because there is no ctx.rotate(), the vertical lines will never skew or tilt upwards!
-                ctx.scale(1 - (0.65 * pState.tiltProgress), 1);
+                // Reduced from 65% to 35% squeeze. This gives a clean 3D 
+                // turning effect without making the circles too slanted/thin.
+                ctx.scale(1 - (0.35 * pState.tiltProgress), 1);
             }
 
             ctx.translate(-cx, -cy);
