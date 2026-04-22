@@ -5,8 +5,8 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    // Shift camera slightly down so the 3D elevation stays centered on screen
-    ctx.translate(0, (100 / pState.zoomLevel) * pState.tiltProgress);
+    // Shift camera slightly right so the horizontally spreading layers stay centered
+    ctx.translate((250 / pState.zoomLevel) * pState.tiltProgress, 0);
 
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
@@ -14,10 +14,10 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
 
         ctx.save();
 
-        // --- 3D ELEVATION STAGGER ---
-        // Because the simulation is rotated, translating on the Y axis physically pulls the 
-        // layers "Up and Out" of the screen, staggering them beautifully "one on top of the other"
-        ctx.translate(0, -k * (60 / pState.zoomLevel) * pState.tiltProgress);
+        // --- HORIZONTAL PARALLAX ---
+        // Stagger the nested Partzufim purely on the X-axis (leftward). 
+        // Because the view is compressed like a side-angled globe, this reveals their 3D depth perfectly!
+        ctx.translate(-k * (125 / pState.zoomLevel) * pState.tiltProgress, 0);
 
         const levelValue = 4 - k;
         const SefFraction = (levelValue + 1) / 5;

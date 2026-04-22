@@ -59,8 +59,7 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
         if (layer.windowProgress > 0.01) {
             ctx.save();
 
-            // NO PARALLAX OFFSETS HERE! 
-            // This ensures the window fills map perfectly to the exact center of the Circles of Restriction!
+            // NO ctx.translate here. The window fills stay perfectly locked to the background rings!
 
             const outerR = phase4Radius * (1 - (k * 0.10));
             const innerR = Math.max(0, phase4Radius * (1 - ((k + 1) * 0.10)));

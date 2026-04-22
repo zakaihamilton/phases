@@ -65,27 +65,23 @@ const SimulationCanvas = ({ activeSequence }) => {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
 
-            // Background is drawn completely flat
             drawRootLight(ctx, cx, cy, w, h, time, pState);
 
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
 
-            // --- TRUE 2.5D ISOMETRIC ROTATION ---
+            // --- GLOBE ROTATE EFFECT (YAW) ---
             if (pState.tiltProgress > 0.01) {
-                // 1. Rotate the camera slightly to the right so the central Line (Kav) tilts diagonally!
-                ctx.rotate(0.25 * pState.tiltProgress);
-
-                // 2. Squash the Y-axis. This gives the circles true 3D perspective, turning them into ellipses.
-                ctx.scale(1, 1 - (0.45 * pState.tiltProgress));
+                // By compressing only the X-axis, the circles visually rotate to the right like a globe.
+                // Because there is no ctx.rotate(), the vertical lines will never skew or tilt upwards!
+                ctx.scale(1 - (0.65 * pState.tiltProgress), 1);
             }
 
             ctx.translate(-cx, -cy);
 
             const maxR = Math.min(w, h) * 0.35;
 
-            // Draw the environment within the newly rotated 3D space
             drawEmanations(ctx, cx, cy, time, pState, maxR);
             drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time);
 
