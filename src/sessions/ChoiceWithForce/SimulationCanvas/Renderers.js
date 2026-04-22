@@ -112,41 +112,93 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
     // GEOMETRY
     const phase4Radius = maxR * (1 - (3 * 0.22));
-    const startY = cy - phase4Radius; // Top of Rosh
-    const baseScreenY = cy - (phase4Radius * 0.50); // Peh (Mouth)
-    const maxExpandedScreenY = cy - (phase4Radius * 0.10); // Bottom of Guf
 
-    const roshLightY = startY + (baseScreenY - startY) * pState.kavProgress;
-    const gufLightY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.gufLightProgress || 0);
+    const roshTopY = cy - phase4Radius; // Top of Rosh
+    const roshBottomY = cy - (phase4Radius * 0.50); // Bottom of Rosh (Peh)
+    const roshStrikeY = roshTopY + (roshBottomY - roshTopY) * 0.80; // ON Kingdom of Direct Light (Top of Screen)
+
+    const gufTopY = roshBottomY;
+    const gufBottomY = cy - (phase4Radius * 0.10); // Bottom of Guf
+    const gufStrikeY = gufTopY + (gufBottomY - gufTopY) * 0.80; // ON Kingdom of the Guf (Top of Screen)
+
+    // Direct Light caps physically at the Strike Y (80% mark)
+    const roshLightY = roshTopY + (roshBottomY - roshTopY) * pState.kavProgress;
+    const gufLightY = gufTopY + (gufBottomY - gufTopY) * pState.gufLightProgress;
 
     const hues = ['180, 180, 180', '255, 235, 59', '33, 150, 243', '244, 67, 54', '76, 175, 80'];
 
-    // ROSH GRADIENTS (Maintains form perfectly above the mouth)
-    const dlGradRosh = ctx.createLinearGradient(cx, startY, cx, baseScreenY);
-    const rlGradRosh = ctx.createLinearGradient(cx, baseScreenY, cx, startY);
+    // GRADIENTS
+    const dlGradRosh = ctx.createLinearGradient(cx, roshTopY, cx, roshBottomY);
+    const rlGradRosh = ctx.createLinearGradient(cx, roshBottomY, cx, roshTopY);
     for (let i = 0; i < 5; i++) {
         dlGradRosh.addColorStop(i * 0.25, `rgb(${hues[i]})`);
         rlGradRosh.addColorStop(i * 0.25, `rgb(${hues[i]})`);
     }
 
-    // GUF GRADIENT (purely downward direct light)
-    const dlGradGuf = ctx.createLinearGradient(cx, baseScreenY, cx, maxExpandedScreenY);
+    const dlGradGuf = ctx.createLinearGradient(cx, gufTopY, cx, gufBottomY);
+    const rlGradGuf = ctx.createLinearGradient(cx, gufBottomY, cx, gufTopY);
     for (let i = 0; i < 5; i++) {
         dlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
+        rlGradGuf.addColorStop(i * 0.25, `rgb(${hues[i]})`);
     }
 
-    // 1. REFLECTED LIGHT (ROSH VESSEL ONLY)
+    // Helper to draw crisp Reflective Walls
+    const drawWalls = (topY, bottomY, opacity) => {
+        ctx.beginPath();
+        ctx.moveTo(cx - (15 / pState.zoomLevel), bottomY); ctx.lineTo(cx - (15 / pState.zoomLevel), topY);
+        ctx.moveTo(cx + (15 / pState.zoomLevel), bottomY); ctx.lineTo(cx + (15 / pState.zoomLevel), topY);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.9})`;
+        ctx.lineWidth = 1.5 / pState.zoomLevel;
+        ctx.stroke();
+    };
+
+    // 1. REFLECTED LIGHT (OHR CHOZER)
+    // ROSH
     if (pState.reflectProgress > 0.01) {
-        const currentReflectY = baseScreenY - (baseScreenY - startY) * pState.reflectProgress;
+        // Step 1: Crown of Reflected light grows BOTTOM-UP from the actual floor of the void to the strike line
+        const crownReflectProgress = Math.min(pState.reflectProgress * 5, 1);
+        const currentTopY_Crown = roshBottomY - (roshBottomY - roshStrikeY) * crownReflectProgress;
+
         ctx.save();
         ctx.globalAlpha = pState.reflectProgress;
-        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, currentReflectY);
+        ctx.beginPath(); ctx.moveTo(cx, roshBottomY); ctx.lineTo(cx, currentTopY_Crown);
         ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+        drawWalls(currentTopY_Crown, roshBottomY, pState.reflectProgress);
 
-        ctx.beginPath();
-        ctx.moveTo(cx - (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
-        ctx.moveTo(cx + (15 / pState.zoomLevel), baseScreenY); ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
+        // Step 2-5: The rest reflects UPWARDS from the strike line
+        if (pState.reflectProgress > 0.20) {
+            const upwardReflectProgress = (pState.reflectProgress - 0.20) / 0.80;
+            const currentTopY_Rest = roshStrikeY - (roshStrikeY - roshTopY) * upwardReflectProgress;
+
+            ctx.beginPath(); ctx.moveTo(cx, roshStrikeY); ctx.lineTo(cx, currentTopY_Rest);
+            ctx.strokeStyle = rlGradRosh; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+            drawWalls(currentTopY_Rest, roshStrikeY, pState.reflectProgress);
+        }
+        ctx.restore();
+    }
+
+    // GUF (Ascends up to the Mouth but not including)
+    if (pState.gufReflectProgress > 0.01) {
+        // Step 1: Crown of Reflected light grows BOTTOM-UP inside the Navel Masach
+        const crownReflectProgress = Math.min(pState.gufReflectProgress * 5, 1);
+        const currentTopY_Crown = gufBottomY - (gufBottomY - gufStrikeY) * crownReflectProgress;
+
+        ctx.save();
+        ctx.globalAlpha = pState.gufReflectProgress;
+        ctx.beginPath(); ctx.moveTo(cx, gufBottomY); ctx.lineTo(cx, currentTopY_Crown);
+        ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+        drawWalls(currentTopY_Crown, gufBottomY, pState.gufReflectProgress);
+
+        // Step 2-5: The rest reflects UPWARDS from the strike line
+        if (pState.gufReflectProgress > 0.20) {
+            const upwardReflectProgress = (pState.gufReflectProgress - 0.20) / 0.80;
+            const shyOfMouthY = gufTopY + (10 / pState.zoomLevel);
+            const currentTopY_Rest = gufStrikeY - (gufStrikeY - shyOfMouthY) * upwardReflectProgress;
+
+            ctx.beginPath(); ctx.moveTo(cx, gufStrikeY); ctx.lineTo(cx, currentTopY_Rest);
+            ctx.strokeStyle = rlGradGuf; ctx.lineWidth = 32 / pState.zoomLevel; ctx.stroke();
+            drawWalls(currentTopY_Rest, gufStrikeY, pState.gufReflectProgress);
+        }
         ctx.restore();
     }
 
@@ -154,44 +206,43 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     // ROSH
     ctx.save();
     ctx.globalAlpha = pState.kavProgress;
-    ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
+    ctx.beginPath(); ctx.moveTo(cx, roshTopY); ctx.lineTo(cx, roshLightY);
     ctx.strokeStyle = dlGradRosh; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
 
-    ctx.beginPath(); ctx.moveTo(cx, startY); ctx.lineTo(cx, roshLightY);
+    ctx.beginPath(); ctx.moveTo(cx, roshTopY); ctx.lineTo(cx, roshLightY);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
     ctx.restore();
 
-    // GUF (Direct Light purely spreading downwards)
+    // GUF 
     if (pState.gufLightProgress > 0.01) {
         ctx.save();
         ctx.globalAlpha = 1;
-        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
+        ctx.beginPath(); ctx.moveTo(cx, gufTopY); ctx.lineTo(cx, gufLightY);
         ctx.strokeStyle = dlGradGuf; ctx.lineWidth = 12 / pState.zoomLevel; ctx.stroke();
 
-        ctx.beginPath(); ctx.moveTo(cx, baseScreenY); ctx.lineTo(cx, gufLightY);
+        ctx.beginPath(); ctx.moveTo(cx, gufTopY); ctx.lineTo(cx, gufLightY);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)'; ctx.lineWidth = 1.5 / pState.zoomLevel; ctx.stroke();
         ctx.restore();
     }
 
-    // 3. THE MASACH & SPARKS
-    if (pState.kavProgress > 0.99) {
+    // 3. THE SCREENS & SPARKS
+    if (pState.kavProgress > 0.79) {
         const screenWidth = (phase4Radius * 0.50) * 0.4;
 
-        // The Root Masach at the Peh (always stays)
+        // --- DRAW MASACH AS A RECTANGLE RECEPTACLE ---
+        // Rosh Masach (The Peh)
         ctx.beginPath();
-        ctx.moveTo(cx - screenWidth, baseScreenY);
-        ctx.lineTo(cx + screenWidth, baseScreenY);
+        ctx.rect(cx - screenWidth, roshStrikeY, screenWidth * 2, roshBottomY - roshStrikeY);
         ctx.strokeStyle = `rgba(100, 200, 255, ${pState.kavProgress})`;
         ctx.lineWidth = 3 / pState.zoomLevel;
         ctx.stroke();
 
         // The 5 Sequential Lines dropping to form the Guf
-        const sectionHeight = (maxExpandedScreenY - baseScreenY) / 5;
+        const sectionHeight = (gufBottomY - gufTopY) / 5;
         for (let i = 0; i < 5; i++) {
             if (pState.gufExpandProgresses[i] > 0.001) {
-                // Line drops from the final position of the previous line (or base for i=0)
-                const startLineY = baseScreenY + (i * sectionHeight);
-                const finalLineY = baseScreenY + ((i + 1) * sectionHeight);
+                const startLineY = gufTopY + (i * sectionHeight);
+                const finalLineY = gufTopY + ((i + 1) * sectionHeight);
                 const lineY = startLineY + (finalLineY - startLineY) * pState.gufExpandProgresses[i];
 
                 ctx.beginPath();
@@ -203,11 +254,21 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
             }
         }
 
-        // Sparks (Zivug d'Hakaa) - Now explicitly fades out when Guf begins!
-        if (pState.flareOpacity > 0.01) {
+        // Guf Masach (The Tabur) - Drawn as a Rectangle when light hits it
+        if (pState.gufLightProgress > 0.79) {
+            ctx.beginPath();
+            ctx.rect(cx - screenWidth, gufStrikeY, screenWidth * 2, gufBottomY - gufStrikeY);
+            ctx.strokeStyle = `rgba(100, 200, 255, ${pState.gufLightProgress})`;
+            ctx.lineWidth = 3 / pState.zoomLevel;
+            ctx.stroke();
+        }
+
+        // Helper function for Zivug d'Hakaa sparks
+        const drawSparks = (yPos, opacity) => {
+            if (opacity <= 0.01) return;
             ctx.save();
-            ctx.globalAlpha = pState.flareOpacity; // Fades out
-            ctx.translate(cx, baseScreenY); // Locked to the Peh (Mouth)
+            ctx.globalAlpha = opacity;
+            ctx.translate(cx, yPos);
             const numSparks = 18;
             for (let i = 0; i < numSparks; i++) {
                 const baseAngle = (Math.PI * 2 / numSparks) * i;
@@ -228,7 +289,11 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.fill();
             ctx.restore();
-        }
+        };
+
+        // Sparks strike EXACTLY on the top line of the rectangles
+        drawSparks(roshStrikeY, pState.pehFlareOpacity);
+        drawSparks(gufStrikeY, pState.taburFlareOpacity);
     }
 
     // 4. THE WINDOW & CIRCLE FILL

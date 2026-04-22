@@ -41,9 +41,9 @@ const rawStates = [
     { name: "Ohr Yashar: Wisdom", description: "The Direct Light descends to Wisdom.", action: 'KAV_DESCEND' },
     { name: "Ohr Yashar: Understanding", description: "The Direct Light descends to Understanding.", action: 'KAV_DESCEND' },
     { name: "Ohr Yashar: Beauty", description: "The Direct Light descends to Beauty.", action: 'KAV_DESCEND' },
-    { name: "Ohr Yashar: Kingdom", description: "The Light strikes the Screen (Masach) at Kingdom.", action: 'KAV_DESCEND' },
+    { name: "Ohr Yashar: Kingdom", description: "The Light strikes the upper boundary of the Screen (Masach).", action: 'KAV_DESCEND' },
 
-    { name: "Ohr Chozer: Crown", description: "Crown of Reflection clothes Kingdom of Direct Light.", action: 'KAV_REFLECT' },
+    { name: "Ohr Chozer: Crown", description: "Crown of Reflection builds bottom-up inside the Screen.", action: 'KAV_REFLECT' },
     { name: "Ohr Chozer: Wisdom", description: "Wisdom of Reflection ascends and clothes Beauty of Direct Light.", action: 'KAV_REFLECT' },
     { name: "Ohr Chozer: Understanding", description: "Understanding of Reflection ascends and clothes Understanding of Direct Light.", action: 'KAV_REFLECT' },
     { name: "Ohr Chozer: Beauty", description: "Beauty of Reflection ascends and clothes Wisdom of Direct Light.", action: 'KAV_REFLECT' },
@@ -60,12 +60,19 @@ const rawStates = [
     { name: "Guf Expansion: Beauty", description: "The Screen drops to form the Beauty of the Body.", action: 'GUF_EXPAND' },
     { name: "Guf Expansion: Kingdom", description: "The Screen completely unfurls to form the Kingdom of the Body.", action: 'GUF_EXPAND' },
 
-    // --- GUF (BODY): LIGHT (TA'AMIM) ---
-    { name: "Guf Light: Crown", description: "The Direct Light descends to fill the Crown of the Body.", action: 'GUF_FILL' },
-    { name: "Guf Light: Wisdom", description: "The Direct Light descends to fill the Wisdom of the Body.", action: 'GUF_FILL' },
-    { name: "Guf Light: Understanding", description: "The Direct Light descends to fill the Understanding of the Body.", action: 'GUF_FILL' },
-    { name: "Guf Light: Beauty", description: "The Direct Light descends to fill the Beauty of the Body.", action: 'GUF_FILL' },
-    { name: "Guf Light: Kingdom", description: "The Direct Light fills the entirety of the Guf.", action: 'GUF_FILL' }
+    // --- GUF (BODY): DIRECT LIGHT (TA'AMIM) ---
+    { name: "Guf Direct Light: Crown", description: "The Direct Light descends to the Crown of the Body.", action: 'GUF_DESCEND' },
+    { name: "Guf Direct Light: Wisdom", description: "The Direct Light descends to the Wisdom of the Body.", action: 'GUF_DESCEND' },
+    { name: "Guf Direct Light: Understanding", description: "The Direct Light descends to the Understanding of the Body.", action: 'GUF_DESCEND' },
+    { name: "Guf Direct Light: Beauty", description: "The Direct Light descends to the Beauty of the Body.", action: 'GUF_DESCEND' },
+    { name: "Guf Direct Light: Kingdom (Navel)", description: "The Light strikes the upper boundary of the Navel (Tabur).", action: 'GUF_DESCEND' },
+
+    // --- GUF (BODY): REFLECTED LIGHT ---
+    { name: "Guf Reflected Light: Crown", description: "Crown of Reflection builds bottom-up inside the Navel.", action: 'GUF_REFLECT' },
+    { name: "Guf Reflected Light: Wisdom", description: "Wisdom of Reflection ascends through Beauty of the Body.", action: 'GUF_REFLECT' },
+    { name: "Guf Reflected Light: Understanding", description: "Understanding of Reflection ascends through Understanding of the Body.", action: 'GUF_REFLECT' },
+    { name: "Guf Reflected Light: Beauty", description: "Beauty of Reflection ascends through Wisdom of the Body.", action: 'GUF_REFLECT' },
+    { name: "Guf Reflected Light: Kingdom", description: "Kingdom of Reflection completes its ascent to just beneath the Mouth (Peh).", action: 'GUF_REFLECT' }
 ];
 
 export const SpiritualStates = rawStates.map((state, index) => {

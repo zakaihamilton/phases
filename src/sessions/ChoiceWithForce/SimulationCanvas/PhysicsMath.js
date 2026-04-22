@@ -15,7 +15,6 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
 
     for (let i = 0; i < 5; i++) {
         pState.restrictionOpacities[i] += (targets.restrictionOpacities[i] - pState.restrictionOpacities[i]) * easeSpeed;
-        // Ease the 5 individual Guf lines dropping
         pState.gufExpandProgresses[i] += (targets.gufExpandProgresses[i] - pState.gufExpandProgresses[i]) * easeSpeed;
     }
 
@@ -24,6 +23,8 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
     pState.windowProgress += (targets.windowProgress - pState.windowProgress) * easeSpeed;
     pState.windowFillProgress += (targets.windowFillProgress - pState.windowFillProgress) * easeSpeed;
 
-    pState.flareOpacity += (targets.flareOpacity - pState.flareOpacity) * easeSpeed;
+    pState.pehFlareOpacity += (targets.pehFlareOpacity - pState.pehFlareOpacity) * easeSpeed;
+    pState.taburFlareOpacity += (targets.taburFlareOpacity - pState.taburFlareOpacity) * easeSpeed;
     pState.gufLightProgress += (targets.gufLightProgress - pState.gufLightProgress) * easeSpeed;
+    pState.gufReflectProgress += (targets.gufReflectProgress - pState.gufReflectProgress) * easeSpeed;
 };

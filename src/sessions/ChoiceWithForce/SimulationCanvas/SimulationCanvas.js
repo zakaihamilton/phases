@@ -34,9 +34,11 @@ const SimulationCanvas = ({ activeSequence }) => {
             outerPhasesOpacity: 1,
             windowProgress: 0,
             windowFillProgress: 0,
-            flareOpacity: 0,                       // NEW
-            gufExpandProgresses: [0, 0, 0, 0, 0],  // NEW
-            gufLightProgress: 0                    // NEW
+            pehFlareOpacity: 0,                    // NEW
+            taburFlareOpacity: 0,                  // NEW
+            gufExpandProgresses: [0, 0, 0, 0, 0],
+            gufLightProgress: 0,
+            gufReflectProgress: 0                  // NEW
         };
 
         const resize = () => {
