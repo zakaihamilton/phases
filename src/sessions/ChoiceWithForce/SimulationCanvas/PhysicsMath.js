@@ -16,6 +16,7 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
     for (let i = 0; i < 5; i++) {
         pState.restrictionOpacities[i] += (targets.restrictionOpacities[i] - pState.restrictionOpacities[i]) * easeSpeed;
         pState.gufExpandProgresses[i] += (targets.gufExpandProgresses[i] - pState.gufExpandProgresses[i]) * easeSpeed;
+        pState.sofExpandProgresses[i] += (targets.sofExpandProgresses[i] - pState.sofExpandProgresses[i]) * easeSpeed;
     }
 
     pState.kavProgress += (targets.kavProgress - pState.kavProgress) * easeSpeed;
@@ -25,6 +26,11 @@ export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
 
     pState.pehFlareOpacity += (targets.pehFlareOpacity - pState.pehFlareOpacity) * easeSpeed;
     pState.taburFlareOpacity += (targets.taburFlareOpacity - pState.taburFlareOpacity) * easeSpeed;
+    pState.siyumFlareOpacity += (targets.siyumFlareOpacity - pState.siyumFlareOpacity) * easeSpeed;
+
     pState.gufLightProgress += (targets.gufLightProgress - pState.gufLightProgress) * easeSpeed;
     pState.gufReflectProgress += (targets.gufReflectProgress - pState.gufReflectProgress) * easeSpeed;
+
+    pState.sofLightProgress += (targets.sofLightProgress - pState.sofLightProgress) * easeSpeed;
+    pState.sofReflectProgress += (targets.sofReflectProgress - pState.sofReflectProgress) * easeSpeed;
 };

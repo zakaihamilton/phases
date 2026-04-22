@@ -29,16 +29,12 @@ const SimulationCanvas = ({ activeSequence }) => {
             lightOpacities: [0, 0, 0, 0],
             restrictionOpacities: [0, 0, 0, 0, 0],
             voidOpacity: 0,
-            kavProgress: 0,
-            reflectProgress: 0,
+            kavProgress: 0, reflectProgress: 0,
             outerPhasesOpacity: 1,
-            windowProgress: 0,
-            windowFillProgress: 0,
-            pehFlareOpacity: 0,                    // NEW
-            taburFlareOpacity: 0,                  // NEW
-            gufExpandProgresses: [0, 0, 0, 0, 0],
-            gufLightProgress: 0,
-            gufReflectProgress: 0                  // NEW
+            windowProgress: 0, windowFillProgress: 0,
+            pehFlareOpacity: 0, taburFlareOpacity: 0, siyumFlareOpacity: 0,
+            gufExpandProgresses: [0, 0, 0, 0, 0], gufLightProgress: 0, gufReflectProgress: 0,
+            sofExpandProgresses: [0, 0, 0, 0, 0], sofLightProgress: 0, sofReflectProgress: 0
         };
 
         const resize = () => {
