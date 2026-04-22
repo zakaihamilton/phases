@@ -57,13 +57,17 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.windowProgress > 0.01) {
+            ctx.save();
+
+            // NO PARALLAX OFFSETS HERE! 
+            // This ensures the window fills map perfectly to the exact center of the Circles of Restriction!
+
             const outerR = phase4Radius * (1 - (k * 0.10));
-            const innerR = phase4Radius * (1 - ((k + 1) * 0.10));
+            const innerR = Math.max(0, phase4Radius * (1 - ((k + 1) * 0.10)));
 
             const bOuter = Math.max(0, outerR + Math.sin(time * 1.5 + 3 + k) * 1.5);
             const bInner = Math.max(0, innerR + Math.sin(time * 1.5 + 3 + (k + 1)) * 1.5);
 
-            ctx.save();
             ctx.globalAlpha = layer.windowProgress;
 
             ctx.beginPath(); ctx.arc(cx, cy, bOuter, 0, Math.PI * 2);
@@ -76,7 +80,7 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
                 ctx.beginPath();
                 ctx.arc(cx, cy, outerR, 0, Math.PI * 2, false);
                 ctx.arc(cx, cy, innerR, 0, Math.PI * 2, true);
-                ctx.fillStyle = `rgba(200, 200, 200, ${layer.windowFillProgress * 0.75})`;
+                ctx.fillStyle = `rgba(${hues[k]}, ${layer.windowFillProgress * 0.45})`;
                 ctx.fill();
             }
             ctx.restore();

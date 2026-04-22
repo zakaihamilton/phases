@@ -13,8 +13,17 @@ const SimulationCanvas = ({ activeSequence }) => {
     const canvasRef = useRef(null);
     const targetsRef = useRef(getFreshState());
 
+    const prevSeqLenRef = useRef(0);
+    const forceSnapRef = useRef(true);
+
     useEffect(() => {
         targetsRef.current = calculateTargets(activeSequence, SpiritualStates);
+        const currentLen = activeSequence ? activeSequence.length : 0;
+
+        if (Math.abs(currentLen - prevSeqLenRef.current) > 1 || prevSeqLenRef.current === 0) {
+            forceSnapRef.current = true;
+        }
+        prevSeqLenRef.current = currentLen;
     }, [activeSequence]);
 
     useEffect(() => {
@@ -38,28 +47,37 @@ const SimulationCanvas = ({ activeSequence }) => {
 
         const render = () => {
             time += 0.01;
+
+            if (forceSnapRef.current) {
+                Object.assign(pState, JSON.parse(JSON.stringify(targetsRef.current)));
+                forceSnapRef.current = false;
+            } else {
+                applyEasing(pState, targetsRef.current, 0.015);
+            }
+
             const dpr = window.devicePixelRatio || 1;
             const w = canvas.width / dpr;
             const h = canvas.height / dpr;
             const cx = w / 2;
             const cy = h / 2;
 
-            applyEasing(pState, targetsRef.current, 0.015);
-
-            // 1. Draw the static void background
             ctx.globalCompositeOperation = 'source-over';
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, w, h);
+
+            // Background is drawn completely flat
+            drawRootLight(ctx, cx, cy, w, h, time, pState);
 
             ctx.save();
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
 
-            // --- TRUE 2.5D ISOMETRIC CAMERA TILT ---
+            // --- TRUE 2.5D ISOMETRIC ROTATION ---
             if (pState.tiltProgress > 0.01) {
-                // Rotate slightly to the right (Yaw)
-                ctx.rotate((Math.PI / 16) * pState.tiltProgress);
-                // Squash the Y-axis to turn the flat circles into a 3D floor (Pitch)
+                // 1. Rotate the camera slightly to the right so the central Line (Kav) tilts diagonally!
+                ctx.rotate(0.25 * pState.tiltProgress);
+
+                // 2. Squash the Y-axis. This gives the circles true 3D perspective, turning them into ellipses.
                 ctx.scale(1, 1 - (0.45 * pState.tiltProgress));
             }
 
@@ -67,8 +85,7 @@ const SimulationCanvas = ({ activeSequence }) => {
 
             const maxR = Math.min(w, h) * 0.35;
 
-            // 2. Draw EVERYTHING inside the newly tilted 3D space
-            drawRootLight(ctx, cx, cy, w, h, time, pState);
+            // Draw the environment within the newly rotated 3D space
             drawEmanations(ctx, cx, cy, time, pState, maxR);
             drawWorldOfAdamKadmon(ctx, cx, cy, pState, maxR, time);
 

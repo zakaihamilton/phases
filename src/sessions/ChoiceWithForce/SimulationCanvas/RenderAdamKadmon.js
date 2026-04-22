@@ -5,22 +5,24 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
     ctx.save(); ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
+    // Shift camera slightly down so the 3D elevation stays centered on screen
+    ctx.translate(0, (100 / pState.zoomLevel) * pState.tiltProgress);
+
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
 
         ctx.save();
 
-        // --- 3D Z-AXIS ELEVATION ---
-        // Because the whole world is rotated and squashed in SimulationCanvas, 
-        // translating along the Y-axis pulls the layer straight "up" out of the floor!
-        ctx.translate(0, -k * (90 / pState.zoomLevel) * pState.tiltProgress);
+        // --- 3D ELEVATION STAGGER ---
+        // Because the simulation is rotated, translating on the Y axis physically pulls the 
+        // layers "Up and Out" of the screen, staggering them beautifully "one on top of the other"
+        ctx.translate(0, -k * (60 / pState.zoomLevel) * pState.tiltProgress);
 
         const levelValue = 4 - k;
         const SefFraction = (levelValue + 1) / 5;
         const RoshFraction = levelValue / 4;
 
-        // Geometry Engine
         const rTop = cy - phase4Radius;
         const rBot = cy - (phase4Radius * 0.50);
         const rStr = rTop + (rBot - rTop) * 0.80;
@@ -37,7 +39,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
         const { dlGrad: gGradD, rlGrad: gGradR } = buildGradients(ctx, cx, gTop, gBot);
         const { dlGrad: sGradD, rlGrad: sGradR } = buildGradients(ctx, cx, sTop, sBot);
 
-        // 1. REFLECTED LIGHT
         if (layer.reflectProgress > 0.01) {
             const crPrg = Math.min(layer.reflectProgress * 5, 1);
             const curY = rBot - (rBot - rStr) * crPrg;
@@ -95,7 +96,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             ctx.restore();
         }
 
-        // 2. DIRECT LIGHT
         ctx.save(); ctx.globalAlpha = layer.kavProgress;
         drawDirectLight(ctx, cx, rTop, rTop + (rBot - rTop) * layer.kavProgress, rGradD, 1, pState.zoomLevel); ctx.restore();
 
@@ -109,7 +109,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             drawDirectLight(ctx, cx, sTop, sTop + (sBot - sTop) * layer.sofLightProgress, sGradD, 0.5, pState.zoomLevel); ctx.restore();
         }
 
-        // 3. SCREENS & SPARKS
         if (layer.kavProgress > 0.79) {
             const sW = (phase4Radius * 0.50) * 0.5;
 
