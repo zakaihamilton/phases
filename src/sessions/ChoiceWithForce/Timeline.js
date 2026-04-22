@@ -1,7 +1,7 @@
 // Timeline.js
 
 const rawStates = [
-    // --- ROOT PHASE (EIN SOF & THE FOUR KINGDOMS) ---
+    // --- ROOT PHASE ---
     { name: "Root Phase: Energy", description: "Crown of Root (Energy / Shoresh). The pure, boundless force.", action: 'ROOT_0' },
     { name: "Root Phase: Still", description: "Wisdom of Root (Still / Domem). The initial potential of the Infinite.", action: 'ROOT_1' },
     { name: "Root Phase: Vegetative", description: "Understanding of Root (Vegetative / Tzomeach). Expansion within the Infinite.", action: 'ROOT_2' },
@@ -41,7 +41,7 @@ const rawStates = [
     { name: "Restriction: Kingdom", description: "The restriction fully solidifies at Kingdom of Restriction.", action: 'RESTRICT_COARSEN' },
     { name: "The Tzimtzum", description: "The Restriction is activated. The Light departs from Phase Four.", action: 'RESTRICT_ACTIVATE' },
 
-    // --- ROSH (HEAD) ---
+    // --- HEAD (ROSH) ---
     { name: "Ohr Yashar: Crown", description: "The Line of Light enters the void, reaching Crown.", action: 'KAV_DESCEND' },
     { name: "Ohr Yashar: Wisdom", description: "The Direct Light descends to Wisdom.", action: 'KAV_DESCEND' },
     { name: "Ohr Yashar: Understanding", description: "The Direct Light descends to Understanding.", action: 'KAV_DESCEND' },
@@ -58,48 +58,66 @@ const rawStates = [
     { name: "The Window (Chalon)", description: "The Reflected Light lines the Circle of Crown to form a window.", action: 'WINDOW_FORM' },
     { name: "Filling the Crown", description: "The Direct Light fills the Circle of Crown within the lining.", action: 'WINDOW_FILL' },
 
-    // --- GUF (INTERIOR): VESSELS ---
+    // --- INTERIOR (GUF) ---
     { name: "Guf Expansion: Crown", description: "The Screen drops to form the Crown of the Body (Guf).", action: 'GUF_EXPAND' },
     { name: "Guf Expansion: Wisdom", description: "The Screen drops from Crown to form the Wisdom of the Body.", action: 'GUF_EXPAND' },
     { name: "Guf Expansion: Understanding", description: "The Screen drops to form the Understanding of the Body.", action: 'GUF_EXPAND' },
     { name: "Guf Expansion: Beauty", description: "The Screen drops to form the Beauty of the Body.", action: 'GUF_EXPAND' },
     { name: "Guf Expansion: Kingdom", description: "The Screen completely unfurls to form the Kingdom of the Body.", action: 'GUF_EXPAND' },
 
-    // --- GUF (INTERIOR): DIRECT LIGHT ---
     { name: "Guf Direct Light: Crown", description: "The Direct Light descends to the Crown of the Body.", action: 'GUF_DESCEND' },
     { name: "Guf Direct Light: Wisdom", description: "The Direct Light descends to the Wisdom of the Body.", action: 'GUF_DESCEND' },
     { name: "Guf Direct Light: Understanding", description: "The Direct Light descends to the Understanding of the Body.", action: 'GUF_DESCEND' },
     { name: "Guf Direct Light: Beauty", description: "The Direct Light descends to the Beauty of the Body.", action: 'GUF_DESCEND' },
     { name: "Guf Direct Light: Kingdom (Navel)", description: "The Light strikes the upper boundary of the Navel (Tabur).", action: 'GUF_DESCEND' },
 
-    // --- GUF (INTERIOR): REFLECTED LIGHT ---
     { name: "Guf Reflected Light: Crown", description: "Crown of Reflection builds bottom-up inside the Navel.", action: 'GUF_REFLECT' },
     { name: "Guf Reflected Light: Wisdom", description: "Wisdom of Reflection ascends through Beauty of the Body.", action: 'GUF_REFLECT' },
     { name: "Guf Reflected Light: Understanding", description: "Understanding of Reflection ascends through Understanding of the Body.", action: 'GUF_REFLECT' },
     { name: "Guf Reflected Light: Beauty", description: "Beauty of Reflection ascends through Wisdom of the Body.", action: 'GUF_REFLECT' },
     { name: "Guf Reflected Light: Kingdom", description: "Kingdom of Reflection completes its ascent to just beneath the Mouth (Peh).", action: 'GUF_REFLECT' },
 
-    // --- SOF (END): VESSELS ---
+    // --- END (SOF) ---
     { name: "Sof Expansion: Crown", description: "The Navel expands downwards to form the Crown of the End (Sof).", action: 'SOF_EXPAND' },
     { name: "Sof Expansion: Wisdom", description: "The Navel drops to form the Wisdom of the End.", action: 'SOF_EXPAND' },
     { name: "Sof Expansion: Understanding", description: "The Navel drops to form the Understanding of the End.", action: 'SOF_EXPAND' },
     { name: "Sof Expansion: Beauty", description: "The Navel drops to form the Beauty of the End.", action: 'SOF_EXPAND' },
     { name: "Sof Expansion: Kingdom", description: "The Screen reaches the absolute center point (Siyum Raglin).", action: 'SOF_EXPAND' },
 
-    // --- SOF (END): DIRECT LIGHT (MERCY) ---
     { name: "Sof Direct Light: Crown", description: "The Light of Mercy (Ohr Chasodim) enters the End at half visibility.", action: 'SOF_DESCEND' },
     { name: "Sof Direct Light: Wisdom", description: "The Light of Mercy descends to Wisdom of the End.", action: 'SOF_DESCEND' },
     { name: "Sof Direct Light: Understanding", description: "The Light of Mercy descends to Understanding of the End.", action: 'SOF_DESCEND' },
     { name: "Sof Direct Light: Beauty", description: "The Light of Mercy descends to Beauty of the End.", action: 'SOF_DESCEND' },
     { name: "Sof Direct Light: Kingdom (Siyum)", description: "The Light of Mercy strikes the boundary of the absolute End.", action: 'SOF_DESCEND' },
 
-    // --- SOF (END): REFLECTED LIGHT ---
     { name: "Sof Reflected Light: Crown", description: "Crown of Reflection builds bottom-up inside the End.", action: 'SOF_REFLECT' },
     { name: "Sof Reflected Light: Wisdom", description: "Wisdom of Reflection ascends through Beauty of the End.", action: 'SOF_REFLECT' },
     { name: "Sof Reflected Light: Understanding", description: "Understanding of Reflection ascends through Understanding of the End.", action: 'SOF_REFLECT' },
     { name: "Sof Reflected Light: Beauty", description: "Beauty of Reflection ascends through Wisdom of the End.", action: 'SOF_REFLECT' },
     { name: "Sof Reflected Light: Kingdom", description: "Kingdom of Reflection completes its ascent to just beneath the Navel (Tabur).", action: 'SOF_REFLECT' }
 ];
+
+// --- PURIFICATION (HIZDAKCHUT) LAYERS ---
+const purificationLevels = [
+    { level: 3, name: "Beauty" },
+    { level: 2, name: "Understanding" },
+    { level: 1, name: "Wisdom" },
+    { level: 0, name: "Crown" }
+];
+
+purificationLevels.forEach(p => {
+    rawStates.push(
+        { name: `Purification to ${p.name}`, description: `The screen purifies to Phase ${p.level}. A new inner layer begins to form.`, action: `PURIFY_${p.level}` },
+        { name: `Head Light at ${p.name}`, description: `Direct Light hits the Mouth.`, action: `ROSH_DESCEND_${p.level}` },
+        { name: `Head Reflection at ${p.name}`, description: `Reflected light rises one level lower.`, action: `ROSH_REFLECT_${p.level}` },
+        { name: `Interior Expansion to ${p.name}`, description: `The Inner Screen expands down to the new, higher Navel.`, action: `GUF_EXPAND_${p.level}` },
+        { name: `Interior Light at ${p.name}`, description: `Direct Light hits the new Navel.`, action: `GUF_DESCEND_${p.level}` },
+        { name: `Interior Reflection at ${p.name}`, description: `Reflected Light rises back to the Mouth.`, action: `GUF_REFLECT_${p.level}` },
+        { name: `End Expansion to ${p.name}`, description: `The Inner End (Sof) expands down to the new Siyum.`, action: `SOF_EXPAND_${p.level}` },
+        { name: `End Light at ${p.name}`, description: `Light of Mercy hits the new End.`, action: `SOF_DESCEND_${p.level}` },
+        { name: `End Reflection at ${p.name}`, description: `Reflected Light rises back to the Navel.`, action: `SOF_REFLECT_${p.level}` }
+    );
+});
 
 export const SpiritualStates = rawStates.map((state, index) => {
     return { index: index, name: state.name, description: state.description, activeSequence: rawStates.slice(0, index + 1).map(s => s.action) };
