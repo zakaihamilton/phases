@@ -160,15 +160,15 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         ctx.moveTo(cx, screenY);
         ctx.lineTo(cx, currentReflectY);
         ctx.strokeStyle = rlGrad;
-        ctx.lineWidth = 18 / pState.zoomLevel;
+        ctx.lineWidth = 32 / pState.zoomLevel;
         ctx.stroke();
 
         // Structural walls
         ctx.beginPath();
-        ctx.moveTo(cx - (8 / pState.zoomLevel), screenY);
-        ctx.lineTo(cx - (8 / pState.zoomLevel), currentReflectY);
-        ctx.moveTo(cx + (8 / pState.zoomLevel), screenY);
-        ctx.lineTo(cx + (8 / pState.zoomLevel), currentReflectY);
+        ctx.moveTo(cx - (15 / pState.zoomLevel), screenY);
+        ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
+        ctx.moveTo(cx + (15 / pState.zoomLevel), screenY);
+        ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.lineWidth = 1.5 / pState.zoomLevel;
         ctx.stroke();
@@ -182,7 +182,7 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     ctx.moveTo(cx, startY);
     ctx.lineTo(cx, currentY);
     ctx.strokeStyle = dlGrad;
-    ctx.lineWidth = 6 / pState.zoomLevel;
+    ctx.lineWidth = 12 / pState.zoomLevel;
     ctx.stroke();
 
     // Core
