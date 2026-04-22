@@ -1,3 +1,4 @@
+// Rules.js
 export const calculateTargets = (activeSequence) => {
     const targets = {
         infinityAlpha: 0,
@@ -10,8 +11,9 @@ export const calculateTargets = (activeSequence) => {
         kavProgress: 0,
         reflectProgress: 0,
         outerPhasesOpacity: 1,
-        windowProgress: 0,     // Tracks the Chalon (Window)
-        windowFillProgress: 0, // Tracks the Golden Fill
+        windowProgress: 0,
+        windowFillProgress: 0,
+        screenExpandProgress: 0, // NEW: Tracks the accordion expansion
         zoomLevel: 1
     };
 
@@ -53,11 +55,16 @@ export const calculateTargets = (activeSequence) => {
             targets.reflectProgress = kavReflectCount * 0.20;
         }
         else if (action === 'WINDOW_FORM') {
-            targets.windowProgress = 1; // Trigger Window
+            targets.windowProgress = 1;
         }
         else if (action === 'WINDOW_FILL') {
             targets.windowProgress = 1;
-            targets.windowFillProgress = 1; // Trigger Fill
+            targets.windowFillProgress = 1;
+        }
+        else if (action === 'SCREEN_EXPAND') {
+            targets.windowProgress = 1;
+            targets.windowFillProgress = 1;
+            targets.screenExpandProgress = 1; // Trigger Accordion
         }
     });
 

@@ -37,6 +37,7 @@ const rawStates = [
     { name: "Restriction: Beauty", description: "The desire to restrict coarsens to Beauty of Restriction.", action: 'RESTRICT_COARSEN' },
     { name: "Restriction: Kingdom", description: "The restriction fully solidifies at Kingdom of Restriction.", action: 'RESTRICT_COARSEN' },
     { name: "The Tzimtzum", description: "The Restriction is activated. The Light departs from Phase Four.", action: 'RESTRICT_ACTIVATE' },
+
     // --- DIRECT LIGHT (OHR YASHAR) ---
     { name: "Ohr Yashar: Crown", description: "The Line of Light (Kav) enters the void, reaching Crown.", action: 'KAV_DESCEND' },
     { name: "Ohr Yashar: Wisdom", description: "The Direct Light descends to Wisdom.", action: 'KAV_DESCEND' },
@@ -61,6 +62,13 @@ const rawStates = [
         name: "Filling the Crown",
         description: "The Direct Light expands through the window, filling the Circle of Crown within the new lining.",
         action: 'WINDOW_FILL'
+    },
+
+    // --- EXPANDING THE SCREEN (GUF / BODY) ---
+    {
+        name: "Expanding the Screen",
+        description: "The Screen expands downwards like an accordion, making space for the 5 interior phases of the body (Guf).",
+        action: 'SCREEN_EXPAND'
     }
 ];
 

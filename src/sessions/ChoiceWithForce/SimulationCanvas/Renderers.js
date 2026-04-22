@@ -1,10 +1,8 @@
-// renderers.js
+// Renderers.js
 
-// PRECALCULATED COLORS FOR OPTIMIZED RENDERING
 const phaseRgbs = [[255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]];
 const subPhaseRgbs = [[180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]];
 
-// Precalculate the 16 blended colors for emanations [i][j]
 const BLENDED_COLORS = phaseRgbs.map(mainRgb => {
     return subPhaseRgbs.map(subRgb => {
         const r = Math.round(mainRgb[0] * 0.6 + subRgb[0] * 0.4);
@@ -14,19 +12,11 @@ const BLENDED_COLORS = phaseRgbs.map(mainRgb => {
     });
 });
 
-/**
- * Optimized helper to draw a glow effect using stacked strokes instead of shadowBlur.
- * shadowBlur is extremely expensive on the CPU canvas API.
- */
 const drawGlowStroke = (ctx, colorRgb, opacity, lineWidth, iterations = 3) => {
     if (opacity <= 0.01) return;
-    
-    // Core stroke
     ctx.strokeStyle = `rgba(${colorRgb}, ${opacity})`;
     ctx.lineWidth = lineWidth;
     ctx.stroke();
-
-    // Glow layers (simulating blur)
     for (let i = 1; i <= iterations; i++) {
         const glowOpacity = opacity * (0.3 / i);
         ctx.strokeStyle = `rgba(${colorRgb}, ${glowOpacity})`;
@@ -40,7 +30,6 @@ export const drawOrb = (ctx, x, y, radius, colorInner, colorOuter, opacity) => {
     ctx.save();
     ctx.globalAlpha = opacity;
     ctx.globalCompositeOperation = 'screen';
-    // Gradients are somewhat expensive, but necessary for orbs.
     const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
     grad.addColorStop(0, colorInner);
     grad.addColorStop(1, colorOuter);
@@ -94,8 +83,6 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
 
                 ctx.beginPath();
                 ctx.arc(cx, cy, layerRadius, 0, Math.PI * 2);
-                
-                // Optimized glow代替shadowBlur
                 drawGlowStroke(ctx, blendedRgb, layerOpacity, 2 / pState.zoomLevel, 2);
             }
         }
@@ -125,8 +112,13 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
 
     const phase4Radius = maxR * (1 - (3 * 0.22));
     const startY = cy - phase4Radius;
-    const screenY = cy - (phase4Radius * 0.50);
-    const currentY = startY + (screenY - startY) * pState.kavProgress;
+
+    // NEW ACCORDION LOGIC: The screen dynamically drops near the center (scale 0.10)
+    const baseScreenY = cy - (phase4Radius * 0.50);
+    const maxExpandedScreenY = cy - (phase4Radius * 0.10);
+    const dynamicScreenY = baseScreenY + (maxExpandedScreenY - baseScreenY) * (pState.screenExpandProgress || 0);
+
+    const currentY = startY + (dynamicScreenY - startY) * pState.kavProgress;
 
     const hues = [
         '180, 180, 180', // 0: Crown
@@ -136,38 +128,37 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
         '76, 175, 80'    // 4: Kingdom
     ];
 
-    // Gradients
-    const dlGrad = ctx.createLinearGradient(cx, startY, cx, screenY);
+    // Gradients (Dynamically stretching to the new bottom screen)
+    const dlGrad = ctx.createLinearGradient(cx, startY, cx, dynamicScreenY);
     dlGrad.addColorStop(0, `rgb(${hues[0]})`);
     dlGrad.addColorStop(0.25, `rgb(${hues[1]})`);
     dlGrad.addColorStop(0.5, `rgb(${hues[2]})`);
     dlGrad.addColorStop(0.75, `rgb(${hues[3]})`);
     dlGrad.addColorStop(1, `rgb(${hues[4]})`);
 
-    const rlGrad = ctx.createLinearGradient(cx, screenY, cx, startY);
+    const rlGrad = ctx.createLinearGradient(cx, dynamicScreenY, cx, startY);
     rlGrad.addColorStop(0, `rgb(${hues[0]})`);
     rlGrad.addColorStop(0.25, `rgb(${hues[1]})`);
     rlGrad.addColorStop(0.5, `rgb(${hues[2]})`);
     rlGrad.addColorStop(0.75, `rgb(${hues[3]})`);
     rlGrad.addColorStop(1, `rgb(${hues[4]})`);
 
-    // 1. REFLECTED LIGHT
+    // 1. REFLECTED LIGHT (Stretches downwards seamlessly!)
     if (pState.reflectProgress > 0.01) {
-        const currentReflectY = screenY - (screenY - startY) * pState.reflectProgress;
+        const currentReflectY = dynamicScreenY - (dynamicScreenY - startY) * pState.reflectProgress;
         ctx.save();
         ctx.globalAlpha = pState.reflectProgress;
         ctx.beginPath();
-        ctx.moveTo(cx, screenY);
+        ctx.moveTo(cx, dynamicScreenY);
         ctx.lineTo(cx, currentReflectY);
         ctx.strokeStyle = rlGrad;
         ctx.lineWidth = 32 / pState.zoomLevel;
         ctx.stroke();
 
-        // Structural walls
         ctx.beginPath();
-        ctx.moveTo(cx - (15 / pState.zoomLevel), screenY);
+        ctx.moveTo(cx - (15 / pState.zoomLevel), dynamicScreenY);
         ctx.lineTo(cx - (15 / pState.zoomLevel), currentReflectY);
-        ctx.moveTo(cx + (15 / pState.zoomLevel), screenY);
+        ctx.moveTo(cx + (15 / pState.zoomLevel), dynamicScreenY);
         ctx.lineTo(cx + (15 / pState.zoomLevel), currentReflectY);
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.lineWidth = 1.5 / pState.zoomLevel;
@@ -185,7 +176,6 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     ctx.lineWidth = 12 / pState.zoomLevel;
     ctx.stroke();
 
-    // Core
     ctx.beginPath();
     ctx.moveTo(cx, startY);
     ctx.lineTo(cx, currentY);
@@ -194,19 +184,30 @@ export const drawKav = (ctx, cx, cy, w, h, pState, maxR, time) => {
     ctx.stroke();
     ctx.restore();
 
-    // 3. THE MASACH & SPARKS
+    // 3. THE MASACH (SCREEN) - ACCORDION EXPANSION
     if (pState.kavProgress > 0.99) {
-        ctx.beginPath();
         const screenWidth = (phase4Radius * 0.50) * 0.4;
-        ctx.moveTo(cx - screenWidth, screenY);
-        ctx.lineTo(cx + screenWidth, screenY);
-        ctx.strokeStyle = `rgba(100, 200, 255, ${pState.kavProgress})`;
-        ctx.lineWidth = 3 / pState.zoomLevel;
-        ctx.stroke();
 
+        // Loop 5 times to create the internal phases (Crown to Kingdom)
+        for (let i = 0; i < 5; i++) {
+            // When progress is 0, they all sit tightly overlapping at baseScreenY.
+            // As progress approaches 1, they spread out down to dynamicScreenY.
+            const lineY = baseScreenY + (dynamicScreenY - baseScreenY) * (i / 4);
+
+            ctx.beginPath();
+            ctx.moveTo(cx - screenWidth, lineY);
+            ctx.lineTo(cx + screenWidth, lineY);
+
+            // Color code the 5 horizontal screens to the 5 Sefirot
+            ctx.strokeStyle = `rgba(${hues[i]}, ${pState.kavProgress})`;
+            ctx.lineWidth = 3 / pState.zoomLevel;
+            ctx.stroke();
+        }
+
+        // The Sparks perfectly ride the bottom-most screen as it descends
         ctx.save();
-        ctx.translate(cx, screenY);
-        const numSparks = 18; // Reduced count
+        ctx.translate(cx, dynamicScreenY);
+        const numSparks = 18;
         for (let i = 0; i < numSparks; i++) {
             const baseAngle = (Math.PI * 2 / numSparks) * i;
             const flicker = Math.sin(time * 30 + i * 100);

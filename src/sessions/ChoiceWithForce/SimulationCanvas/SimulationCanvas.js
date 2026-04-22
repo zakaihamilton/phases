@@ -35,7 +35,8 @@ const SimulationCanvas = ({ activeSequence }) => {
             reflectProgress: 0,
             outerPhasesOpacity: 1,
             windowProgress: 0,
-            windowFillProgress: 0
+            windowFillProgress: 0,
+            screenExpandProgress: 0
         };
 
         const resize = () => {
