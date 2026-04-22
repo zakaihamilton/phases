@@ -1,5 +1,4 @@
 // Renderers.js
-// Componentized drawing logic for clean modularity
 
 const phaseRgbs = [[255, 235, 59], [33, 150, 243], [244, 67, 54], [76, 175, 80]];
 const subPhaseRgbs = [[180, 180, 180], [255, 235, 59], [33, 150, 243], [76, 175, 80]];
@@ -84,7 +83,6 @@ export const drawEmanations = (ctx, cx, cy, time, pState, maxR) => {
     }
 };
 
-// MODULAR COMPONENTS
 const buildGradients = (ctx, cx, topY, bottomY) => {
     const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
     const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
@@ -127,19 +125,23 @@ const drawSparks = (ctx, cx, yPos, opacity, time, zoomLevel) => {
 
 // MAIN CONTROLLER
 export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
-    ctx.save(); ctx.globalCompositeOperation = 'screen';
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
     const phase4Radius = maxR * (1 - (3 * 0.22));
 
-    // Render all 5 Nested Purification Layers simultaneously on top of each other!
     for (let k = 0; k < 5; k++) {
         const layer = pState.layers[k];
         if (layer.kavProgress <= 0.01) continue;
+
+        ctx.save(); // ISOLATE THE CURRENT LAYER
+
+        // Apply the 2.5D Isometric Tilt! Steps right and up.
+        ctx.translate(k * 75 * pState.tiltProgress, -k * 15 * pState.tiltProgress);
 
         const levelValue = 4 - k;
         const SefirahFraction = (levelValue + 1) / 5;
         const RoshReflectFraction = levelValue / 4;
 
-        // Geometry Engine computes static geometric boundaries for this specific nested layer
         const roshTopY = cy - phase4Radius;
         const roshBottomY = cy - (phase4Radius * 0.50);
         const roshStrikeY = roshTopY + (roshBottomY - roshTopY) * 0.80;
@@ -158,7 +160,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
         const { dlGrad: dlGradGuf, rlGrad: rlGradGuf } = buildGradients(ctx, cx, gufTopY, activeGufBottomY);
         const { dlGrad: dlGradSof, rlGrad: rlGradSof } = buildGradients(ctx, cx, sofTopY, activeSofBottomY);
 
-        // 1. REFLECTED LIGHT
         if (layer.reflectProgress > 0.01) {
             const crownReflectProgress = Math.min(layer.reflectProgress * 5, 1);
             const currentTopY_Crown = roshBottomY - (roshBottomY - roshStrikeY) * crownReflectProgress;
@@ -216,7 +217,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             ctx.restore();
         }
 
-        // 2. DIRECT LIGHT
         ctx.save(); ctx.globalAlpha = layer.kavProgress;
         drawDirectLight(ctx, cx, roshTopY, roshTopY + (roshBottomY - roshTopY) * layer.kavProgress, dlGradRosh, 1, pState.zoomLevel); ctx.restore();
 
@@ -230,7 +230,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             drawDirectLight(ctx, cx, sofTopY, sofTopY + (activeSofBottomY - sofTopY) * layer.sofLightProgress, dlGradSof, 0.5, pState.zoomLevel); ctx.restore();
         }
 
-        // 3. SCREENS & SPARKS
         if (layer.kavProgress > 0.79) {
             const screenWidth = (phase4Radius * 0.50) * 0.5;
 
@@ -277,7 +276,6 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             drawSparks(ctx, cx, activeSofStrikeY, layer.siyumFlareOpacity, time, pState.zoomLevel);
         }
 
-        // Window Fill Only on Base Layer (k=0)
         if (k === 0 && layer.windowProgress > 0.01) {
             const crownOuterR = phase4Radius * 1.0; const crownInnerR = phase4Radius * 0.90;
             const bOuter = Math.max(0, crownOuterR + Math.sin(time * 1.5 + 3) * 1.5);
@@ -293,6 +291,8 @@ export const drawWorldOfAdamKadmon = (ctx, cx, cy, pState, maxR, time) => {
             }
             ctx.restore();
         }
+
+        ctx.restore(); // END LAYER ISOLATION (Clears the translate!)
     }
-    ctx.restore();
+    ctx.restore(); // END WORLD
 };

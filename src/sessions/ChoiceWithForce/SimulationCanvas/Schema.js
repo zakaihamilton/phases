@@ -1,5 +1,4 @@
 // Schema.js
-// Single Source of Truth for the Kabbalistic Engine
 
 export const createLayerState = () => ({
     kavProgress: 0,
@@ -26,8 +25,8 @@ export const INITIAL_STATE = {
     voidOpacity: 0,
     zoomLevel: 1,
     outerPhasesOpacity: 1,
+    tiltProgress: 0, // NEW: Controls the 2.5D Isometric Camera
     layers: [createLayerState(), createLayerState(), createLayerState(), createLayerState(), createLayerState()]
 };
 
-// Generates a deep copy clean slate
 export const getFreshState = () => JSON.parse(JSON.stringify(INITIAL_STATE));

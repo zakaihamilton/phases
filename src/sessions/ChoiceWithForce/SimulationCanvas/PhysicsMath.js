@@ -1,21 +1,13 @@
 // PhysicsMath.js
-// Config-driven sequential engine. It calculates "Visual Distance" to intelligently fast-forward.
 
 const EPSILON = 0.015;
 const done = (val, target) => Math.abs(val - target) <= EPSILON;
 
-// The exact chronological order of creation within any Partzuf
 const CHRONOLOGY = [
-    { prop: 'kavProgress', type: 'value' },
-    { prop: 'reflectProgress', type: 'value' },
-    { prop: 'windowProgress', type: 'value' },
-    { prop: 'windowFillProgress', type: 'value' },
-    { prop: 'gufExpandProgresses', type: 'array' },
-    { prop: 'gufLightProgress', type: 'value' },
-    { prop: 'gufReflectProgress', type: 'value' },
-    { prop: 'sofExpandProgresses', type: 'array' },
-    { prop: 'sofLightProgress', type: 'value' },
-    { prop: 'sofReflectProgress', type: 'value' }
+    { prop: 'kavProgress', type: 'value' }, { prop: 'reflectProgress', type: 'value' },
+    { prop: 'windowProgress', type: 'value' }, { prop: 'windowFillProgress', type: 'value' },
+    { prop: 'gufExpandProgresses', type: 'array' }, { prop: 'gufLightProgress', type: 'value' }, { prop: 'gufReflectProgress', type: 'value' },
+    { prop: 'sofExpandProgresses', type: 'array' }, { prop: 'sofLightProgress', type: 'value' }, { prop: 'sofReflectProgress', type: 'value' }
 ];
 
 const getVisualSum = (state) => {
@@ -29,16 +21,17 @@ const getVisualSum = (state) => {
 };
 
 export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
-    // Dynamic Speed Boost: The larger the sequence jump, the faster it animates!
     const distance = Math.abs(getVisualSum(targets) - getVisualSum(pState));
     const seqSpeedBoost = easeSpeed * (2.5 + (distance * 1.5));
     const bgEase = easeSpeed * (1 + (distance * 0.5));
 
-    // Generic backgrounds
     pState.infinityAlpha += (targets.infinityAlpha - pState.infinityAlpha) * bgEase;
     pState.zoomLevel += (targets.zoomLevel - pState.zoomLevel) * bgEase;
     pState.voidOpacity += (targets.voidOpacity - pState.voidOpacity) * bgEase;
     pState.outerPhasesOpacity += (targets.outerPhasesOpacity - pState.outerPhasesOpacity) * bgEase;
+
+    // Apply smooth easing to the camera pan!
+    pState.tiltProgress += (targets.tiltProgress - pState.tiltProgress) * bgEase;
 
     for (let i = 0; i < 5; i++) pState.rootOpacities[i] += (targets.rootOpacities[i] - pState.rootOpacities[i]) * bgEase;
     for (let i = 0; i < 5; i++) pState.restrictionOpacities[i] += (targets.restrictionOpacities[i] - pState.restrictionOpacities[i]) * bgEase;
@@ -47,7 +40,6 @@ export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
         for (let j = 0; j < 4; j++) pState.subVesselOpacities[i][j] += (targets.subVesselOpacities[i][j] - pState.subVesselOpacities[i][j]) * bgEase;
     }
 
-    // Evaluate each Layer
     for (let lyr = 0; lyr < 5; lyr++) {
         const p = pState.layers[lyr];
         const t = targets.layers[lyr];
@@ -56,10 +48,8 @@ export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
         p.taburFlareOpacity += (t.taburFlareOpacity - p.taburFlareOpacity) * bgEase;
         p.siyumFlareOpacity += (t.siyumFlareOpacity - p.siyumFlareOpacity) * bgEase;
 
-        let canMoveFwd = true;
-        let canMoveBwd = true;
+        let canMoveFwd = true; let canMoveBwd = true;
 
-        // Auto-Sequence Forwards
         for (let i = 0; i < CHRONOLOGY.length; i++) {
             const rule = CHRONOLOGY[i];
             if (rule.type === 'value') {
@@ -78,7 +68,6 @@ export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
             }
         }
 
-        // Auto-Sequence Backwards (For skipping backward in the timeline)
         for (let i = CHRONOLOGY.length - 1; i >= 0; i--) {
             const rule = CHRONOLOGY[i];
             if (rule.type === 'value') {
