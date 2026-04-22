@@ -13,11 +13,15 @@ const SimulationCanvas = ({ activeSequence }) => {
     const canvasRef = useRef(null);
     const targetsRef = useRef(getFreshState());
 
+    // TRACKING FIX: We revert to checking sequence length. 
+    // This ensures that clicking "Next" (which adds exactly 1 item) always ANIMATES smoothly,
+    // while loading a fresh page (which jumps from 0 to N items) instantly SNAPS!
     const prevSeqLenRef = useRef(0);
     const forceSnapRef = useRef(true);
 
     useEffect(() => {
         targetsRef.current = calculateTargets(activeSequence, SpiritualStates);
+
         const currentLen = activeSequence ? activeSequence.length : 0;
 
         if (Math.abs(currentLen - prevSeqLenRef.current) > 1 || prevSeqLenRef.current === 0) {
@@ -71,10 +75,7 @@ const SimulationCanvas = ({ activeSequence }) => {
             ctx.translate(cx, cy);
             ctx.scale(pState.zoomLevel, pState.zoomLevel);
 
-            // --- GENTLER GLOBE ROTATE EFFECT ---
             if (pState.tiltProgress > 0.01) {
-                // Reduced from 65% to 35% squeeze. This gives a clean 3D 
-                // turning effect without making the circles too slanted/thin.
                 ctx.scale(1 - (0.35 * pState.tiltProgress), 1);
             }
 

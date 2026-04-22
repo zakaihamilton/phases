@@ -10,14 +10,21 @@ export const calculateTargets = (activeSequence, timeline) => {
         return targetState;
     }
 
-    // Convert the activeSequence length back into an index to map to the timeline
-    const activeIndex = activeSequence.length - 1;
+    // 1. Identify the current step the user is on
+    const currentStep = activeSequence[activeSequence.length - 1];
 
-    // Cumulatively fold the state modifiers up to the target index
-    for (let i = 0; i <= activeIndex; i++) {
+    // 2. Find its absolute position in the master timeline using its unique 'action' ID
+    const absoluteIndex = timeline.findIndex(t => t.action === currentStep.action);
+
+    // Fallback to length-based index if action isn't found
+    const targetIndex = absoluteIndex !== -1 ? absoluteIndex : activeSequence.length - 1;
+
+    // 3. Cumulatively fold the state modifiers from the VERY BEGINNING up to the target index.
+    // This ensures all previous states (foundational layers, previous purifications) are fully built!
+    for (let i = 0; i <= targetIndex; i++) {
         const step = timeline[i];
         if (step && step.stateModifiers) {
-            const isLastStep = (i === activeIndex);
+            const isLastStep = (i === targetIndex);
             targetState = step.stateModifiers(targetState, isLastStep);
         }
     }
