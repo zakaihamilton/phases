@@ -31,29 +31,6 @@ export const drawOrb = (ctx, x, y, radius, colorInner, colorOuter, opacity) => {
     ctx.fill(); ctx.restore();
 };
 
-export const buildGradients = (ctx, cx, topY, bottomY) => {
-    const dlGrad = ctx.createLinearGradient(cx, topY, cx, bottomY);
-    const rlGrad = ctx.createLinearGradient(cx, bottomY, cx, topY);
-    for (let i = 0; i < 5; i++) {
-        dlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`); rlGrad.addColorStop(i * 0.25, `rgb(${hues[i]})`);
-    }
-    return { dlGrad, rlGrad };
-};
-
-export const drawWalls = (ctx, cx, topY, bottomY, opacity, zoomLevel) => {
-    ctx.beginPath();
-    ctx.moveTo(cx - (24 / zoomLevel), bottomY); ctx.lineTo(cx - (24 / zoomLevel), topY);
-    ctx.moveTo(cx + (24 / zoomLevel), bottomY); ctx.lineTo(cx + (24 / zoomLevel), topY);
-    ctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.9})`; ctx.lineWidth = 2 / zoomLevel; ctx.stroke();
-};
-
-export const drawDirectLight = (ctx, cx, topY, bottomY, grad, opacityModifier, zoomLevel) => {
-    ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
-    ctx.strokeStyle = grad; ctx.lineWidth = 20 / zoomLevel; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx, topY); ctx.lineTo(cx, bottomY);
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * opacityModifier})`; ctx.lineWidth = 2.5 / zoomLevel; ctx.stroke();
-};
-
 export const drawSparks = (ctx, cx, yPos, opacity, time, zoomLevel) => {
     if (opacity <= 0.01) return;
     ctx.save(); ctx.globalAlpha = opacity; ctx.translate(cx, yPos);
@@ -71,7 +48,139 @@ export const drawSparks = (ctx, cx, yPos, opacity, time, zoomLevel) => {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill(); ctx.restore();
 };
 
-export const drawExpandingScreen = (ctx, cx, topY, bottomY, progressesArray, screenWidth, zoomLevel) => {
+// --- NEW: MULTI-COLOR 3D CYLINDRICAL PIPES ---
+export const drawMultiColorPipe = (ctx, cx, originY, destY, radius, progress, zoomLevel, isHollow) => {
+    if (progress <= 0.01) return;
+    const r = radius / zoomLevel;
+    const totalH = Math.abs(destY - originY);
+    if (totalH <= 0.1) return;
+
+    const segH = totalH / 5;
+    const direction = destY > originY ? 1 : -1;
+    const capSquash = r * 0.35;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+
+    for (let i = 0; i < 5; i++) {
+        const segStartProgress = i * 0.2;
+        if (progress <= segStartProgress) continue;
+
+        const segLocalProgress = Math.min(1, (progress - segStartProgress) / 0.2);
+        const segLength = segH * segLocalProgress;
+
+        const segOriginY = originY + (i * segH * direction);
+        const segDestY = segOriginY + (segLength * direction);
+
+        const yMin = Math.min(segOriginY, segDestY);
+        const yMax = Math.max(segOriginY, segDestY);
+        const h = yMax - yMin;
+
+        // Gray (0), Yellow (1), Blue (2), Red (3), Green (4)
+        const rgbStr = hues[i];
+
+        ctx.globalAlpha = isHollow ? 0.85 : 1.0;
+
+        const grad = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
+        if (isHollow) {
+            grad.addColorStop(0, `rgba(${rgbStr}, 0.9)`);
+            grad.addColorStop(0.2, `rgba(${rgbStr}, 0.5)`);
+            grad.addColorStop(0.5, `rgba(${rgbStr}, 0.1)`);
+            grad.addColorStop(0.8, `rgba(${rgbStr}, 0.5)`);
+            grad.addColorStop(1, `rgba(${rgbStr}, 0.9)`);
+        } else {
+            grad.addColorStop(0, `rgba(${rgbStr}, 0.8)`);
+            grad.addColorStop(0.3, `rgba(${rgbStr}, 1)`);
+            grad.addColorStop(0.5, `rgba(255, 255, 255, 0.7)`);
+            grad.addColorStop(0.7, `rgba(${rgbStr}, 1)`);
+            grad.addColorStop(1, `rgba(${rgbStr}, 0.8)`);
+        }
+
+        ctx.beginPath();
+        ctx.rect(cx - r, yMin, r * 2, h);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Add a 3D structural connecting ring between the 5 phases
+        if (i > 0 && progress > segStartProgress) {
+            ctx.beginPath();
+            ctx.ellipse(cx, segOriginY, r, capSquash, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${isHollow ? 0.4 : 0.8})`;
+            ctx.lineWidth = 1.5 / zoomLevel;
+            ctx.stroke();
+        }
+    }
+
+    const currentEndY = originY + (totalH * progress * direction);
+    const lowestY = Math.max(originY, currentEndY);
+    const highestY = Math.min(originY, currentEndY);
+
+    const activeColorIdx = Math.floor(Math.min(progress, 0.99) * 5);
+    const bottomColorRgb = direction === 1 ? hues[activeColorIdx] : hues[0];
+    const topColorRgb = direction === 1 ? hues[0] : hues[activeColorIdx];
+
+    // Bottom Cap
+    ctx.beginPath();
+    ctx.ellipse(cx, lowestY, r, capSquash, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${bottomColorRgb}, ${isHollow ? 0.8 : 0.9})`;
+    ctx.fill();
+
+    // Top Cap
+    ctx.beginPath();
+    ctx.ellipse(cx, highestY, r, capSquash, 0, 0, Math.PI * 2);
+    if (isHollow) {
+        ctx.strokeStyle = `rgba(${topColorRgb}, 0.9)`;
+        ctx.lineWidth = 2 / zoomLevel;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(${topColorRgb}, 0.15)`;
+        ctx.fill();
+    } else {
+        ctx.fillStyle = `rgba(255, 255, 255, 0.95)`;
+        ctx.fill();
+    }
+
+    ctx.restore();
+};
+
+// --- 3D VOLUMETRIC SCREENS (MASACH) ---
+export const draw3DDisk = (ctx, cx, cy, radius, thickness, rgbStr, opacity, zoomLevel) => {
+    if (opacity <= 0.01) return;
+    const r = radius / zoomLevel;
+    const t = Math.max(thickness, 1) / zoomLevel;
+    const capSquash = r * 0.35;
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.globalCompositeOperation = 'source-over';
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + t, r, capSquash, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgbStr}, 0.4)`;
+    ctx.fill();
+
+    const grad = ctx.createLinearGradient(cx - r, 0, cx + r, 0);
+    grad.addColorStop(0, `rgba(${rgbStr}, 0.8)`);
+    grad.addColorStop(0.5, `rgba(255, 255, 255, 0.5)`);
+    grad.addColorStop(1, `rgba(${rgbStr}, 0.8)`);
+
+    ctx.beginPath();
+    ctx.rect(cx - r, cy, r * 2, t);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, capSquash, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgbStr}, 0.85)`;
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.8)`;
+    ctx.lineWidth = 1.5 / zoomLevel;
+    ctx.stroke();
+
+    ctx.restore();
+};
+
+export const drawExpandingScreen = (ctx, cx, topY, bottomY, progressesArray, screenWidth, zoomLevel, baseRgb) => {
     const sectionHeight = (bottomY - topY) / 5;
     let previousY = topY; let lowestY = topY;
 
@@ -79,17 +188,9 @@ export const drawExpandingScreen = (ctx, cx, topY, bottomY, progressesArray, scr
         const targetY = topY + ((i + 1) * sectionHeight);
         const currentY = previousY + (targetY - previousY) * progressesArray[i];
         if (progressesArray[i] > 0.001) {
-            ctx.beginPath(); ctx.moveTo(cx - screenWidth, currentY); ctx.lineTo(cx + screenWidth, currentY);
-            ctx.strokeStyle = `rgba(${hues[i]}, ${progressesArray[i]})`;
-            ctx.lineWidth = 3 / zoomLevel; ctx.stroke();
+            draw3DDisk(ctx, cx, currentY, screenWidth, 4, hues[i], progressesArray[i], zoomLevel);
         }
         previousY = currentY;
         if (currentY > lowestY) lowestY = currentY;
-    }
-    if (lowestY > topY + 0.1) {
-        ctx.beginPath(); ctx.moveTo(cx - screenWidth, topY); ctx.lineTo(cx - screenWidth, lowestY);
-        ctx.moveTo(cx + screenWidth, topY); ctx.lineTo(cx + screenWidth, lowestY);
-        ctx.strokeStyle = `rgba(100, 200, 255, ${progressesArray[0]})`;
-        ctx.lineWidth = 3 / zoomLevel; ctx.stroke();
     }
 };
