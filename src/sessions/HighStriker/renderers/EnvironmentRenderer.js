@@ -273,41 +273,104 @@ export const drawPedestrians = (ctx, engine) => {
     pedestrians.forEach(p => {
         if (p.x < -100 || p.x > width + 100) return;
 
-        const bob = Math.abs(Math.sin(time * 8 + p.off)) * 6 * p.scale;
+        const walkSpeed = time * 8 + p.off;
+        const bob = Math.abs(Math.sin(walkSpeed)) * 6 * p.scale;
+        const swing = Math.sin(walkSpeed) * 12;
+
         ctx.save();
         ctx.translate(p.x, baseY - bob);
         ctx.scale(p.scale, p.scale);
+        
+        // Flip based on direction
+        if (p.v < 0) ctx.scale(-1, 1);
 
+        // Legs
+        ctx.strokeStyle = '#2f3542';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        
+        // Back leg
+        ctx.beginPath();
+        ctx.moveTo(0, -5);
+        ctx.lineTo(Math.sin(walkSpeed + Math.PI) * 10, 5);
+        ctx.stroke();
+
+        // Arms - Back arm
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(-swing * 0.5, -5 + swing * 0.2);
+        ctx.stroke();
+
+        // Body
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.roundRect(-8, -25, 16, 25, 6);
+        ctx.roundRect(-7, -26, 14, 22, 5);
         ctx.fill();
 
+        // Head
         ctx.fillStyle = '#ffeaa7';
         ctx.beginPath();
         ctx.arc(0, -32, 6, 0, Math.PI * 2);
         ctx.fill();
+
+        // Eyes - Looking Forward
+        ctx.fillStyle = '#2f3542';
+        ctx.beginPath();
+        ctx.arc(3, -33, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Optional: Back eye hint
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(1, -33, 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // Hair/Hat detail
+        ctx.fillStyle = p.off % 2 < 1 ? '#2f3542' : '#8e44ad';
+        ctx.beginPath();
+        ctx.arc(0, -34, 6, Math.PI, 0);
+        ctx.fill();
+
+        // Front leg
+        ctx.strokeStyle = '#2f3542';
+        ctx.beginPath();
+        ctx.moveTo(0, -5);
+        ctx.lineTo(Math.sin(walkSpeed) * 10, 5);
+        ctx.stroke();
+
+        // Front arm
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(swing * 0.5, -5 - swing * 0.2);
+        ctx.stroke();
 
         ctx.restore();
     });
 };
 
 export const drawMidground = (ctx, engine) => {
-    drawPedestrians(ctx, engine);
     const { width, height, time } = engine;
     const baseY = height * 0.6;
 
     // --- Ferris Wheel ---
     const fwX = width < 600 ? width * 1.1 : width * 0.82;
-    const fwY = baseY - 130;
-    const fwR = 120;
+    const fwY = baseY - 240;
+    const fwR = 180;
     const fwRot = time * 0.3;
 
+    // Main Supports
     ctx.strokeStyle = '#2f3542';
-    ctx.lineWidth = 12;
-    ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX + 60, baseY); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX - 60, baseY); ctx.stroke();
+    ctx.lineWidth = 14;
+    ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX + 100, baseY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX - 100, baseY); ctx.stroke();
+    
+    // Cross supports
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(fwX - 45, fwY + 110); ctx.lineTo(fwX + 45, fwY + 110); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(fwX - 70, fwY + 180); ctx.lineTo(fwX + 70, fwY + 180); ctx.stroke();
 
+    // Outer Glow
     ctx.save();
     ctx.globalCompositeOperation = 'screen';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -315,68 +378,109 @@ export const drawMidground = (ctx, engine) => {
     ctx.beginPath(); ctx.arc(fwX, fwY, fwR, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
+    // Wheel Rings
     ctx.strokeStyle = '#747d8c';
-    ctx.lineWidth = 8;
+    ctx.lineWidth = 10;
     ctx.beginPath(); ctx.arc(fwX, fwY, fwR, 0, Math.PI * 2); ctx.stroke();
-    ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.arc(fwX, fwY, fwR - 30, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(fwX, fwY, fwR - 40, 0, Math.PI * 2); ctx.stroke();
 
-    ctx.strokeStyle = 'rgba(87, 101, 116, 0.5)';
+    // Truss Structure between rings
     ctx.lineWidth = 2;
-    for (let i = 0; i < 12; i++) {
-        const angle = fwRot + (i * Math.PI / 6);
+    ctx.strokeStyle = 'rgba(116, 125, 140, 0.6)';
+    const trussCount = 24;
+    for (let i = 0; i < trussCount; i++) {
+        const a1 = fwRot + (i * Math.PI * 2 / trussCount);
+        const a2 = fwRot + ((i + 0.5) * Math.PI * 2 / trussCount);
+        const a3 = fwRot + ((i + 1) * Math.PI * 2 / trussCount);
+        
+        ctx.beginPath();
+        ctx.moveTo(fwX + Math.cos(a1) * fwR, fwY + Math.sin(a1) * fwR);
+        ctx.lineTo(fwX + Math.cos(a2) * (fwR - 40), fwY + Math.sin(a2) * (fwR - 40));
+        ctx.lineTo(fwX + Math.cos(a3) * fwR, fwY + Math.sin(a3) * fwR);
+        ctx.stroke();
+    }
+
+    // Spokes
+    const spokeCount = 16;
+    for (let i = 0; i < spokeCount; i++) {
+        const angle = fwRot + (i * Math.PI * 2 / spokeCount);
+        ctx.strokeStyle = 'rgba(87, 101, 116, 0.4)';
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(fwX, fwY);
         ctx.lineTo(fwX + Math.cos(angle) * fwR, fwY + Math.sin(angle) * fwR);
         ctx.stroke();
 
-        const lightOn = (Math.floor(time * 4) + i) % 3 === 0;
+        // Lights on spokes
+        const lightOn = (Math.floor(time * 3) + i) % 4 === 0;
         if (lightOn) {
+            const lDist = fwR * 0.7;
             ctx.save();
             ctx.fillStyle = i % 2 === 0 ? '#f1c40f' : '#ff4757';
             ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 10;
-            ctx.beginPath(); ctx.arc(fwX + Math.cos(angle) * fwR, fwY + Math.sin(angle) * fwR, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 12;
+            ctx.beginPath(); 
+            ctx.arc(fwX + Math.cos(angle) * lDist, fwY + Math.sin(angle) * lDist, 4, 0, Math.PI * 2); 
+            ctx.fill();
             ctx.restore();
         }
     }
 
-    for (let i = 0; i < 12; i++) {
-        const angle = fwRot + (i * Math.PI / 6);
+    // Cabins
+    const cabinCount = 16;
+    for (let i = 0; i < cabinCount; i++) {
+        const angle = fwRot + (i * Math.PI * 2 / cabinCount);
         const cx = fwX + Math.cos(angle) * fwR;
         const cy = fwY + Math.sin(angle) * fwR;
 
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(0);
+        
+        // Cabin Suspension
+        ctx.strokeStyle = '#576574';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-8, -10); ctx.lineTo(0, 0); ctx.lineTo(8, -10); ctx.stroke();
+        
+        // Main Cabin Body
+        const cColor = i % 3 === 0 ? '#ff6b81' : (i % 3 === 1 ? '#1e90ff' : '#2ed573');
+        ctx.fillStyle = cColor;
+        ctx.beginPath(); ctx.roundRect(-16, 0, 32, 38, 8); ctx.fill();
+        ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 2.5; ctx.stroke();
 
-        ctx.fillStyle = i % 2 === 0 ? '#ff6b81' : '#1e90ff';
-        ctx.beginPath(); ctx.roundRect(-18, 0, 36, 42, 8); ctx.fill();
-        ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 3; ctx.stroke();
-
+        // Window/Glass
         ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.fillRect(-14, 8, 28, 18);
-
+        ctx.beginPath(); ctx.roundRect(-12, 6, 24, 16, 4); ctx.fill();
+        
+        // Roof
         ctx.fillStyle = '#feca57';
-        ctx.beginPath(); ctx.moveTo(-22, 0); ctx.lineTo(22, 0); ctx.lineTo(0, -18); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); 
+        ctx.moveTo(-20, 2); ctx.lineTo(20, 2); ctx.lineTo(0, -14); 
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
 
-        ctx.strokeStyle = '#576574'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -10); ctx.stroke();
+        // Base/Step
+        ctx.fillStyle = '#2f3542';
+        ctx.fillRect(-12, 38, 24, 3);
 
         ctx.restore();
     }
 
-    const hubGrad = ctx.createRadialGradient(fwX, fwY, 5, fwX, fwY, 30);
+    // Central Hub
+    const hubR = 25;
+    const hubGrad = ctx.createRadialGradient(fwX, fwY, 5, fwX, fwY, hubR);
     hubGrad.addColorStop(0, '#f1c40f');
-    hubGrad.addColorStop(1, '#e67e22');
+    hubGrad.addColorStop(0.6, '#e67e22');
+    hubGrad.addColorStop(1, '#d35400');
     ctx.fillStyle = hubGrad;
-    ctx.beginPath(); ctx.arc(fwX, fwY, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(fwX, fwY, hubR, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 4; ctx.stroke();
 
-    for (let i = 0; i < 8; i++) {
-        const a = fwRot * 2 + (i * Math.PI / 4);
+    // Hub Lights
+    for (let i = 0; i < 10; i++) {
+        const a = fwRot * -2.5 + (i * Math.PI * 2 / 10);
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(fwX + Math.cos(a) * 12, fwY + Math.sin(a) * 12, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(fwX + Math.cos(a) * 16, fwY + Math.sin(a) * 16, 3, 0, Math.PI * 2); ctx.fill();
     }
 
     // --- Drop Tower ---
@@ -571,6 +675,8 @@ export const drawMidground = (ctx, engine) => {
         ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 12, by + 25); ctx.lineTo(bx + 12, by + 25); ctx.fill();
         ctx.stroke();
     }
+
+    drawPedestrians(ctx, engine);
 };
 export const drawAtmosphere = (ctx, engine) => {
     const { width, height, time } = engine;

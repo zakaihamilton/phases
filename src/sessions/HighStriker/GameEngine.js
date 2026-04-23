@@ -1,5 +1,5 @@
 import { towerLevels } from './data';
-import { drawEnvironment, drawFlora, drawMidground } from './renderers/EnvironmentRenderer';
+import { drawEnvironment, drawFlora, drawMidground, drawPedestrians } from './renderers/EnvironmentRenderer';
 import { drawStrikerTower } from './renderers/TowerRenderer';
 import { drawCharacter } from './renderers/CharacterRenderer';
 import { drawParticles, drawBAM, drawFloatingTexts, drawCinematicEffects, drawShockwaves, drawPuckTrail, drawSpeedLines, drawFlash } from './renderers/EffectsRenderer';
