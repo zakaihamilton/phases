@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayCircle } from 'lucide-react';
+import { towerLevels } from '../data';
 import styles from './NarrativePanel.module.css';
 
 export default function NarrativePanel({ 
@@ -26,7 +27,17 @@ export default function NarrativePanel({
             `}
         >
             <div className={styles['panel-content']}>
-                <h2 className={styles.subtitle}>{sceneData.subtitle}</h2>
+                <h2 className={styles.subtitle}>
+                    {sceneData.subtitle}
+                    {currentScene === 4 && towerLevels[purificationStep] && (
+                        <span 
+                            className={styles['phase-badge']}
+                            style={{ color: towerLevels[purificationStep].color }}
+                        >
+                            : {towerLevels[purificationStep].phase}
+                        </span>
+                    )}
+                </h2>
                 <h1 className={styles.title}>{sceneData.title}</h1>
                 <p className={styles.description}>{sceneData.text}</p>
 

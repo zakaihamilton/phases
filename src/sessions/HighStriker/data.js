@@ -39,9 +39,9 @@ export const scenes = [
 ];
 
 export const towerLevels = [
-    { id: 4, name: "Crown", ratio: 1.0, phase: "Full Force" },
-    { id: 3, name: "Wisdom", ratio: 0.8, phase: "Phase 3" },
-    { id: 2, name: "Understanding", ratio: 0.6, phase: "Phase 2" },
-    { id: 1, name: "Small Face", ratio: 0.4, phase: "Phase 1" },
-    { id: 0, name: "Kingdom", ratio: 0.1, phase: "Root" }
+    { id: 4, name: "Crown", ratio: 1.0, phase: "Phase 4", color: '#2ecc71' },
+    { id: 3, name: "Wisdom", ratio: 0.8, phase: "Phase 3", color: '#e74c3c' },
+    { id: 2, name: "Understanding", ratio: 0.6, phase: "Phase 2", color: '#3498db' },
+    { id: 1, name: "Small Face", ratio: 0.4, phase: "Phase 1", color: '#f1c40f' },
+    { id: 0, name: "Kingdom", ratio: 0.1, phase: "Root", color: '#7f8c8d' }
 ];

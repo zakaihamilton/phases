@@ -449,11 +449,11 @@ export default class GameEngine {
 
     interpolatePhaseColors(step) {
         const colors = [
-            { main: [52, 73, 94], light: [127, 140, 141], dark: [44, 62, 80] },
-            { main: [183, 149, 11], light: [241, 196, 15], dark: [154, 125, 10] },
-            { main: [31, 97, 141], light: [52, 152, 219], dark: [26, 82, 118] },
-            { main: [148, 49, 38], light: [231, 76, 60], dark: [123, 36, 28] },
-            { main: [25, 111, 61], light: [46, 204, 113], dark: [20, 90, 50] }
+            { main: [25, 111, 61], light: [46, 204, 113], dark: [20, 90, 50] },    // Phase 4 (Crown) - Green
+            { main: [148, 49, 38], light: [231, 76, 60], dark: [123, 36, 28] },   // Phase 3 (Wisdom) - Red
+            { main: [31, 97, 141], light: [52, 152, 219], dark: [26, 82, 118] },  // Phase 2 (Understanding) - Blue
+            { main: [183, 149, 11], light: [241, 196, 15], dark: [154, 125, 10] }, // Phase 1 (Small Face) - Gold
+            { main: [52, 73, 94], light: [127, 140, 141], dark: [44, 62, 80] }    // Root (Kingdom) - Gray
         ];
 
         const idx1 = Math.floor(step);
