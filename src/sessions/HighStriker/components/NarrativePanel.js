@@ -27,7 +27,7 @@ export default function NarrativePanel({
             `}
         >
             <div className={styles['panel-content']}>
-                <h2 className={styles.subtitle}>
+                <h2 key={sceneData.subtitle + (currentScene === 4 ? purificationStep : '')} className={styles.subtitle}>
                     {sceneData.subtitle}
                     {currentScene === 4 && towerLevels[purificationStep] && (
                         <span 
@@ -38,8 +38,8 @@ export default function NarrativePanel({
                         </span>
                     )}
                 </h2>
-                <h1 className={styles.title}>{sceneData.title}</h1>
-                <p className={styles.description}>{sceneData.text}</p>
+                <h1 key={sceneData.title} className={styles.title}>{sceneData.title}</h1>
+                <p key={sceneData.text} className={styles.description}>{sceneData.text}</p>
 
                 {currentScene === 4 && (
                     <div className={styles['power-meter-container']}>
