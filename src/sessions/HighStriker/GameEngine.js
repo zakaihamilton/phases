@@ -117,18 +117,23 @@ export default class GameEngine {
     playSequence(command, powerRatio, onComplete) {
         this.animCallback = onComplete;
 
-        if (command === 'WINDUP' || command === 'WINDING_FULL' || command === 'RESET_IDLE') {
+        // Reset core animation and physics state for clean transitions
+        this.windupTimer = 0;
+        this.swingTimer = 0;
+        this.puckY = 0;
+        this.puckVy = 0;
+        this.puckTrail = [];
+
+        if (command === 'WINDUP' || command === 'WINDING_FULL' || command === 'RESET_IDLE' || command === 'CONCLUSION') {
             this.reachedLevels.clear();
             this.currentActiveLevel = -1;
         }
 
         if (command === 'WINDUP') {
             this.animState = 'WINDING';
-            this.windupTimer = 0;
         }
         else if (command === 'SWING_IMPACT') {
             this.animState = 'SWINGING';
-            this.swingTimer = 0;
         }
         else if (command === 'SHOOT') {
             this.targetPuckRatio = powerRatio;
@@ -137,21 +142,16 @@ export default class GameEngine {
         else if (command === 'FULL_HIT') {
             this.targetPuckRatio = powerRatio;
             this.animState = 'WINDING_FULL';
-            this.windupTimer = 0;
         }
         else if (command === 'RESET_IDLE') {
             this.hammerAngle = Math.PI * 0.8;
-            this.puckY = 0;
-            this.puckTrail = [];
             this.animState = 'IDLE';
             if (this.animCallback) this.animCallback();
         }
         else if (command === 'CONCLUSION') {
-            this.reachedLevels.clear();
             this.activeTargetLevel = -1;
             this.currentActiveLevel = -1;
             this.hammerAngle = Math.PI * 0.8;
-            this.puckY = 0;
             this.animState = 'IDLE';
             if (this.animCallback) this.animCallback();
         }
@@ -1042,9 +1042,12 @@ export default class GameEngine {
 
             const pulse = 0;
             const glowColor = isReached ? '#f1c40f' : (isTarget ? '#00d2d3' : '#34495e');
-            const boardColor = isReached || isTarget ? '#e67e22' : '#d35400';
-            const innerBorder = isReached || isTarget ? '#f1c40f' : '#e67e22';
-            const textColor = isReached || isTarget ? '#fff200' : '#bdc3c7';
+            const phaseMainColors = ['#196f3d', '#943126', '#1f618d', '#b7950b', '#34495e'];
+            const phaseLightColors = ['#2ecc71', '#e74c3c', '#3498db', '#f1c40f', '#7f8c8d'];
+            
+            const boardColor = phaseMainColors[lvl.id];
+            const innerBorder = phaseLightColors[lvl.id];
+            const textColor = '#ffffff';
 
             ctx.strokeStyle = glowColor;
             ctx.lineWidth = isReached || isTarget ? 6 : 4;
@@ -1091,9 +1094,9 @@ export default class GameEngine {
                 ctx.beginPath(); ctx.arc(boardX + boardW - 10, boardY + boardH - 10, 3, 0, Math.PI * 2); ctx.fill();
             }
 
-            ctx.fillStyle = (isReached || isTarget) ? '#ffffff' : '#bdc3c7';
-            ctx.shadowColor = (isReached || isTarget) ? '#000000' : 'transparent';
-            ctx.shadowBlur = (isReached || isTarget) ? 10 : 0;
+            ctx.fillStyle = textColor;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = (isReached || isTarget) ? 8 : 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.font = `bold 20px "Outfit", sans-serif`;

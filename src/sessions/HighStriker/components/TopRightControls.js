@@ -1,6 +1,6 @@
 import React from 'react';
 import { Maximize, Eye, EyeOff } from 'lucide-react';
-import styles from '../HighStriker.module.css';
+import styles from './TopRightControls.module.css';
 
 export default function TopRightControls({ hudVisible, setHudVisible }) {
     return (

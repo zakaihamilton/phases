@@ -1,6 +1,6 @@
 import React from 'react';
 import { PlayCircle } from 'lucide-react';
-import styles from '../HighStriker.module.css';
+import styles from './NarrativePanel.module.css';
 
 export default function NarrativePanel({ 
     currentScene, 

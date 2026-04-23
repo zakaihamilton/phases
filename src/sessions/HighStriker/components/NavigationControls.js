@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import styles from '../HighStriker.module.css';
+import styles from './NavigationControls.module.css';
 
 export default function NavigationControls({ 
     prevStepFn, 
