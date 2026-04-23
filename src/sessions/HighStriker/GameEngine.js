@@ -1053,7 +1053,7 @@ export default class GameEngine {
             ctx.shadowBlur = (isReached || isTarget) ? 10 : 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = `bold ${24 + pulse / 2}px "Bangers", cursive`;
+            ctx.font = `bold ${20 + pulse / 2}px "Outfit", sans-serif`;
             ctx.fillText(lvl.name, boardX + boardW / 2, y + 2);
             ctx.shadowBlur = 0;
         });
@@ -1158,10 +1158,6 @@ export default class GameEngine {
 
         ctx.fillStyle = '#f1c40f';
         ctx.fillRect(baseX - 50, baseY + 10, 100, 35); ctx.strokeRect(baseX - 50, baseY + 10, 100, 35);
-        ctx.fillStyle = '#2d3436';
-        ctx.textAlign = 'center';
-        ctx.font = '24px "Bangers", cursive';
-        ctx.fillText("SCREEN", baseX, baseY + 36);
     }
 
     drawCharacter(ctx) {
@@ -1447,7 +1443,7 @@ export default class GameEngine {
             ctx.save();
             ctx.globalAlpha = t.life;
             ctx.fillStyle = t.color;
-            ctx.font = 'bold 40px "Bangers", cursive';
+            ctx.font = 'bold 44px "Outfit", sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(t.text, t.x, t.y);
             ctx.restore();
