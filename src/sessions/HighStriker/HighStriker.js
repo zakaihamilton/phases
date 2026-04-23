@@ -135,6 +135,11 @@ export default function HighStriker() {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                window.location.hash = '';
+                return;
+            }
             if (e.key === 'Enter') {
                 e.preventDefault();
                 setHudVisible(v => !v);

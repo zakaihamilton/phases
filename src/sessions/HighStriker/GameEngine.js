@@ -26,6 +26,7 @@ export default class GameEngine {
         this.bamScale = 0;
         this.flashAlpha = 0;
         this.requestId = null;
+        this.baseScale = 1.0;
 
         // Level tracking
         this.reachedLevels = new Set();
@@ -84,6 +85,13 @@ export default class GameEngine {
         this.canvas.width = this.width * window.devicePixelRatio;
         this.canvas.height = this.height * window.devicePixelRatio;
         this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        // Calculate dynamic scale for mobile
+        if (this.width < 900) {
+            this.baseScale = Math.max(0.4, this.width / 1100);
+        } else {
+            this.baseScale = 1.0;
+        }
     }
 
     start() {
@@ -373,11 +381,19 @@ export default class GameEngine {
 
         this.drawEnvironment(ctx);
         this.drawFlora(ctx);
+
+        ctx.save();
+        // Scale the main game elements for mobile
+        ctx.translate(this.width / 2, this.height * 0.6);
+        ctx.scale(this.baseScale, this.baseScale);
+        ctx.translate(-this.width / 2, -this.height * 0.6);
+
         this.drawMidground(ctx);
         this.drawStrikerTower(ctx);
         this.drawCharacter(ctx);
         this.drawParticles(ctx);
         this.drawBAM(ctx);
+        ctx.restore();
 
         ctx.restore();
 
