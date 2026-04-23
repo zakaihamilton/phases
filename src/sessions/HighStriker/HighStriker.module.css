@@ -208,11 +208,10 @@
 /* --- Navigation Controls --- */
 .nav-controls {
     position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 40px;
+    left: 40px;
     display: flex;
-    gap: 30px;
+    gap: 20px;
     z-index: 50;
     transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
@@ -220,7 +219,7 @@
 .nav-controls.hud-hidden {
     opacity: 0;
     pointer-events: none;
-    transform: translate(-50%, 30px);
+    transform: translateY(30px);
 }
 
 .nav-btn {
