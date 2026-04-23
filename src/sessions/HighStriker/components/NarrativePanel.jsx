@@ -62,6 +62,31 @@ export default function NarrativePanel({
                         <span>Navigate with Arrows • Space to Strike • Enter for HUD</span>
                     </div>
                 )}
+
+                <div className={styles['progress-container']}>
+                    {Array.from({ length: 10 }).map((_, i) => {
+                        let isFilled = false;
+                        let isCurrent = false;
+                        
+                        const currentIndex = currentScene < 4 
+                            ? currentScene 
+                            : (currentScene === 4 ? 4 + purificationStep : 9);
+
+                        if (i < currentIndex) isFilled = true;
+                        if (i === currentIndex) isCurrent = true;
+
+                        return (
+                            <div 
+                                key={i} 
+                                className={`
+                                    ${styles['progress-pill']} 
+                                    ${isFilled ? styles.filled : ''} 
+                                    ${isCurrent ? styles.current : ''}
+                                `} 
+                            />
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

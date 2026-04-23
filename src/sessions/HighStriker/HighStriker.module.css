@@ -240,6 +240,39 @@
     opacity: 0.8;
 }
 
+.progress-container {
+    display: flex;
+    gap: 6px;
+    margin-top: 24px;
+}
+
+.progress-pill {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-pill.filled {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: none;
+}
+
+.progress-pill.current {
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    transform: scaleY(1.5);
+}
+
+.side-panel .progress-container {
+    justify-content: flex-start;
+}
+
+.center-panel .progress-container {
+    justify-content: center;
+}
+
 @keyframes pulse {
     0%, 100% {
         transform: scale(1);
