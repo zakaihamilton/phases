@@ -43,10 +43,14 @@ export default function HighStriker() {
             engineRef.current.purificationStep = purificationStep;
 
             // Sync engine with initial state immediately
-            if (currentScene >= 3) {
+            if (currentScene >= 3 && currentScene < 5) {
                 engineRef.current.activeTargetLevel = towerLevels[purificationStep].id;
+            } else {
+                engineRef.current.activeTargetLevel = -1;
             }
-            if (currentScene === 4) {
+            if (currentScene === 5) {
+                engineRef.current.playSequence('CONCLUSION', 0, null);
+            } else if (currentScene === 4) {
                 engineRef.current.playSequence('FULL_HIT', towerLevels[purificationStep].ratio, null);
             } else if (currentScene === 3) {
                 engineRef.current.playSequence('SHOOT', 1.0, null);
@@ -70,27 +74,29 @@ export default function HighStriker() {
     }, [currentScene, purificationStep]);
 
     const processNavigation = useCallback((forward) => {
-        // Allow interruption for snappier movement
 
         let nextScene = currentScene;
         let nextStep = purificationStep;
 
         if (forward) {
-            if (currentScene === scenes.length - 1) {
-                if (purificationStep < scenes[currentScene].steps - 1) {
+            if (currentScene === 4) { // Purification Step
+                if (purificationStep < 4) {
                     nextStep = purificationStep + 1;
-                } else return;
-            } else {
+                } else {
+                    nextScene = 5; // Move to Conclusion
+                    nextStep = 0;
+                }
+            } else if (currentScene < 5) {
                 nextScene = currentScene + 1;
                 nextStep = 0;
-            }
+            } else return;
         } else {
-            if (currentScene === scenes.length - 1 && purificationStep > 0) {
+            if (currentScene === 4 && purificationStep > 0) {
                 nextStep = purificationStep - 1;
             } else if (currentScene > 0) {
                 nextScene = currentScene - 1;
-                if (nextScene === scenes.length - 1) {
-                    nextStep = scenes[scenes.length - 1].steps - 1;
+                if (nextScene === 4) {
+                    nextStep = 4;
                 }
             } else return;
         }
@@ -104,7 +110,7 @@ export default function HighStriker() {
         const completeAnim = () => setIsAnimating(false);
 
         // Keep active target level dynamically attached in scene 4
-        if (nextScene >= 3) {
+        if (nextScene >= 3 && nextScene < 5) {
             engine.activeTargetLevel = towerLevels[nextStep].id;
         } else {
             engine.activeTargetLevel = -1;
@@ -131,8 +137,11 @@ export default function HighStriker() {
         }
         else if (nextScene === 4) {
             setIsAnimating(true);
-            const ratio = towerLevels[nextStep].ratio;
-            engine.playSequence('FULL_HIT', ratio, completeAnim);
+            const level = towerLevels[nextStep];
+            engine.playSequence('FULL_HIT', level ? level.ratio : 1.0, completeAnim);
+        }
+        else if (nextScene === 5) {
+            engine.playSequence('CONCLUSION', 0, null);
         }
 
     }, [currentScene, purificationStep, isAnimating]);

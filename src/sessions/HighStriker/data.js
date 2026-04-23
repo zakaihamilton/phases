@@ -29,6 +29,12 @@ export const scenes = [
         text: "The measure of Reflected Light is determined by the 'Coarseness' of the Screen. A stronger hit (more coarseness) raises the light higher. As the screen purifies, height diminishes.",
         type: "purification",
         steps: 5
+    },
+    {
+        title: "Conclusion",
+        subtitle: "The Unity of Light",
+        text: "The Reflected Light has ascended from the Kingdom back to the Crown, clothing the Direct Light along the way. We see that the measure of the 'hit'—the coarseness of the screen—is what ultimately determines the revelation of the Light.",
+        type: "conclusion"
     }
 ];
 

@@ -145,6 +145,15 @@ export default class GameEngine {
             this.animState = 'IDLE';
             if (this.animCallback) this.animCallback();
         }
+        else if (command === 'CONCLUSION') {
+            this.reachedLevels.clear();
+            this.activeTargetLevel = -1;
+            this.currentActiveLevel = -1;
+            this.hammerAngle = Math.PI * 0.8;
+            this.puckY = 0;
+            this.animState = 'IDLE';
+            if (this.animCallback) this.animCallback();
+        }
     }
 
     triggerLaunch(ratio) {
@@ -995,10 +1004,10 @@ export default class GameEngine {
         towerLevels.forEach(lvl => {
             const y = baseY - (this.towerHeight * lvl.ratio);
 
-            const isReached = (this.currentActiveLevel === lvl.id);
+            const isReached = this.reachedLevels.has(lvl.id);
             const isTarget = (this.activeTargetLevel === lvl.id);
 
-            const pulse = isReached ? Math.sin(this.time * 12) * 5 : 0;
+            const pulse = 0;
             const glowColor = isReached ? '#f1c40f' : (isTarget ? '#00d2d3' : '#34495e');
             const boardColor = isReached || isTarget ? '#e67e22' : '#d35400';
             const innerBorder = isReached || isTarget ? '#f1c40f' : '#e67e22';
@@ -1054,7 +1063,7 @@ export default class GameEngine {
             ctx.shadowBlur = (isReached || isTarget) ? 10 : 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = `bold ${20 + pulse / 2}px "Outfit", sans-serif`;
+            ctx.font = `bold 20px "Outfit", sans-serif`;
             ctx.fillText(lvl.name, boardX + boardW / 2, y + 2);
             ctx.shadowBlur = 0;
         });
