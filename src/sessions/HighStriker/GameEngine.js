@@ -2,7 +2,7 @@ import { towerLevels } from './data';
 import { drawEnvironment, drawFlora, drawMidground } from './renderers/EnvironmentRenderer';
 import { drawStrikerTower } from './renderers/TowerRenderer';
 import { drawCharacter } from './renderers/CharacterRenderer';
-import { drawParticles, drawBAM, drawFloatingTexts, drawCinematicEffects } from './renderers/EffectsRenderer';
+import { drawParticles, drawBAM, drawFloatingTexts, drawCinematicEffects, drawShockwaves, drawPuckTrail, drawSpeedLines, drawFlash } from './renderers/EffectsRenderer';
 
 export default class GameEngine {
     constructor(canvas) {
@@ -31,6 +31,8 @@ export default class GameEngine {
         this.flashAlpha = 0;
         this.requestId = null;
         this.baseScale = 1.0;
+        this.zoomLevel = 1.0;
+        this.targetZoomLevel = 1.0;
         this.floatingTexts = [];
 
         this.reachedLevels = new Set();
@@ -181,51 +183,54 @@ export default class GameEngine {
 
     spawnImpact() {
         const colors = this.interpolatePhaseColors(this.displayStep);
-        this.shake = 12;
-        this.timeScale = 0.2;
-        this.vignetteIntensity = 0.8;
-        this.padScaleY = 0.8;
-        this.bamScale = 1.2;
-        this.flashAlpha = 0.6;
+        this.shake = 20;
+        this.timeScale = 0.15;
+        this.vignetteIntensity = 1.0;
+        this.padScaleY = 0.75;
+        this.bamScale = 1.0;
+        this.flashAlpha = 0.8;
+        this.targetZoomLevel = 1.15;
         this.flashColor = colors.light;
-        this.shockwaves.push({ r: 10, alpha: 1.0, width: 20 });
+        
+        this.shockwaves.push({ r: 10, alpha: 1.0, width: 30 });
+        this.shockwaves.push({ r: 5, alpha: 0.8, width: 15 });
+        
         this.floatingTexts.push({
             x: this.width / 2 - 100,
             y: this.height - 250,
             text: 'CLANG!',
-            life: 1.0,
+            life: 1.2,
             color: '#ff4757'
         });
-        this.shockwaves.push({ r: 5, alpha: 0.8, width: 10 });
 
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 120; i++) {
             const ang = Math.random() * Math.PI * 2;
-            const vel = 300 + Math.random() * 1200;
+            const vel = 400 + Math.random() * 1500;
             this.impactParticles.push({
                 x: this.width / 2 - 90,
                 y: this.height - 120,
                 vx: Math.cos(ang) * vel,
-                vy: -Math.abs(Math.sin(ang) * vel) - 200,
-                life: 1.2 + Math.random() * 0.8,
-                size: 4 + Math.random() * 8,
+                vy: -Math.abs(Math.sin(ang) * vel) - 300,
+                life: 1.5 + Math.random() * 1.0,
+                size: 5 + Math.random() * 10,
                 color: ['#ff9f43', '#feca57', '#fff', '#ff4757', '#00d2d3'][Math.floor(Math.random() * 5)],
                 type: Math.random() > 0.5 ? 'star' : 'circle',
                 rot: Math.random() * Math.PI * 2,
-                vrot: (Math.random() - 0.5) * 10
+                vrot: (Math.random() - 0.5) * 15
             });
         }
     }
 
     spawnConfetti() {
-        for (let i = 0; i < 150; i++) {
+        for (let i = 0; i < 200; i++) {
             this.confetti.push({
                 x: Math.random() * this.width,
-                y: Math.random() * (this.height * 0.5),
-                vx: (Math.random() - 0.5) * 300,
-                vy: 100 + Math.random() * 300,
+                y: Math.random() * (this.height * 0.4),
+                vx: (Math.random() - 0.5) * 400,
+                vy: 50 + Math.random() * 400,
                 rot: Math.random() * Math.PI * 2,
-                vrot: (Math.random() - 0.5) * 10,
-                size: 8 + Math.random() * 10,
+                vrot: (Math.random() - 0.5) * 12,
+                size: 10 + Math.random() * 12,
                 color: ['#ff4757', '#2ed573', '#1e90ff', '#feca57', '#ff9ff3'][Math.floor(Math.random() * 5)]
             });
         }
@@ -236,25 +241,31 @@ export default class GameEngine {
         const baseY = this.height - 110;
         const y = baseY - (this.towerHeight * ratio);
 
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 35; i++) {
             this.impactParticles.push({
                 x: baseX - 24,
                 y: y,
-                vx: (Math.random() - 0.5) * 700,
-                vy: (Math.random() - 0.5) * 700,
-                life: 0.6 + Math.random() * 0.4,
-                color: Math.random() > 0.5 ? '#00d2d3' : '#f1c40f'
+                vx: (Math.random() - 0.5) * 800,
+                vy: (Math.random() - 0.5) * 800,
+                life: 0.8 + Math.random() * 0.5,
+                color: Math.random() > 0.5 ? '#00d2d3' : '#f1c40f',
+                size: 3 + Math.random() * 5
             });
         }
     }
 
     update(rawDt) {
         const dt = rawDt * this.timeScale;
-        this.timeScale += (1.0 - this.timeScale) * rawDt * 5;
+        this.timeScale += (1.0 - this.timeScale) * rawDt * 4;
 
         if (this.vignetteIntensity > 0) {
-            this.vignetteIntensity -= rawDt * 1.5;
+            this.vignetteIntensity -= rawDt * 1.2;
             if (this.vignetteIntensity < 0) this.vignetteIntensity = 0;
+        }
+
+        this.zoomLevel += (this.targetZoomLevel - this.zoomLevel) * rawDt * 6;
+        if (this.animState === 'IDLE' || this.animState === 'RISING' || this.animState === 'FALLING') {
+            this.targetZoomLevel = 1.0;
         }
 
         this.time += dt;
@@ -282,27 +293,27 @@ export default class GameEngine {
         this.eyeLookX += (this.eyeTargetX - this.eyeLookX) * dt * 8;
         this.eyeLookY += (this.eyeTargetY - this.eyeLookY) * dt * 8;
 
-        if (this.shake > 0) this.shake -= rawDt * 45;
+        if (this.shake > 0) this.shake -= rawDt * 50;
         if (this.shake < 0) this.shake = 0;
 
         if (this.padScaleY < 1.0) {
-            this.padScaleY += dt * 6;
+            this.padScaleY += dt * 5;
             if (this.padScaleY > 1.0) this.padScaleY = 1.0;
         }
 
         this.floatingTexts.forEach((t, i) => {
-            t.y -= dt * 50;
+            t.y -= dt * 60;
             t.life -= dt;
             if (t.life <= 0) this.floatingTexts.splice(i, 1);
         });
 
         if (this.bamScale > 0) {
-            this.bamScale += dt * 3.0;
-            if (this.bamScale > 2.0) this.bamScale = 0;
+            this.bamScale += dt * 3.5;
+            if (this.bamScale > 2.5) this.bamScale = 0;
         }
 
         if (this.flashAlpha > 0) {
-            this.flashAlpha -= dt * 3;
+            this.flashAlpha -= dt * 2.5;
             if (this.flashAlpha < 0) this.flashAlpha = 0;
         }
 
@@ -325,29 +336,29 @@ export default class GameEngine {
         this.impactParticles.forEach(p => {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
-            p.vy += (this.gravity * 0.5) * dt;
-            p.life -= dt * 1.0;
+            p.vy += (this.gravity * 0.6) * dt;
+            p.life -= dt * 0.8;
             if (p.rot !== undefined) p.rot += p.vrot * dt;
         });
         this.impactParticles = this.impactParticles.filter(p => p.life > 0);
 
         this.confetti.forEach(c => {
-            c.x += c.vx * dt + Math.sin(this.time * 2 + c.y * 0.01) * 50 * dt;
+            c.x += c.vx * dt + Math.sin(this.time * 2.5 + c.y * 0.01) * 60 * dt;
             c.y += c.vy * dt;
             c.rot += c.vrot * dt;
         });
         this.confetti = this.confetti.filter(c => c.y < this.height + 50);
 
         this.shockwaves.forEach(s => {
-            s.r += dt * 800;
-            s.alpha -= dt * 2.5;
+            s.r += dt * 900;
+            s.alpha -= dt * 2.0;
         });
         this.shockwaves = this.shockwaves.filter(s => s.alpha > 0);
 
         if (this.puckY > 5 || this.puckVy > 0) {
             this.puckTrail.push({ y: this.puckY, life: 1.0 });
         }
-        this.puckTrail.forEach(t => t.life -= dt * 4);
+        this.puckTrail.forEach(t => t.life -= dt * 5);
         this.puckTrail = this.puckTrail.filter(t => t.life > 0);
 
         this.clouds.forEach(c => {
@@ -407,8 +418,15 @@ export default class GameEngine {
             this.puckVy -= this.gravity * dt;
             if (this.puckVy <= 0) {
                 this.animState = 'FALLING';
+                
+                // Cinematic slow-mo at peak
+                if (this.targetPuckRatio > 0.6) {
+                    this.timeScale = 0.3;
+                }
+
                 if (this.targetPuckRatio >= 0.95) {
-                    this.shake = 0;
+                    this.shake = 8;
+                    this.vignetteIntensity = 0.5;
                     this.shockwaves.push({ r: 20, alpha: 1.0, isBell: true, width: 40 });
                     this.spawnConfetti();
                 }
@@ -476,6 +494,14 @@ export default class GameEngine {
         ctx.clearRect(0, 0, this.width, this.height);
 
         ctx.save();
+        
+        // --- World Space Scaling & Zoom ---
+        const zoomX = this.width / 2;
+        const zoomY = this.height * 0.7;
+        ctx.translate(zoomX, zoomY);
+        ctx.scale(this.zoomLevel, this.zoomLevel);
+        ctx.translate(-zoomX, -zoomY);
+
         if (this.shake > 0) {
             ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
         }
@@ -492,6 +518,8 @@ export default class GameEngine {
         ctx.translate(-this.width / 2, -this.height * 0.6);
 
         drawMidground(ctx, this);
+        drawShockwaves(ctx, this);
+        drawPuckTrail(ctx, this);
         drawStrikerTower(ctx, this);
         drawCharacter(ctx, this);
         drawParticles(ctx, this);
@@ -501,17 +529,8 @@ export default class GameEngine {
 
         ctx.restore();
 
+        drawSpeedLines(ctx, this);
         drawCinematicEffects(ctx, this);
-
-        if (this.flashAlpha > 0) {
-            ctx.fillStyle = this.flashColor || `rgba(255, 255, 255, ${this.flashAlpha})`;
-            if (!this.flashColor) ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
-            else {
-                ctx.globalAlpha = this.flashAlpha;
-                ctx.fillRect(0, 0, this.width, this.height);
-                ctx.globalAlpha = 1.0;
-            }
-            if (!this.flashColor) ctx.fillRect(0, 0, this.width, this.height);
-        }
+        drawFlash(ctx, this);
     }
 }
