@@ -103,11 +103,18 @@ export default function HighStriker() {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 setHudVisible(v => !v);
                 return;
             }
-            if (e.key === 'ArrowRight' || e.key === ' ') nextStepFn();
-            if (e.key === 'ArrowLeft') prevStepFn();
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextStepFn();
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevStepFn();
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);

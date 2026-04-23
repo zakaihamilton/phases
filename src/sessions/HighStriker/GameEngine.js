@@ -24,6 +24,8 @@ export default class GameEngine {
         this.shockwaves = [];
         this.shake = 0;
         this.bamScale = 0;
+        this.flashAlpha = 0;
+        this.requestId = null;
 
         // Level tracking
         this.reachedLevels = new Set();
@@ -69,6 +71,8 @@ export default class GameEngine {
             speed: 30 + Math.random() * 50, off: Math.random() * 10, scale: 0.4 + Math.random() * 0.6
         }));
 
+        this.confetti = [];
+
         this.resize = this.resize.bind(this);
         window.addEventListener('resize', this.resize);
         this.resize();
@@ -92,6 +96,11 @@ export default class GameEngine {
 
     stop() {
         this.isRunning = false;
+        window.removeEventListener('resize', this.resize);
+        if (this.requestId) {
+            cancelAnimationFrame(this.requestId);
+            this.requestId = null;
+        }
     }
 
     playSequence(command, powerRatio, onComplete) {
@@ -135,19 +144,42 @@ export default class GameEngine {
     }
 
     spawnImpact() {
-        this.shake = 25;
-        this.padScaleY = 0.2;
+        this.shake = 0; // Disabled shake entirely
+        this.padScaleY = 0.8; // Subtle compression
         this.bamScale = 1;
-        this.shockwaves.push({ r: 10, alpha: 1.0 });
+        this.flashAlpha = 0.6;
+        this.shockwaves.push({ r: 10, alpha: 1.0, width: 20 });
+        this.shockwaves.push({ r: 5, alpha: 0.8, width: 10 });
 
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 100; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const vel = 300 + Math.random() * 1200;
             this.impactParticles.push({
-                x: this.width / 2 - 60 + (Math.random() * 60 - 30),
+                x: this.width / 2 - 90,
                 y: this.height - 120,
-                vx: (Math.random() - 0.5) * 1200,
-                vy: -Math.random() * 900 - 300,
-                life: 1.0 + Math.random() * 0.6,
-                color: Math.random() > 0.4 ? '#ff9f43' : (Math.random() > 0.5 ? '#feca57' : '#fff')
+                vx: Math.cos(ang) * vel,
+                vy: -Math.abs(Math.sin(ang) * vel) - 200,
+                life: 1.2 + Math.random() * 0.8,
+                size: 4 + Math.random() * 8,
+                color: ['#ff9f43', '#feca57', '#fff', '#ff4757', '#00d2d3'][Math.floor(Math.random() * 5)],
+                type: Math.random() > 0.5 ? 'star' : 'circle',
+                rot: Math.random() * Math.PI * 2,
+                vrot: (Math.random() - 0.5) * 10
+            });
+        }
+    }
+
+    spawnConfetti() {
+        for (let i = 0; i < 150; i++) {
+            this.confetti.push({
+                x: Math.random() * this.width,
+                y: Math.random() * (this.height * 0.5), // Spawn in top half instead of negative Y
+                vx: (Math.random() - 0.5) * 300,
+                vy: 100 + Math.random() * 300,
+                rot: Math.random() * Math.PI * 2,
+                vrot: (Math.random() - 0.5) * 10,
+                size: 8 + Math.random() * 10,
+                color: ['#ff4757', '#2ed573', '#1e90ff', '#feca57', '#ff9ff3'][Math.floor(Math.random() * 5)]
             });
         }
     }
@@ -190,6 +222,11 @@ export default class GameEngine {
             if (this.bamScale > 2.0) this.bamScale = 0;
         }
 
+        if (this.flashAlpha > 0) {
+            this.flashAlpha -= dt * 3;
+            if (this.flashAlpha < 0) this.flashAlpha = 0;
+        }
+
         // Dynamic Level Highlighting (Tracks reached levels during animation)
         if (this.puckY > 0) {
             let highest = -1;
@@ -199,7 +236,6 @@ export default class GameEngine {
                     if (!this.reachedLevels.has(l.id)) {
                         this.reachedLevels.add(l.id);
                         this.spawnLevelBurst(l.ratio);
-                        if (l.ratio < 1.0) this.shake = Math.max(this.shake, 5);
                     }
                 }
             });
@@ -211,10 +247,18 @@ export default class GameEngine {
         this.impactParticles.forEach(p => {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
-            p.vy += this.gravity * dt;
-            p.life -= dt * 1.5;
+            p.vy += (this.gravity * 0.5) * dt;
+            p.life -= dt * 1.0;
+            if (p.rot !== undefined) p.rot += p.vrot * dt;
         });
         this.impactParticles = this.impactParticles.filter(p => p.life > 0);
+
+        this.confetti.forEach(c => {
+            c.x += c.vx * dt + Math.sin(this.time * 2 + c.y * 0.01) * 50 * dt;
+            c.y += c.vy * dt;
+            c.rot += c.vrot * dt;
+        });
+        this.confetti = this.confetti.filter(c => c.y < this.height + 50);
 
         this.shockwaves.forEach(s => {
             s.r += dt * 800;
@@ -280,8 +324,9 @@ export default class GameEngine {
             if (this.puckVy <= 0) {
                 this.animState = 'FALLING';
                 if (this.targetPuckRatio >= 0.95) {
-                    this.shake = 12;
-                    this.shockwaves.push({ r: 20, alpha: 1.0, isBell: true });
+                    this.shake = 0; // Disabled shake entirely
+                    this.shockwaves.push({ r: 20, alpha: 1.0, isBell: true, width: 40 });
+                    this.spawnConfetti();
                 }
             }
         }
@@ -307,19 +352,24 @@ export default class GameEngine {
         this.update(dt);
         this.draw();
 
-        requestAnimationFrame(() => this.loop());
+        this.requestId = requestAnimationFrame(() => this.loop());
     }
 
     draw() {
         const ctx = this.ctx;
 
-        ctx.fillStyle = '#81ecec';
-        ctx.fillRect(0, 0, this.width, this.height);
+        // Clear the entire canvas first
+        ctx.clearRect(0, 0, this.width, this.height);
 
         ctx.save();
+        // Shake everything including background
         if (this.shake > 0) {
             ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
         }
+        
+        // Fill background over-sized to prevent empty edges during shake
+        ctx.fillStyle = '#81ecec';
+        ctx.fillRect(-50, -50, this.width + 100, this.height + 100);
 
         this.drawEnvironment(ctx);
         this.drawFlora(ctx);
@@ -332,6 +382,11 @@ export default class GameEngine {
         ctx.restore();
 
         this.drawCinematicEffects(ctx);
+        
+        if (this.flashAlpha > 0) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
+            ctx.fillRect(0, 0, this.width, this.height);
+        }
     }
 
     drawEnvironment(ctx) {
@@ -354,15 +409,18 @@ export default class GameEngine {
         ctx.beginPath(); ctx.arc(sunX, sunY, 200, 0, Math.PI * 2); ctx.fill();
 
         ctx.translate(sunX, sunY);
-        ctx.rotate(this.time * 0.03);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        for (let i = 0; i < 16; i++) {
+        ctx.rotate(this.time * 0.05);
+        for (let i = 0; i < 12; i++) {
+            ctx.rotate(Math.PI / 6);
+            const grad = ctx.createLinearGradient(0, 0, 800, 0);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(2000, -150);
-            ctx.lineTo(2000, 150);
+            ctx.lineTo(800, -40);
+            ctx.lineTo(800, 40);
             ctx.fill();
-            ctx.rotate(Math.PI / 8);
         }
         ctx.restore();
 
@@ -383,6 +441,15 @@ export default class GameEngine {
             ctx.lineTo(g.x + tilt + 3, baseY - g.h);
             ctx.quadraticCurveTo(g.x + 3 + tilt / 2, baseY - g.h / 2, g.x + 8, baseY + 4);
             ctx.fill();
+            
+            // Add a second layer of highlights to grass
+            ctx.fillStyle = '#1dd1a1';
+            ctx.beginPath();
+            ctx.moveTo(g.x + 2, baseY + 4);
+            ctx.quadraticCurveTo(g.x + tilt / 2 + 2, baseY - g.h / 3, g.x + tilt + 1, baseY - g.h / 2);
+            ctx.lineTo(g.x + tilt + 2, baseY - g.h / 2);
+            ctx.fill();
+            ctx.fillStyle = '#01a3a4';
         });
 
         this.clouds.forEach(c => {
@@ -943,8 +1010,13 @@ export default class GameEngine {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         this.puckTrail.forEach(t => {
-            ctx.fillStyle = `rgba(0, 210, 211, ${t.life * 0.5})`;
-            ctx.beginPath(); ctx.ellipse(baseX, baseY - t.y - 15, 18 * t.life, 10 * t.life, 0, 0, Math.PI * 2); ctx.fill();
+            const ratio = t.life;
+            const fireGrad = ctx.createRadialGradient(baseX, baseY - t.y - 15, 0, baseX, baseY - t.y - 15, 30 * ratio);
+            fireGrad.addColorStop(0, `rgba(255, 165, 0, ${ratio * 0.8})`);
+            fireGrad.addColorStop(0.5, `rgba(255, 69, 0, ${ratio * 0.4})`);
+            fireGrad.addColorStop(1, `rgba(255, 0, 0, 0)`);
+            ctx.fillStyle = fireGrad;
+            ctx.beginPath(); ctx.arc(baseX, baseY - t.y - 15, 30 * ratio, 0, Math.PI * 2); ctx.fill();
         });
         ctx.restore();
 
@@ -978,7 +1050,7 @@ export default class GameEngine {
                 ctx.translate(baseX, baseY - padH);
                 ctx.scale(1, 0.3);
                 ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha})`;
-                ctx.lineWidth = 15;
+                ctx.lineWidth = s.width || 15;
                 ctx.beginPath(); ctx.arc(0, 0, s.r, 0, Math.PI * 2); ctx.stroke();
                 ctx.restore();
             }
@@ -1025,10 +1097,28 @@ export default class GameEngine {
 
         const restAngle = Math.PI * 0.8;
         const leanAngle = (this.hammerAngle - restAngle) * 0.15;
+        
+        // Squash and stretch factors
+        let squashX = 1.0;
+        let squashY = 1.0;
+        if (this.animState === 'WINDING' || this.animState === 'WINDING_FULL') {
+            const p = Math.min(this.windupTimer / 0.5, 1.0);
+            squashX = 1.0 + Math.sin(p * Math.PI) * 0.1;
+            squashY = 1.0 - Math.sin(p * Math.PI) * 0.1;
+        } else if (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') {
+            const p = Math.min(this.swingTimer / 0.12, 1.0);
+            squashX = 1.0 - Math.sin(p * Math.PI) * 0.15;
+            squashY = 1.0 + Math.sin(p * Math.PI) * 0.15;
+        }
 
         // Shadow 
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath(); ctx.ellipse(gx, gy, 45, 12, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(gx, gy, 45 * squashX, 12 * squashY, 0, 0, Math.PI * 2); ctx.fill();
+
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.scale(squashX, squashY);
+        ctx.translate(-gx, -gy);
 
         ctx.save();
         ctx.translate(gx, gy - 60);
@@ -1036,11 +1126,6 @@ export default class GameEngine {
         ctx.translate(-gx, -(gy - 60));
 
         // Legs 
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        if (this.shake > 0) ctx.translate((Math.random() - 0.5) * this.shake, (Math.random() - 0.5) * this.shake);
-
         ctx.fillStyle = '#2c3e50';
         ctx.beginPath(); ctx.roundRect(gx - 20, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.roundRect(gx + 6, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
@@ -1048,7 +1133,6 @@ export default class GameEngine {
         ctx.fillStyle = '#1e272e';
         ctx.beginPath(); ctx.roundRect(gx - 26, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.roundRect(gx, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
-        ctx.restore();
 
         // Body (Classic Cartoon Barrel Chest)
         const bodyGrad = ctx.createLinearGradient(gx - 50, gy - 130, gx + 30, gy - 130);
@@ -1207,14 +1291,36 @@ export default class GameEngine {
     }
 
     drawParticles(ctx) {
-        ctx.globalCompositeOperation = 'screen';
+        ctx.save();
         this.impactParticles.forEach(p => {
             ctx.globalAlpha = p.life;
             ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 8 * p.life, 0, Math.PI * 2); ctx.fill();
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot || 0);
+            
+            if (p.type === 'star') {
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    ctx.lineTo(Math.cos((i * 0.8) * Math.PI) * p.size, Math.sin((i * 0.8) * Math.PI) * p.size);
+                }
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.beginPath(); ctx.arc(0, 0, p.size, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.restore();
         });
-        ctx.globalAlpha = 1.0;
-        ctx.globalCompositeOperation = 'source-over';
+        
+        this.confetti.forEach(c => {
+            ctx.save();
+            ctx.translate(c.x, c.y);
+            ctx.rotate(c.rot);
+            ctx.fillStyle = c.color;
+            ctx.fillRect(-c.size / 2, -c.size / 4, c.size, c.size / 2);
+            ctx.restore();
+        });
+        ctx.restore();
     }
 
     drawBAM(ctx) {
