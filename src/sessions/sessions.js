@@ -1,8 +1,9 @@
 import {
-    CircleDot, Route
+    CircleDot, Route, Scale
 } from 'lucide-react';
 import ConcentricCircles from './ConcentricCircles';
 import TheBakeryRoute from './TheBakeryRoute';
+import HighStriker from './HighStriker';
 
 const sessions = [
     {
@@ -21,6 +22,14 @@ const sessions = [
         icon: Route,
         component: TheBakeryRoute
     },
+    {
+        date: "2026-04-23",
+        id: "high-striker",
+        label: "TES 2 - High Striker",
+        description: "Four Phases of Reflected Light",
+        icon: Scale,
+        component: HighStriker
+    }
 ];
 
 export default sessions;
