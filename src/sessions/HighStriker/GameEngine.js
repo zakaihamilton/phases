@@ -43,6 +43,7 @@ export default class GameEngine {
         this.swingTimer = 0;
 
         this.purificationStep = 0;
+        this.displayStep = 0;
         this.levelWidth = 4000;
 
         this.clouds = Array.from({ length: 15 }, () => ({
@@ -384,7 +385,39 @@ export default class GameEngine {
         this.update(dt);
         this.draw();
 
+        // Interpolate display step for smooth color transitions
+        const stepTarget = this.purificationStep;
+        const stepDiff = stepTarget - this.displayStep;
+        if (Math.abs(stepDiff) > 0.001) {
+            this.displayStep += stepDiff * Math.min(dt * 5, 1.0); // Smooth transition speed
+        } else {
+            this.displayStep = stepTarget;
+        }
+
         this.requestId = requestAnimationFrame(() => this.loop());
+    }
+
+    interpolatePhaseColors(step) {
+        const colors = [
+            { main: [52, 73, 94], light: [127, 140, 141], dark: [44, 62, 80] }, // Crown
+            { main: [183, 149, 11], light: [241, 196, 15], dark: [154, 125, 10] }, // Wisdom
+            { main: [31, 97, 141], light: [52, 152, 219], dark: [26, 82, 118] }, // Understanding
+            { main: [148, 49, 38], light: [231, 76, 60], dark: [123, 36, 28] }, // Small Face
+            { main: [25, 111, 61], light: [46, 204, 113], dark: [20, 90, 50] }  // Kingdom
+        ];
+
+        const idx1 = Math.floor(step);
+        const idx2 = Math.min(idx1 + 1, colors.length - 1);
+        const t = step - idx1;
+
+        const lerp = (c1, c2, t) => Math.round(c1 + (c2 - c1) * t);
+        const lerpColor = (col1, col2, t) => `rgb(${lerp(col1[0], col2[0], t)}, ${lerp(col1[1], col2[1], t)}, ${lerp(col1[2], col2[2], t)})`;
+
+        return {
+            main: lerpColor(colors[idx1].main, colors[idx2].main, t),
+            light: lerpColor(colors[idx1].light, colors[idx2].light, t),
+            dark: lerpColor(colors[idx1].dark, colors[idx2].dark, t)
+        };
     }
 
     draw() {
@@ -1212,14 +1245,8 @@ export default class GameEngine {
         ctx.rotate(leanAngle);
         ctx.translate(-gx, -(gy - 60));
 
-        // --- Phase-based Colors ---
-        const colors = [
-            { main: '#34495e', light: '#7f8c8d', dark: '#2c3e50' }, // Crown
-            { main: '#b7950b', light: '#f1c40f', dark: '#9a7d0a' }, // Wisdom
-            { main: '#1f618d', light: '#3498db', dark: '#1a5276' }, // Understanding
-            { main: '#943126', light: '#e74c3c', dark: '#7b241c' }, // Small Face
-            { main: '#196f3d', light: '#2ecc71', dark: '#145a32' }  // Kingdom
-        ][this.purificationStep] || { main: '#943126', light: '#e74c3c', dark: '#7b241c' };
+        // --- Phase-based Colors (Smoothed) ---
+        const colors = this.interpolatePhaseColors(this.displayStep);
 
         // Legs (Trousers)
         ctx.fillStyle = colors.dark;
