@@ -11,7 +11,7 @@ export default class GameEngine {
         this.time = 0;
         this.lastTime = performance.now();
 
-        this.gravity = 2500;
+        this.gravity = 1800;
         this.towerHeight = 450;
         this.puckY = 0;
         this.puckVy = 0;
@@ -311,7 +311,7 @@ export default class GameEngine {
 
         if (this.animState === 'WINDING' || this.animState === 'WINDING_FULL') {
             this.windupTimer += dt;
-            const progress = Math.min(this.windupTimer / 0.5, 1.0);
+            const progress = Math.min(this.windupTimer / 0.8, 1.0);
             const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
             this.hammerAngle = REST_ANGLE + (WINDUP_ANGLE - REST_ANGLE) * ease;
 
@@ -327,7 +327,7 @@ export default class GameEngine {
         }
         else if (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') {
             this.swingTimer += dt;
-            const progress = Math.min(this.swingTimer / 0.12, 1.0);
+            const progress = Math.min(this.swingTimer / 0.2, 1.0);
             const ease = 1 - Math.pow(1 - progress, 4);
             this.hammerAngle = WINDUP_ANGLE + (STRIKE_ANGLE - WINDUP_ANGLE) * ease;
 

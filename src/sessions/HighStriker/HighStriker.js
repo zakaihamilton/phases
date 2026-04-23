@@ -70,7 +70,7 @@ export default function HighStriker() {
     }, [currentScene, purificationStep]);
 
     const processNavigation = useCallback((forward) => {
-        if (isAnimating) return;
+        // Allow interruption for snappier movement
 
         let nextScene = currentScene;
         let nextStep = purificationStep;
