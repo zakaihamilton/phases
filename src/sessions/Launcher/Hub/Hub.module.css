@@ -98,18 +98,18 @@
 }
 
 .cardsGrid {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1100px;
+    padding: 1rem;
+    margin: 0 auto;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
     .cardsGrid {
-        flex-direction: row;
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
@@ -118,8 +118,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
+    justify-content: flex-start;
+    padding: 2.5rem 2rem;
     border-radius: 2rem;
     background-color: rgba(15, 23, 42, 0.5);
     backdrop-filter: blur(4px);
@@ -128,7 +128,8 @@
     cursor: pointer;
     overflow: hidden;
     outline: none;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    height: 100%;
+    min-height: 380px;
 }
 
 .card::after {
@@ -205,6 +206,19 @@
         inset 0 0 0 1px rgba(16, 185, 129, 0.4);
 }
 
+.high-striker .cardGlow {
+    background: radial-gradient(circle at center, #f59e0b, #fbbf24, transparent);
+}
+
+.high-striker:hover,
+.high-striker:focus {
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow:
+        0 30px 60px -12px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(245, 158, 11, 0.2),
+        inset 0 0 0 1px rgba(245, 158, 11, 0.4);
+}
+
 
 
 
@@ -214,6 +228,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 1;
+    width: 100%;
 }
 
 .cardIconWrapper {
@@ -262,16 +278,33 @@
 
 
 .cardDate {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #94a3b8;
-    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.35rem 1rem;
+    border-radius: 99px;
+    margin-top: auto;
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.card:hover .cardDate,
+.card:focus .cardDate {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 .cardDesc {
-    font-size: 0.875rem;
+    font-size: 0.935rem;
     color: #94a3b8;
     text-align: center;
-    font-weight: 500;
+    font-weight: 400;
+    line-height: 1.6;
     margin: 0;
 }
