@@ -19,12 +19,10 @@ export default function NarrativePanel({
 
     return (
         <div 
-            key={sceneData.title}
             className={`
                 ${styles['narrative-panel']} 
                 ${currentScene === 0 ? styles['center-panel'] : styles['side-panel']} 
                 ${!hudVisible ? styles['hud-hidden'] : ''}
-                ${styles['fade-in']}
             `}
         >
             <div className={styles['panel-content']}>
