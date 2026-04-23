@@ -175,6 +175,44 @@ export default function HighStriker() {
     }, [nextStepFn, prevStepFn]);
 
 
+    useEffect(() => {
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const handleTouchStart = (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        };
+
+        const handleTouchEnd = (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchEndX - touchStartX;
+            const threshold = 50;
+
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0) {
+                    // Swipe Right -> Previous
+                    processNavigation(false);
+                } else {
+                    // Swipe Left -> Next
+                    processNavigation(true);
+                }
+            }
+        };
+
+        const container = document.querySelector(`.${styles['app-container']}`);
+        if (container) {
+            container.addEventListener('touchstart', handleTouchStart, { passive: true });
+            container.addEventListener('touchend', handleTouchEnd, { passive: true });
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener('touchstart', handleTouchStart);
+                container.removeEventListener('touchend', handleTouchEnd);
+            }
+        };
+    }, [processNavigation]);
+
     return (
         <div className={styles['app-container']}>
             <div className={styles.noise} />
