@@ -1,5 +1,5 @@
 export const drawEnvironment = (ctx, engine) => {
-    const { width, height, time, grass, clouds, birds, balloons } = engine;
+    const { width, height, time, grass, clouds, birds, balloons, animState, puckVy } = engine;
     const gradient = ctx.createLinearGradient(0, 0, 0, height * 0.6);
     gradient.addColorStop(0, '#0abde3');
     gradient.addColorStop(1, '#c8d6e5');
@@ -22,17 +22,21 @@ export const drawEnvironment = (ctx, engine) => {
     ctx.rotate(time * 0.05);
     for (let i = 0; i < 12; i++) {
         ctx.rotate(Math.PI / 6);
-        const grad = ctx.createLinearGradient(0, 0, 800, 0);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        const grad = ctx.createLinearGradient(0, 0, 1200, 0);
+        grad.addColorStop(0, 'rgba(255, 255, 200, 0.25)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 200, 0.05)');
+        grad.addColorStop(1, 'rgba(255, 255, 200, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(800, -40);
-        ctx.lineTo(800, 40);
+        ctx.lineTo(1200, -80);
+        ctx.lineTo(1200, 80);
         ctx.fill();
     }
     ctx.restore();
+
+    drawAtmosphere(ctx, engine);
+    drawLensFlare(ctx, engine);
 
     ctx.fillStyle = '#10ac84';
     ctx.fillRect(0, height * 0.6, width, height * 0.4);
@@ -44,7 +48,13 @@ export const drawEnvironment = (ctx, engine) => {
     ctx.fillStyle = '#01a3a4';
     grass.forEach(g => {
         if (g.x > width + 50) return;
-        const tilt = Math.sin(time * 2.5 + g.off) * 8;
+        
+        // Grass responds to puck speed if nearby
+        const distToCenter = Math.abs(g.x - (width / 2 - 90));
+        const speedInfluence = (animState === 'RISING' || animState === 'FALLING') ? Math.abs(puckVy) * 0.005 : 0;
+        const ripple = speedInfluence * Math.exp(-distToCenter * 0.01);
+        
+        const tilt = Math.sin(time * 2.5 + g.off) * 8 + ripple * Math.sign(g.x - (width / 2 - 90));
         ctx.beginPath();
         ctx.moveTo(g.x, baseY + 4);
         ctx.quadraticCurveTo(g.x + tilt / 2, baseY - g.h / 2, g.x + tilt, baseY - g.h);
@@ -561,4 +571,67 @@ export const drawMidground = (ctx, engine) => {
         ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - 12, by + 25); ctx.lineTo(bx + 12, by + 25); ctx.fill();
         ctx.stroke();
     }
+};
+export const drawAtmosphere = (ctx, engine) => {
+    const { width, height, time } = engine;
+    
+    // Floating Motes / Dust
+    ctx.save();
+    const moteCount = 40;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < moteCount; i++) {
+        const x = (Math.sin(i * 123.45) * 0.5 + 0.5) * width + Math.sin(time * 0.2 + i) * 50;
+        const y = (Math.cos(i * 678.90) * 0.5 + 0.5) * height + Math.cos(time * 0.3 + i) * 30;
+        const size = (Math.sin(i + time) * 0.5 + 0.5) * 2 + 1;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Subtle Ground Fog
+    const fogGrad = ctx.createLinearGradient(0, height * 0.5, 0, height * 0.65);
+    fogGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    fogGrad.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
+    ctx.fillStyle = fogGrad;
+    ctx.fillRect(0, height * 0.5, width, height * 0.15);
+};
+
+export const drawLensFlare = (ctx, engine) => {
+    const { width, height, puckY, towerHeight } = engine;
+    const sunX = width * 0.85;
+    const sunY = height * 0.25;
+    
+    // Flare intensity based on puck height
+    const ratio = Math.min(puckY / towerHeight, 1.0);
+    if (ratio < 0.5) return;
+    
+    const intensity = (ratio - 0.5) * 2;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    const dx = sunX - centerX;
+    const dy = sunY - centerY;
+    
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    
+    const flareColors = ['rgba(255, 200, 50, 0.2)', 'rgba(50, 200, 255, 0.1)', 'rgba(255, 100, 255, 0.1)'];
+    
+    for (let i = 1; i <= 3; i++) {
+        const fx = sunX - dx * i * 0.4;
+        const fy = sunY - dy * i * 0.4;
+        const size = 20 + i * 40;
+        
+        ctx.beginPath();
+        const grad = ctx.createRadialGradient(fx, fy, 0, fx, fy, size);
+        grad.addColorStop(0, flareColors[i-1]);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.arc(fx, fy, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    ctx.restore();
 };
