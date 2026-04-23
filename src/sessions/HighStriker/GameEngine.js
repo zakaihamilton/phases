@@ -41,6 +41,8 @@ export default class GameEngine {
         this.eyeTargetY = 0;
 
         this.animState = 'IDLE';
+        this.timeScale = 1.0;
+        this.vignetteIntensity = 0;
         this.targetPuckRatio = 0;
         this.animCallback = null;
         this.windupTimer = 0;
@@ -168,10 +170,14 @@ export default class GameEngine {
     }
 
     spawnImpact() {
-        this.shake = 0; // Disabled shake entirely
-        this.padScaleY = 0.8; // Subtle compression
+        const colors = this.interpolatePhaseColors(this.displayStep);
+        this.shake = 12; 
+        this.timeScale = 0.2; // Cinematic slow motion
+        this.vignetteIntensity = 0.8;
+        this.padScaleY = 0.8; 
         this.bamScale = 1.2;
         this.flashAlpha = 0.6;
+        this.flashColor = colors.light; // Impact flash matches phase color
         this.shockwaves.push({ r: 10, alpha: 1.0, width: 20 });
         this.floatingTexts.push({
             x: this.width / 2 - 100,
@@ -232,7 +238,17 @@ export default class GameEngine {
         }
     }
 
-    update(dt) {
+    update(rawDt) {
+        // Apply time dilation (slow motion)
+        const dt = rawDt * this.timeScale;
+        this.timeScale += (1.0 - this.timeScale) * rawDt * 5;
+
+        // Decaying vignette
+        if (this.vignetteIntensity > 0) {
+            this.vignetteIntensity -= rawDt * 1.5;
+            if (this.vignetteIntensity < 0) this.vignetteIntensity = 0;
+        }
+
         this.time += dt;
 
         this.blinkTimer -= dt;
@@ -263,7 +279,7 @@ export default class GameEngine {
         this.eyeLookX += (this.eyeTargetX - this.eyeLookX) * dt * 8;
         this.eyeLookY += (this.eyeTargetY - this.eyeLookY) * dt * 8;
 
-        if (this.shake > 0) this.shake -= dt * 40;
+        if (this.shake > 0) this.shake -= rawDt * 45;
         if (this.shake < 0) this.shake = 0;
 
         if (this.padScaleY < 1.0) {
@@ -461,7 +477,7 @@ export default class GameEngine {
         
         // Fill background over-sized to prevent empty edges during shake
         ctx.fillStyle = '#81ecec';
-        ctx.fillRect(-50, -50, this.width + 100, this.height + 100);
+        ctx.fillRect(-200, -200, this.width + 400, this.height + 400);
 
         this.drawEnvironment(ctx);
         this.drawFlora(ctx);
@@ -485,8 +501,15 @@ export default class GameEngine {
         this.drawCinematicEffects(ctx);
         
         if (this.flashAlpha > 0) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
-            ctx.fillRect(0, 0, this.width, this.height);
+            ctx.fillStyle = this.flashColor || `rgba(255, 255, 255, ${this.flashAlpha})`;
+            if (!this.flashColor) ctx.fillStyle = `rgba(255, 255, 255, ${this.flashAlpha})`;
+            else {
+                // Parse the rgb/hex to add alpha
+                ctx.globalAlpha = this.flashAlpha;
+                ctx.fillRect(0, 0, this.width, this.height);
+                ctx.globalAlpha = 1.0;
+            }
+            if (!this.flashColor) ctx.fillRect(0, 0, this.width, this.height);
         }
     }
 
@@ -1534,6 +1557,7 @@ export default class GameEngine {
         ctx.strokeRect(180, 30, 60, 20);
 
         ctx.restore();
+        ctx.restore();
     }
 
     drawParticles(ctx) {
@@ -1615,16 +1639,22 @@ export default class GameEngine {
         const cx = this.width / 2;
         const cy = this.height / 2;
         const r = Math.max(cx, cy) * 1.5;
-        const gradient = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r);
+        
+        // Base Vignette + Dynamic Impact Vignette
+        const intensity = 0.4 + (this.vignetteIntensity * 0.45);
+        const gradient = ctx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
         gradient.addColorStop(0, 'rgba(0,0,0,0)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0.85)');
+        gradient.addColorStop(1, `rgba(0,0,0,${intensity})`);
 
+        ctx.save();
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, this.width, this.height);
 
+        // Letterbox bars (Cinematic Aspect Ratio)
         ctx.fillStyle = '#000';
-        const barHeight = this.height * 0.08;
+        const barHeight = this.height * 0.06;
         ctx.fillRect(0, 0, this.width, barHeight);
         ctx.fillRect(0, this.height - barHeight, this.width, barHeight);
+        ctx.restore();
     }
 }
