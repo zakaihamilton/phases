@@ -643,54 +643,95 @@ export default class GameEngine {
         const fwX = this.width * 0.82;
         const fwY = baseY - 130;
         const fwR = 120;
+        const fwRot = this.time * 0.3;
 
+        // Support Structure
         ctx.strokeStyle = '#2f3542';
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 12;
         ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX + 60, baseY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX - 60, baseY); ctx.stroke();
 
-        ctx.strokeStyle = '#747d8c';
-        ctx.lineWidth = 6;
+        // Outer Rim Glow
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 15;
         ctx.beginPath(); ctx.arc(fwX, fwY, fwR, 0, Math.PI * 2); ctx.stroke();
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(fwX, fwY, fwR - 25, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
 
-        ctx.strokeStyle = '#576574';
-        ctx.lineWidth = 1;
+        // Main Rims
+        ctx.strokeStyle = '#747d8c';
+        ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.arc(fwX, fwY, fwR, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(fwX, fwY, fwR - 30, 0, Math.PI * 2); ctx.stroke();
+
+        // Spokes
+        ctx.strokeStyle = 'rgba(87, 101, 116, 0.5)';
+        ctx.lineWidth = 2;
         for (let i = 0; i < 12; i++) {
-            const a1 = this.time * 0.3 + (i * Math.PI / 6);
-            const a2 = this.time * 0.3 + ((i + 2) * Math.PI / 6);
+            const angle = fwRot + (i * Math.PI / 6);
             ctx.beginPath();
-            ctx.moveTo(fwX + Math.cos(a1) * (fwR - 25), fwY + Math.sin(a1) * (fwR - 25));
-            ctx.lineTo(fwX + Math.cos(a2) * (fwR - 25), fwY + Math.sin(a2) * (fwR - 25));
+            ctx.moveTo(fwX, fwY);
+            ctx.lineTo(fwX + Math.cos(angle) * fwR, fwY + Math.sin(angle) * fwR);
             ctx.stroke();
+
+            // Rim Lights
+            const lightOn = (Math.floor(this.time * 4) + i) % 3 === 0;
+            if (lightOn) {
+                ctx.save();
+                ctx.fillStyle = i % 2 === 0 ? '#f1c40f' : '#ff4757';
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 10;
+                ctx.beginPath(); ctx.arc(fwX + Math.cos(angle) * fwR, fwY + Math.sin(angle) * fwR, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.restore();
+            }
         }
 
+        // Gondolas
         for (let i = 0; i < 12; i++) {
-            const angle = this.time * 0.3 + (i * Math.PI / 6);
+            const angle = fwRot + (i * Math.PI / 6);
             const cx = fwX + Math.cos(angle) * fwR;
             const cy = fwY + Math.sin(angle) * fwR;
 
-            ctx.strokeStyle = '#a4b0be';
-            ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(cx, cy); ctx.stroke();
-
-            ctx.fillStyle = (Math.floor(this.time * 5) % 2 === i % 2) ? '#f1c40f' : '#ff4757';
-            ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.save();
+            ctx.translate(cx, cy);
+            // Counter-rotate gondola to keep it upright
+            ctx.rotate(0); 
 
             ctx.fillStyle = i % 2 === 0 ? '#ff6b81' : '#1e90ff';
-            ctx.beginPath(); ctx.roundRect(cx - 16, cy, 32, 38, 6); ctx.fill();
-            ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.roundRect(-18, 0, 36, 42, 8); ctx.fill();
+            ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 3; ctx.stroke();
 
-            ctx.fillStyle = '#dfe4ea';
-            ctx.fillRect(cx - 12, cy + 6, 24, 16);
+            // Window
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillRect(-14, 8, 28, 18);
+            
+            // Roof
             ctx.fillStyle = '#feca57';
-            ctx.beginPath(); ctx.moveTo(cx - 20, cy); ctx.lineTo(cx + 20, cy); ctx.lineTo(cx, cy - 15); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-22, 0); ctx.lineTo(22, 0); ctx.lineTo(0, -18); ctx.fill(); ctx.stroke();
+            
+            // Hanging bars
+            ctx.strokeStyle = '#576574'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -10); ctx.stroke();
+            
+            ctx.restore();
         }
 
-        ctx.fillStyle = '#576574';
-        ctx.beginPath(); ctx.moveTo(fwX, fwY); ctx.lineTo(fwX - 55, baseY); ctx.lineTo(fwX - 25, baseY); ctx.fill();
-        ctx.fillStyle = '#2f3542';
-        ctx.beginPath(); ctx.arc(fwX, fwY, 15, 0, Math.PI * 2); ctx.fill();
+        // Central Hub
+        const hubGrad = ctx.createRadialGradient(fwX, fwY, 5, fwX, fwY, 30);
+        hubGrad.addColorStop(0, '#f1c40f');
+        hubGrad.addColorStop(1, '#e67e22');
+        ctx.fillStyle = hubGrad;
+        ctx.beginPath(); ctx.arc(fwX, fwY, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#2f3542'; ctx.lineWidth = 4; ctx.stroke();
+        
+        // Hub Lights
+        for (let i = 0; i < 8; i++) {
+            const a = fwRot * 2 + (i * Math.PI / 4);
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(fwX + Math.cos(a) * 12, fwY + Math.sin(a) * 12, 3, 0, Math.PI * 2); ctx.fill();
+        }
 
         // --- Drop Tower ---
         const dtX = this.width * 0.28;
