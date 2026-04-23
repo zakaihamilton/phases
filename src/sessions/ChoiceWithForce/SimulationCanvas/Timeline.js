@@ -34,16 +34,21 @@ const buildTimeline = () => {
         });
     });
 
-    timeline.push({
-        name: `The Restriction`, description: `The Light departs. The Void is formed.`, action: `RESTRICTION_VOID`,
-        stateModifiers: mod(s => { s.voidOpacity = 1; })
-    });
-
+    // 3. Restriction - Circles appear first, then the actual restriction hits at Phase 4
     for (let i = 0; i < 5; i++) {
         timeline.push({
-            name: `Circles of Restriction ${i + 1}`, description: `Setting boundaries of the Void.`, action: `RESTRICTION_CIRCLES_${i}`,
+            name: `Circles of Restriction ${i + 1}`, description: `Setting boundaries of the Void (Level ${i + 1}).`, action: `RESTRICTION_CIRCLES_${i}`,
             stateModifiers: mod(s => { s.restrictionOpacities[i] = 1; })
         });
+
+        // "Only on the vessels of restriction it should actually restrict on phase four"
+        // This is index 3 (the 4th circle/phase)
+        if (i === 3) {
+            timeline.push({
+                name: `The Restriction`, description: `The Light departs. The Void is formed.`, action: `RESTRICTION_VOID`,
+                stateModifiers: mod(s => { s.voidOpacity = 1; })
+            });
+        }
     }
 
     timeline.push({
