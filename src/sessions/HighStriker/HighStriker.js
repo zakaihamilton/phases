@@ -130,6 +130,7 @@ export default function HighStriker() {
 
     return (
         <div className={styles['app-container']}>
+            <div className={styles.noise} />
             <canvas ref={canvasRef} className={styles['game-canvas']} />
 
             <TopRightControls 
