@@ -42,6 +42,7 @@ export default class GameEngine {
         this.windupTimer = 0;
         this.swingTimer = 0;
 
+        this.purificationStep = 0;
         this.levelWidth = 4000;
 
         this.clouds = Array.from({ length: 15 }, () => ({
@@ -1202,20 +1203,29 @@ export default class GameEngine {
         ctx.rotate(leanAngle);
         ctx.translate(-gx, -(gy - 60));
 
-        // Legs 
-        ctx.fillStyle = '#2c3e50';
+        // --- Phase-based Colors ---
+        const colors = [
+            { main: '#34495e', light: '#7f8c8d', dark: '#2c3e50' }, // Crown
+            { main: '#b7950b', light: '#f1c40f', dark: '#9a7d0a' }, // Wisdom
+            { main: '#1f618d', light: '#3498db', dark: '#1a5276' }, // Understanding
+            { main: '#943126', light: '#e74c3c', dark: '#7b241c' }, // Small Face
+            { main: '#196f3d', light: '#2ecc71', dark: '#145a32' }  // Kingdom
+        ][this.purificationStep] || { main: '#943126', light: '#e74c3c', dark: '#7b241c' };
+
+        // Legs (Trousers)
+        ctx.fillStyle = colors.dark;
         ctx.beginPath(); ctx.roundRect(gx - 20, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.roundRect(gx + 6, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
 
-        ctx.fillStyle = '#1e272e';
+        ctx.fillStyle = '#1e272e'; // Shoes stay dark
         ctx.beginPath(); ctx.roundRect(gx - 26, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.roundRect(gx, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
 
-        // Body (Classic Cartoon Barrel Chest)
+        // --- Body (Color based on Phase) ---
         const bodyGrad = ctx.createLinearGradient(gx - 50, gy - 130, gx + 30, gy - 130);
-        bodyGrad.addColorStop(0, '#c0392b');
-        bodyGrad.addColorStop(0.5, '#e74c3c');
-        bodyGrad.addColorStop(1, '#922b21');
+        bodyGrad.addColorStop(0, colors.dark);
+        bodyGrad.addColorStop(0.5, colors.main);
+        bodyGrad.addColorStop(1, colors.dark);
         ctx.fillStyle = bodyGrad;
 
         ctx.beginPath();
@@ -1332,8 +1342,8 @@ export default class GameEngine {
         ctx.translate(shoulderX, shoulderY);
         ctx.rotate(this.hammerAngle);
 
-        // Cartoon Arm (Overlapping smooth rounded chunks)
-        ctx.fillStyle = headGrad;
+        // Cartoon Arm (Color based on Phase)
+        ctx.fillStyle = colors.main;
 
         // Forearm
         ctx.beginPath(); ctx.roundRect(30, -12, 45, 24, 12); ctx.fill(); ctx.stroke();

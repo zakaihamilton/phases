@@ -29,11 +29,18 @@ export default function HighStriker() {
     const [isAnimating, setIsAnimating] = useState(false);
     const [hudVisible, setHudVisible] = useState(true);
 
+    useEffect(() => {
+        if (engineRef.current) {
+            engineRef.current.purificationStep = purificationStep;
+        }
+    }, [purificationStep]);
+
     const sceneData = scenes[currentScene];
 
     useEffect(() => {
         if (canvasRef.current) {
             engineRef.current = new GameEngine(canvasRef.current);
+            engineRef.current.purificationStep = purificationStep;
 
             // Sync engine with initial state immediately
             if (currentScene >= 3) {
