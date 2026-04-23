@@ -123,13 +123,13 @@
 }
 
 .power-chunk.filled.crown {
-    background: linear-gradient(180deg, #7f8c8d 0%, #bdc3c7 100%);
-    box-shadow: 0 0 10px rgba(127, 140, 141, 0.5);
+    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
 }
 
 .power-chunk.filled.wisdom {
-    background: linear-gradient(180deg, #f1c40f 0%, #f39c12 100%);
-    box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
 }
 
 .power-chunk.filled.understanding {
@@ -138,13 +138,13 @@
 }
 
 .power-chunk.filled.small-face {
-    background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
-    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+    background: linear-gradient(180deg, #f1c40f 0%, #f39c12 100%);
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
 }
 
 .power-chunk.filled.kingdom {
-    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
+    background: linear-gradient(180deg, #7f8c8d 0%, #bdc3c7 100%);
+    box-shadow: 0 0 10px rgba(127, 140, 141, 0.5);
 }
 
 .power-chunk.empty {
