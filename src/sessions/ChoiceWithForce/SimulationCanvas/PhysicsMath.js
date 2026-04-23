@@ -1,68 +1,81 @@
 // PhysicsMath.js
 
 const EPSILON = 0.015;
-const done = (val, target) => Math.abs(val - target) <= EPSILON;
+const done = (val, target) => Math.abs((val || 0) - (target || 0)) <= EPSILON;
 
 const CHRONOLOGY = [
-    { prop: 'kavProgress', type: 'value' }, { prop: 'reflectProgress', type: 'value' },
+    { prop: 'rayProgress', type: 'value' }, { prop: 'headReflectProgress', type: 'value' },
     { prop: 'windowProgress', type: 'value' }, { prop: 'windowFillProgress', type: 'value' },
-    { prop: 'gufExpandProgresses', type: 'array' }, { prop: 'gufLightProgress', type: 'value' }, { prop: 'gufReflectProgress', type: 'value' },
-    { prop: 'sofExpandProgresses', type: 'array' }, { prop: 'sofLightProgress', type: 'value' }, { prop: 'sofReflectProgress', type: 'value' }
+    { prop: 'bodyExpandProgresses', type: 'array' }, { prop: 'bodyLightProgress', type: 'value' }, { prop: 'bodyReflectProgress', type: 'value' },
+    { prop: 'endExpandProgresses', type: 'array' }, { prop: 'endLightProgress', type: 'value' }, { prop: 'endReflectProgress', type: 'value' }
 ];
 
 const getVisualSum = (state) => {
-    let sum = state.rootOpacities.reduce((a, b) => a + b, 0);
-    state.layers.forEach(l => {
-        sum += l.kavProgress + l.reflectProgress + l.windowProgress + l.windowFillProgress +
-            l.gufExpandProgresses.reduce((a, b) => a + b, 0) + l.gufLightProgress + l.gufReflectProgress +
-            l.sofExpandProgresses.reduce((a, b) => a + b, 0) + l.sofLightProgress + l.sofReflectProgress;
-    });
+    if (!state || !state.rootOpacities) return 0;
+    let sum = state.rootOpacities.reduce((a, b) => a + (b || 0), 0);
+    if (state.layers) {
+        state.layers.forEach(l => {
+            if (!l) return;
+            sum += (l.rayProgress || 0) + (l.headReflectProgress || 0) + (l.windowProgress || 0) + (l.windowFillProgress || 0) +
+                (l.bodyLightProgress || 0) + (l.bodyReflectProgress || 0) + (l.endLightProgress || 0) + (l.endReflectProgress || 0);
+            if (l.bodyExpandProgresses) sum += l.bodyExpandProgresses.reduce((a, b) => a + (b || 0), 0);
+            if (l.endExpandProgresses) sum += l.endExpandProgresses.reduce((a, b) => a + (b || 0), 0);
+        });
+    }
     return sum;
 };
 
-export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
-    const distance = Math.abs(getVisualSum(targets) - getVisualSum(pState));
-    const seqSpeedBoost = easeSpeed * (2.5 + (distance * 1.5));
-    const bgEase = easeSpeed * (1 + (distance * 0.5));
+export const applyEasing = (pState, targets, easeSpeed = 0.015) => {
+    if (!targets) return;
 
-    pState.infinityAlpha += (targets.infinityAlpha - pState.infinityAlpha) * bgEase;
-    pState.zoomLevel += (targets.zoomLevel - pState.zoomLevel) * bgEase;
-    pState.voidOpacity += (targets.voidOpacity - pState.voidOpacity) * bgEase;
-    pState.outerPhasesOpacity += (targets.outerPhasesOpacity - pState.outerPhasesOpacity) * bgEase;
+    pState.zoomLevel += ((targets.zoomLevel || 1) - (pState.zoomLevel || 1)) * 0.05;
+    pState.tiltProgress += ((targets.tiltProgress || 0) - (pState.tiltProgress || 0)) * 0.05;
+    pState.infinityAlpha += ((targets.infinityAlpha || 0) - (pState.infinityAlpha || 0)) * 0.02;
+    pState.voidOpacity += ((targets.voidOpacity || 0) - (pState.voidOpacity || 0)) * 0.02;
+    pState.outerPhasesOpacity += ((targets.outerPhasesOpacity || 0) - (pState.outerPhasesOpacity || 0)) * 0.02;
 
-    // Apply smooth easing to the camera pan!
-    pState.tiltProgress += (targets.tiltProgress - pState.tiltProgress) * bgEase;
-
-    for (let i = 0; i < 5; i++) pState.rootOpacities[i] += (targets.rootOpacities[i] - pState.rootOpacities[i]) * bgEase;
-    for (let i = 0; i < 5; i++) pState.restrictionOpacities[i] += (targets.restrictionOpacities[i] - pState.restrictionOpacities[i]) * bgEase;
+    for (let i = 0; i < 5; i++) {
+        pState.rootOpacities[i] += ((targets.rootOpacities[i] || 0) - (pState.rootOpacities[i] || 0)) * 0.02;
+        pState.restrictionOpacities[i] += ((targets.restrictionOpacities[i] || 0) - (pState.restrictionOpacities[i] || 0)) * 0.02;
+    }
     for (let i = 0; i < 4; i++) {
-        pState.lightOpacities[i] += (targets.lightOpacities[i] - pState.lightOpacities[i]) * bgEase;
-        for (let j = 0; j < 4; j++) pState.subVesselOpacities[i][j] += (targets.subVesselOpacities[i][j] - pState.subVesselOpacities[i][j]) * bgEase;
+        pState.lightOpacities[i] += ((targets.lightOpacities[i] || 0) - (pState.lightOpacities[i] || 0)) * 0.02;
+        for (let j = 0; j < 4; j++) {
+            pState.subVesselOpacities[i][j] += ((targets.subVesselOpacities[i][j] || 0) - (pState.subVesselOpacities[i][j] || 0)) * 0.02;
+        }
     }
 
-    for (let lyr = 0; lyr < 5; lyr++) {
-        const p = pState.layers[lyr];
-        const t = targets.layers[lyr];
+    const tSum = getVisualSum(targets);
+    const pSum = getVisualSum(pState);
+    const difference = Math.abs(tSum - pSum);
+    const seqSpeedBoost = Math.max(easeSpeed, Math.min(0.15, difference * 0.01));
 
-        p.pehFlareOpacity += (t.pehFlareOpacity - p.pehFlareOpacity) * bgEase;
-        p.taburFlareOpacity += (t.taburFlareOpacity - p.taburFlareOpacity) * bgEase;
-        p.siyumFlareOpacity += (t.siyumFlareOpacity - p.siyumFlareOpacity) * bgEase;
+    let canMoveFwd = true;
+    let canMoveBwd = true;
 
-        let canMoveFwd = true; let canMoveBwd = true;
+    pState.layers.forEach((p, lyrIdx) => {
+        const t = targets.layers[lyrIdx];
+        if (!t) return;
+
+        p.mouthFlareOpacity += ((t.mouthFlareOpacity || 0) - (p.mouthFlareOpacity || 0)) * 0.05;
+        p.navelFlareOpacity += ((t.navelFlareOpacity || 0) - (p.navelFlareOpacity || 0)) * 0.05;
+        p.toesFlareOpacity += ((t.toesFlareOpacity || 0) - (p.toesFlareOpacity || 0)) * 0.05;
 
         for (let i = 0; i < CHRONOLOGY.length; i++) {
             const rule = CHRONOLOGY[i];
             if (rule.type === 'value') {
-                const diff = t[rule.prop] - p[rule.prop];
+                const diff = (t[rule.prop] || 0) - (p[rule.prop] || 0);
                 if (diff > EPSILON && canMoveFwd) p[rule.prop] += diff * seqSpeedBoost;
-                else if (Math.abs(diff) <= EPSILON) p[rule.prop] = t[rule.prop];
+                else if (Math.abs(diff) <= EPSILON) p[rule.prop] = (t[rule.prop] || 0);
                 if (!done(p[rule.prop], t[rule.prop])) canMoveFwd = false;
             } else if (rule.type === 'array') {
+                if (!p[rule.prop]) p[rule.prop] = [0, 0, 0, 0, 0];
+                if (!t[rule.prop]) t[rule.prop] = [0, 0, 0, 0, 0];
                 for (let j = 0; j < 5; j++) {
-                    const diff = t[rule.prop][j] - p[rule.prop][j];
+                    const diff = (t[rule.prop][j] || 0) - (p[rule.prop][j] || 0);
                     const prevDoneFwd = j === 0 ? canMoveFwd : done(p[rule.prop][j - 1], t[rule.prop][j - 1]);
                     if (diff > EPSILON && prevDoneFwd) p[rule.prop][j] += diff * seqSpeedBoost;
-                    else if (Math.abs(diff) <= EPSILON) p[rule.prop][j] = t[rule.prop][j];
+                    else if (Math.abs(diff) <= EPSILON) p[rule.prop][j] = (t[rule.prop][j] || 0);
                     if (!done(p[rule.prop][j], t[rule.prop][j])) canMoveFwd = false;
                 }
             }
@@ -71,17 +84,19 @@ export const applyEasing = (pState, targets, easeSpeed = 0.02) => {
         for (let i = CHRONOLOGY.length - 1; i >= 0; i--) {
             const rule = CHRONOLOGY[i];
             if (rule.type === 'value') {
-                const diff = t[rule.prop] - p[rule.prop];
+                const diff = (t[rule.prop] || 0) - (p[rule.prop] || 0);
                 if (diff < -EPSILON && canMoveBwd) p[rule.prop] += diff * seqSpeedBoost;
                 if (!done(p[rule.prop], t[rule.prop])) canMoveBwd = false;
             } else if (rule.type === 'array') {
+                if (!p[rule.prop]) p[rule.prop] = [0, 0, 0, 0, 0];
+                if (!t[rule.prop]) t[rule.prop] = [0, 0, 0, 0, 0];
                 for (let j = 4; j >= 0; j--) {
-                    const diff = t[rule.prop][j] - p[rule.prop][j];
-                    const nextDoneBwd = j === 4 ? canMoveBwd : done(p[rule.prop][j + 1], t[rule.prop][j + 1]);
-                    if (diff < -EPSILON && nextDoneBwd) p[rule.prop][j] += diff * seqSpeedBoost;
+                    const diff = (t[rule.prop][j] || 0) - (p[rule.prop][j] || 0);
+                    const prevDoneBwd = j === 4 ? canMoveBwd : done(p[rule.prop][j + 1], t[rule.prop][j + 1]);
+                    if (diff < -EPSILON && prevDoneBwd) p[rule.prop][j] += diff * seqSpeedBoost;
                     if (!done(p[rule.prop][j], t[rule.prop][j])) canMoveBwd = false;
                 }
             }
         }
-    }
+    });
 };

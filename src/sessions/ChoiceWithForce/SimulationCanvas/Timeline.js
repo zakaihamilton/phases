@@ -14,7 +14,7 @@ const buildTimeline = () => {
         timeline.push({
             name: `Root Phase: ${name}`, description: `Level ${i} of the Infinite.`, action: `ROOT_${i}`,
             stateModifiers: mod(s => {
-                s.infinityAlpha = 1; s.zoomLevel = 1.2; s.tiltProgress = 0; // Flat camera
+                s.infinityAlpha = 1; s.zoomLevel = 1.2; s.tiltProgress = 0;
                 for (let j = 0; j <= i; j++) s.rootOpacities[j] = 1;
             })
         });
@@ -29,115 +29,98 @@ const buildTimeline = () => {
             });
         }
         timeline.push({
-            name: `Phase ${vIdx + 1}: Light of ${vName}`, description: `Light fills ${vName}.`, action: `LIGHT_${vIdx}`,
-            stateModifiers: mod(s => { s.lightOpacities[vIdx] = 1; s.zoomLevel = 1.2 + (vIdx * 0.4); })
+            name: `Phase ${vIdx + 1}: Light Enters`, description: `Light enters ${vName}.`, action: `LIGHT_${vIdx}`,
+            stateModifiers: mod(s => { s.lightOpacities[vIdx] = 1; })
         });
     });
 
-    for (let r = 0; r < 5; r++) {
+    timeline.push({
+        name: `The Restriction`, description: `The Light departs. The Void is formed.`, action: `RESTRICTION_VOID`,
+        stateModifiers: mod(s => { s.voidOpacity = 1; })
+    });
+
+    for (let i = 0; i < 5; i++) {
         timeline.push({
-            name: `Restriction: Step ${r + 1}`, description: `Solidifying restriction.`, action: `RESTRICT_${r}`,
-            stateModifiers: mod(s => { s.restrictionOpacities[r] = 1; s.zoomLevel = 2.8 + (r * 0.3); })
+            name: `Circles of Restriction ${i + 1}`, description: `Setting boundaries of the Void.`, action: `RESTRICTION_CIRCLES_${i}`,
+            stateModifiers: mod(s => { s.restrictionOpacities[i] = 1; })
         });
     }
+
     timeline.push({
-        name: "The Tzimtzum", description: "Light departs.", action: 'RESTRICT_ACTIVATE',
-        stateModifiers: mod(s => { s.lightOpacities[3] = 0; s.voidOpacity = 1; s.zoomLevel = 4.2; s.outerPhasesOpacity = 0; })
+        name: `Preparation for the Ray`, description: `The Outer Phases dim. The 3D view rotates.`, action: `PREP_RAY`,
+        stateModifiers: mod(s => { s.outerPhasesOpacity = 0.2; s.tiltProgress = 1; })
     });
 
-    const purifications = ["Kingdom (Galgalta)", "Beauty", "Understanding", "Wisdom", "Crown"];
-    const circleNames = ["Crown", "Wisdom", "Understanding", "Beauty", "Kingdom"];
+    const pNames = ["Crown", "Wisdom", "Understanding", "Beauty", "Kingdom"];
 
     for (let lyr = 0; lyr < 5; lyr++) {
-        const pName = purifications[lyr];
-
-        if (lyr > 0) {
-            timeline.push({
-                name: `Purification to ${pName}`,
-                description: `The screen purifies to the next layer. Nested emergence begins.`,
-                action: `PURIFY_START_${lyr}`,
-                stateModifiers: mod(s => {
-                    s.layers[lyr] = JSON.parse(JSON.stringify(s.layers[lyr]));
-
-                    // Gradual tilt mapping (25% per layer)
-                    s.tiltProgress = lyr / 4;
-
-                    // Note: zoomLevel manipulation has been entirely removed here.
-                    // The camera will stay locked at the close-up 4.2 scale during the tilt!
-                })
-            });
-        }
+        const pName = pNames[lyr];
 
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Rosh of ${pName}: Descend ${step}`, description: `Direct Light descends.`, action: `ROSH_DESCEND_${lyr}_${step}`,
+                name: `Head of ${pName}: Ray ${step}`, description: `Ray descends into the Head.`, action: `RAY_DESCEND_${lyr}_${step}`,
                 stateModifiers: mod((s, isLast) => {
-                    s.layers[lyr].kavProgress = Math.min(step * 0.20, 0.80);
-                    if (isLast && step >= 5) s.layers[lyr].pehFlareOpacity = 1;
+                    s.layers[lyr].rayProgress = Math.min(step * 0.20, 0.80);
+                    if (isLast && step >= 5) s.layers[lyr].mouthFlareOpacity = 1;
                 })
             });
         }
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Rosh of ${pName}: Reflect ${step}`, description: `Reflected Light ascends.`, action: `ROSH_REFLECT_${lyr}_${step}`,
-                stateModifiers: mod(s => { s.layers[lyr].reflectProgress = step * 0.20; })
+                name: `Head of ${pName}: Reflect ${step}`, description: `Reflection rises from the Mouth.`, action: `HEAD_REFLECT_${lyr}_${step}`,
+                stateModifiers: mod(s => { s.layers[lyr].headReflectProgress = step * 0.20; })
             });
         }
-
         timeline.push({
-            name: `Window of ${circleNames[lyr]}`,
-            description: `Forming the window lining for the circle of ${circleNames[lyr]}.`,
-            action: `WINDOW_FORM_${lyr}`,
+            name: `Head of ${pName}: Window Lined`, description: `The Outer Vessel is defined.`, action: `WINDOW_LINE_${lyr}`,
             stateModifiers: mod(s => { s.layers[lyr].windowProgress = 1; })
         });
         timeline.push({
-            name: `Filling ${circleNames[lyr]}`,
-            description: `Filling the circle of ${circleNames[lyr]}.`,
-            action: `WINDOW_FILL_${lyr}`,
+            name: `Head of ${pName}: Window Filled`, description: `The Inner Vessel manifests.`, action: `WINDOW_FILL_${lyr}`,
             stateModifiers: mod(s => { s.layers[lyr].windowFillProgress = 1; })
         });
 
         for (let step = 0; step < 5; step++) {
             timeline.push({
-                name: `Guf of ${pName}: Expand ${step + 1}`, description: `Interior boundary expands.`, action: `GUF_EXPAND_${lyr}_${step}`,
-                stateModifiers: mod(s => { s.layers[lyr].gufExpandProgresses[step] = 1; })
+                name: `Body of ${pName}: Expand ${step + 1}`, description: `Body boundary expands.`, action: `BODY_EXPAND_${lyr}_${step}`,
+                stateModifiers: mod(s => { s.layers[lyr].bodyExpandProgresses[step] = 1; })
             });
         }
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Guf of ${pName}: Light ${step}`, description: `Light hits the Navel.`, action: `GUF_DESCEND_${lyr}_${step}`,
+                name: `Body of ${pName}: Light ${step}`, description: `Light hits the Navel.`, action: `BODY_DESCEND_${lyr}_${step}`,
                 stateModifiers: mod((s, isLast) => {
-                    s.layers[lyr].gufLightProgress = Math.min(step * 0.20, 0.80);
-                    if (isLast && step >= 5) s.layers[lyr].taburFlareOpacity = 1;
+                    s.layers[lyr].bodyLightProgress = Math.min(step * 0.20, 0.80);
+                    if (isLast && step >= 5) s.layers[lyr].navelFlareOpacity = 1;
                 })
             });
         }
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Guf of ${pName}: Reflect ${step}`, description: `Reflection rises from Navel.`, action: `GUF_REFLECT_${lyr}_${step}`,
-                stateModifiers: mod(s => { s.layers[lyr].gufReflectProgress = step * 0.20; })
+                name: `Body of ${pName}: Reflect ${step}`, description: `Reflection rises from the Navel.`, action: `BODY_REFLECT_${lyr}_${step}`,
+                stateModifiers: mod(s => { s.layers[lyr].bodyReflectProgress = step * 0.20; })
             });
         }
 
         for (let step = 0; step < 5; step++) {
             timeline.push({
-                name: `Sof of ${pName}: Expand ${step + 1}`, description: `End boundary expands.`, action: `SOF_EXPAND_${lyr}_${step}`,
-                stateModifiers: mod(s => { s.layers[lyr].sofExpandProgresses[step] = 1; })
+                name: `End of ${pName}: Expand ${step + 1}`, description: `End boundary expands.`, action: `END_EXPAND_${lyr}_${step}`,
+                stateModifiers: mod(s => { s.layers[lyr].endExpandProgresses[step] = 1; })
             });
         }
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Sof of ${pName}: Light ${step}`, description: `Light hits the Siyum.`, action: `SOF_DESCEND_${lyr}_${step}`,
+                name: `End of ${pName}: Light ${step}`, description: `Light hits the Toes.`, action: `END_DESCEND_${lyr}_${step}`,
                 stateModifiers: mod((s, isLast) => {
-                    s.layers[lyr].sofLightProgress = Math.min(step * 0.20, 0.80);
-                    if (isLast && step >= 5) s.layers[lyr].siyumFlareOpacity = 1;
+                    s.layers[lyr].endLightProgress = Math.min(step * 0.20, 0.80);
+                    if (isLast && step >= 5) s.layers[lyr].toesFlareOpacity = 1;
                 })
             });
         }
         for (let step = 1; step <= 5; step++) {
             timeline.push({
-                name: `Sof of ${pName}: Reflect ${step}`, description: `Reflection rises from Siyum.`, action: `SOF_REFLECT_${lyr}_${step}`,
-                stateModifiers: mod(s => { s.layers[lyr].sofReflectProgress = step * 0.20; })
+                name: `End of ${pName}: Reflect ${step}`, description: `Reflection rises from the Toes.`, action: `END_REFLECT_${lyr}_${step}`,
+                stateModifiers: mod(s => { s.layers[lyr].endReflectProgress = step * 0.20; })
             });
         }
     }
@@ -145,7 +128,4 @@ const buildTimeline = () => {
     return timeline;
 };
 
-export const SpiritualStates = buildTimeline().map((state, index, arr) => {
-    const seq = arr.slice(0, index + 1).map(s => s.action);
-    return { index, ...state, activeSequence: seq };
-});
+export const SpiritualStates = buildTimeline();

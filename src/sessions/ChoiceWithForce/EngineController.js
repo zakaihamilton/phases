@@ -21,12 +21,12 @@ const EngineController = () => {
     const handlePrev = () => setCurrentStateIndex(prev => Math.max(prev - 1, 0));
 
     const currentState = SpiritualStates[currentStateIndex];
+    const currentSequence = SpiritualStates.slice(0, currentStateIndex + 1);
 
     return (
         <div style={{ position: 'relative', width: '100vw', height: '100vh', backgroundColor: '#000', overflow: 'hidden' }}>
             {/* The WebGL/Canvas Renderer */}
-            <SimulationCanvas activeSequence={currentState.activeSequence} />
-
+            <SimulationCanvas activeSequence={currentSequence} />
             {/* Top Info Panel */}
             <InfoPanel
                 name={currentState.name}

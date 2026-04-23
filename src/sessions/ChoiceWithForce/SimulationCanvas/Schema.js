@@ -1,19 +1,19 @@
 // Schema.js
 
 export const createLayerState = () => ({
-    kavProgress: 0,
-    reflectProgress: 0,
+    rayProgress: 0,
+    headReflectProgress: 0,
     windowProgress: 0,
     windowFillProgress: 0,
-    gufExpandProgresses: [0, 0, 0, 0, 0],
-    gufLightProgress: 0,
-    gufReflectProgress: 0,
-    sofExpandProgresses: [0, 0, 0, 0, 0],
-    sofLightProgress: 0,
-    sofReflectProgress: 0,
-    pehFlareOpacity: 0,
-    taburFlareOpacity: 0,
-    siyumFlareOpacity: 0
+    bodyExpandProgresses: [0, 0, 0, 0, 0],
+    bodyLightProgress: 0,
+    bodyReflectProgress: 0,
+    endExpandProgresses: [0, 0, 0, 0, 0],
+    endLightProgress: 0,
+    endReflectProgress: 0,
+    mouthFlareOpacity: 0,
+    navelFlareOpacity: 0,
+    toesFlareOpacity: 0
 });
 
 export const INITIAL_STATE = {
@@ -25,7 +25,7 @@ export const INITIAL_STATE = {
     voidOpacity: 0,
     zoomLevel: 1,
     outerPhasesOpacity: 1,
-    tiltProgress: 0, // NEW: Controls the 2.5D Isometric Camera
+    tiltProgress: 0,
     layers: [createLayerState(), createLayerState(), createLayerState(), createLayerState(), createLayerState()]
 };
 
