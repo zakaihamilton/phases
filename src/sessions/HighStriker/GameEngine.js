@@ -35,6 +35,10 @@ export default class GameEngine {
         this.activeTargetLevel = -1; // New property for bulb lights
 
         this.blinkTimer = 2.0;
+        this.eyeLookX = 0;
+        this.eyeLookY = 0;
+        this.eyeTargetX = 0;
+        this.eyeTargetY = 0;
 
         this.animState = 'IDLE';
         this.targetPuckRatio = 0;
@@ -235,6 +239,29 @@ export default class GameEngine {
         if (this.blinkTimer < -0.15) {
             this.blinkTimer = 2 + Math.random() * 4;
         }
+
+        // --- Dynamic Eye Movement ---
+        if (this.puckY > 10) {
+            // Look up at the rising puck
+            this.eyeTargetX = -2;
+            this.eyeTargetY = -3;
+        } else if (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') {
+            // Look down at the impact point
+            this.eyeTargetX = -3;
+            this.eyeTargetY = 2;
+        } else if (this.animState === 'WINDING' || this.animState === 'WINDING_FULL') {
+            // Look back during windup
+            this.eyeTargetX = 2;
+            this.eyeTargetY = -1;
+        } else {
+            // Idle roaming
+            if (this.time % 3 < 0.02) {
+                this.eyeTargetX = (Math.random() - 0.5) * 3;
+                this.eyeTargetY = (Math.random() - 0.5) * 3;
+            }
+        }
+        this.eyeLookX += (this.eyeTargetX - this.eyeLookX) * dt * 8;
+        this.eyeLookY += (this.eyeTargetY - this.eyeLookY) * dt * 8;
 
         if (this.shake > 0) this.shake -= dt * 40;
         if (this.shake < 0) this.shake = 0;
@@ -1265,10 +1292,12 @@ export default class GameEngine {
         ctx.lineCap = 'round';
 
         const isIdle = this.animState === 'IDLE' || this.animState === 'WINDUP_HOLD';
-        const breath = isIdle ? Math.sin(this.time * 4) * 2 : 0;
+        const breath = isIdle ? Math.sin(this.time * 4) * 2.5 : 0;
+        const sway = isIdle ? Math.sin(this.time * 1.5) * 4 : 0;
+        const footTap = isIdle && (this.time % 6 < 2) ? Math.max(0, Math.sin(this.time * 12)) * 4 : 0;
 
         const restAngle = Math.PI * 0.8;
-        const leanAngle = (this.hammerAngle - restAngle) * 0.15;
+        const leanAngle = (this.hammerAngle - restAngle) * 0.15 + (isIdle ? Math.sin(this.time * 2) * 0.02 : 0);
         
         // Squash and stretch factors
         let squashX = 1.0;
@@ -1288,26 +1317,45 @@ export default class GameEngine {
         ctx.beginPath(); ctx.ellipse(gx, gy, 45 * squashX, 12 * squashY, 0, 0, Math.PI * 2); ctx.fill();
 
         ctx.save();
-        ctx.translate(gx, gy);
+        ctx.translate(gx + sway, gy);
         ctx.scale(squashX, squashY);
-        ctx.translate(-gx, -gy);
+        ctx.translate(-(gx + sway), -gy);
 
         ctx.save();
-        ctx.translate(gx, gy - 60);
+        ctx.translate(gx + sway, gy - 60);
+        
+        // Add a slight "effort" shake when holding a full swing
+        const shakeMag = this.animState === 'WINDUP_HOLD' || this.animState === 'WINDUP_FULL' ? Math.sin(this.time * 60) * 1.5 : 0;
+        ctx.translate(shakeMag, 0);
+        
         ctx.rotate(leanAngle);
         ctx.translate(-gx, -(gy - 60));
 
         // --- Phase-based Colors (Smoothed) ---
         const colors = this.interpolatePhaseColors(this.displayStep);
 
-        // Legs (Trousers)
-        ctx.fillStyle = colors.dark;
-        ctx.beginPath(); ctx.roundRect(gx - 20, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.roundRect(gx + 6, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
+        // --- Aura Glow (Phase-specific) ---
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.shadowColor = colors.main;
+        ctx.shadowBlur = 15 + Math.sin(this.time * 5) * 5;
+        ctx.globalAlpha = 0.3 + Math.sin(this.time * 3) * 0.1;
+        // Draw a simplified body silhouette for the aura
+        ctx.beginPath();
+        ctx.roundRect(gx - 25, gy - 135 + breath, 50, 75, 25);
+        ctx.fill();
+        ctx.restore();
 
-        ctx.fillStyle = '#1e272e'; // Shoes stay dark
-        ctx.beginPath(); ctx.roundRect(gx - 26, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.roundRect(gx, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
+        // Legs (Trousers)
+        const braceX = (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') ? 10 : 0;
+        ctx.fillStyle = colors.dark;
+        ctx.beginPath(); ctx.roundRect(gx - 20 - braceX, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(gx + 6 + braceX, gy - 65, 16, 45, 8); ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#1e272e'; // Shoes
+        // Left shoe taps during idle
+        ctx.beginPath(); ctx.roundRect(gx - 26 - braceX, gy - 25 - footTap, 26, 25, 10); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(gx + braceX, gy - 25, 26, 25, 10); ctx.fill(); ctx.stroke();
 
         // --- Body (Color based on Phase) ---
         const bodyGrad = ctx.createLinearGradient(gx - 50, gy - 130, gx + 30, gy - 130);
@@ -1360,11 +1408,12 @@ export default class GameEngine {
         ctx.closePath();
         ctx.fill(); ctx.stroke();
 
-        // Feather on Hat
+        // Feather on Hat (with extra bounce)
+        const featherBounce = Math.sin(this.time * 8 + (squashY - 1) * 10) * 5;
         ctx.fillStyle = '#ff4757';
         ctx.beginPath();
         ctx.moveTo(gx + 8, hy - 165);
-        ctx.quadraticCurveTo(gx + 30, hy - 190, gx + 40, hy - 170);
+        ctx.quadraticCurveTo(gx + 30, hy - 190 + featherBounce, gx + 40, hy - 170 + featherBounce);
         ctx.quadraticCurveTo(gx + 35, hy - 160, gx + 8, hy - 160);
         ctx.fill(); ctx.stroke();
 
@@ -1391,10 +1440,9 @@ export default class GameEngine {
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.ellipse(gx - 22, hy - 144, 5, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#3498db';
-            const lookOff = (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') ? -1.5 : 1.5;
-            ctx.beginPath(); ctx.arc(gx - 22 + lookOff, hy - 144, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(gx - 22 + this.eyeLookX, hy - 144 + this.eyeLookY, 2.5, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#111';
-            ctx.beginPath(); ctx.arc(gx - 22 + lookOff, hy - 144, 1.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(gx - 22 + this.eyeLookX, hy - 144 + this.eyeLookY, 1.5, 0, Math.PI * 2); ctx.fill();
         }
 
         // Expressive Eyebrow
@@ -1415,10 +1463,25 @@ export default class GameEngine {
         ctx.closePath();
         ctx.fill(); ctx.stroke();
 
+        // --- Dynamic Mouth ---
+        ctx.fillStyle = '#444';
+        ctx.strokeStyle = '#2f3542';
+        ctx.lineWidth = 2;
+        if (this.animState === 'SWINGING' || this.animState === 'SWINGING_FULL') {
+            // Surprise / Effort "O"
+            ctx.beginPath(); ctx.ellipse(gx - 35, hy - 118, 4, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        } else if (isIdle) {
+            // Small Smile
+            ctx.beginPath(); ctx.arc(gx - 35, hy - 122, 6, 0.4, Math.PI - 0.4); ctx.stroke();
+        } else {
+            // Concentrating line
+            ctx.beginPath(); ctx.moveTo(gx - 40, hy - 120); ctx.lineTo(gx - 30, hy - 120); ctx.stroke();
+        }
+
         ctx.restore(); // Restore Lean transformation
 
         // --- ARM & HAMMER ---
-        const pivotOffsetX = -20;
+        const pivotOffsetX = -20 + (isIdle ? sway * 0.2 : 0);
         const pivotOffsetY = -120 + breath;
         const rotCos = Math.cos(leanAngle);
         const rotSin = Math.sin(leanAngle);
