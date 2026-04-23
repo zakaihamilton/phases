@@ -8,6 +8,15 @@ export default function NarrativePanel({
     purificationStep, 
     hudVisible 
 }) {
+    const [isLoaded, setIsLoaded] = React.useState(false);
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => setIsLoaded(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (!isLoaded) return null;
+
     return (
         <div 
             key={sceneData.title}

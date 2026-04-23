@@ -10,8 +10,22 @@ export default function HighStriker() {
     const canvasRef = useRef(null);
     const engineRef = useRef(null);
 
-    const [currentScene, setCurrentScene] = useState(0);
-    const [purificationStep, setPurificationStep] = useState(0);
+    const getInitialState = () => {
+        const hash = window.location.hash.replace('#', '');
+        if (hash.startsWith('high-striker/')) {
+            const parts = hash.replace('high-striker/', '').split('/');
+            const scene = parseInt(parts[0]);
+            const step = parseInt(parts[1]);
+            if (!isNaN(scene) && !isNaN(step)) {
+                return { scene, step };
+            }
+        }
+        return { scene: 0, step: 0 };
+    };
+
+    const initialState = getInitialState();
+    const [currentScene, setCurrentScene] = useState(initialState.scene);
+    const [purificationStep, setPurificationStep] = useState(initialState.step);
     const [isAnimating, setIsAnimating] = useState(false);
     const [hudVisible, setHudVisible] = useState(true);
 
@@ -20,6 +34,21 @@ export default function HighStriker() {
     useEffect(() => {
         if (canvasRef.current) {
             engineRef.current = new GameEngine(canvasRef.current);
+
+            // Sync engine with initial state immediately
+            if (currentScene >= 3) {
+                engineRef.current.activeTargetLevel = towerLevels[purificationStep].id;
+            }
+            if (currentScene === 4) {
+                engineRef.current.playSequence('FULL_HIT', towerLevels[purificationStep].ratio, null);
+            } else if (currentScene === 3) {
+                engineRef.current.playSequence('SHOOT', 1.0, null);
+            } else if (currentScene === 2) {
+                engineRef.current.playSequence('SWING_IMPACT', 0, null);
+            } else if (currentScene === 1) {
+                engineRef.current.playSequence('WINDUP', 0, null);
+            }
+
             engineRef.current.start();
         }
         return () => {
@@ -28,6 +57,10 @@ export default function HighStriker() {
             }
         };
     }, []);
+
+    useEffect(() => {
+        window.location.hash = `high-striker/${currentScene}/${purificationStep}`;
+    }, [currentScene, purificationStep]);
 
     const processNavigation = useCallback((forward) => {
         if (isAnimating) return;
@@ -133,27 +166,27 @@ export default function HighStriker() {
             <div className={styles.noise} />
             <canvas ref={canvasRef} className={styles['game-canvas']} />
 
-            <TopRightControls 
-                hudVisible={hudVisible} 
-                setHudVisible={setHudVisible} 
-                toggleFullscreen={toggleFullscreen} 
+            <TopRightControls
+                hudVisible={hudVisible}
+                setHudVisible={setHudVisible}
+                toggleFullscreen={toggleFullscreen}
             />
 
-            <NarrativePanel 
-                currentScene={currentScene} 
-                sceneData={sceneData} 
-                purificationStep={purificationStep} 
-                hudVisible={hudVisible} 
+            <NarrativePanel
+                currentScene={currentScene}
+                sceneData={sceneData}
+                purificationStep={purificationStep}
+                hudVisible={hudVisible}
             />
 
-            <NavigationControls 
-                prevStepFn={prevStepFn} 
-                nextStepFn={nextStepFn} 
-                currentScene={currentScene} 
-                isAnimating={isAnimating} 
-                hudVisible={hudVisible} 
-                scenesCount={scenes.length} 
-                purificationStep={purificationStep} 
+            <NavigationControls
+                prevStepFn={prevStepFn}
+                nextStepFn={nextStepFn}
+                currentScene={currentScene}
+                isAnimating={isAnimating}
+                hudVisible={hudVisible}
+                scenesCount={scenes.length}
+                purificationStep={purificationStep}
             />
         </div>
     );
