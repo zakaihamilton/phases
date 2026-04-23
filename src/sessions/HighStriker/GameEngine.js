@@ -66,6 +66,15 @@ export default class GameEngine {
             x: i * 10, h: 8 + Math.random() * 16, off: Math.random() * Math.PI * 2
         }));
 
+        this.pedestrians = Array.from({ length: 15 }, () => ({
+            x: Math.random() * 3000,
+            y: 0, // Relative to horizon
+            v: (Math.random() > 0.5 ? 1 : -1) * (15 + Math.random() * 25),
+            color: ['#ff9f43', '#ee5253', '#0abde3', '#10ac84', '#5f27cd', '#222f3e'][Math.floor(Math.random() * 6)],
+            scale: 0.35 + Math.random() * 0.25,
+            off: Math.random() * Math.PI * 2
+        }));
+
         this.trees = Array.from({ length: 12 }, (_, i) => ({
             x: Math.random() * this.levelWidth, s: 0.6 + Math.random() * 0.5, type: Math.random() > 0.5 ? 1 : 2
         }));
@@ -351,6 +360,12 @@ export default class GameEngine {
         this.clouds.forEach(c => {
             c.x += c.v * dt;
             if (c.x > this.width + 200) c.x = -200;
+        });
+
+        this.pedestrians.forEach(p => {
+            p.x += p.v * dt;
+            if (p.x > 3000) p.x = -100;
+            if (p.x < -100) p.x = 3000;
         });
 
         this.birds.forEach(b => {
@@ -778,7 +793,34 @@ export default class GameEngine {
         });
     }
 
+    drawPedestrians(ctx) {
+        const baseY = this.height * 0.6 + 15; // Slightly below horizon on the grass
+        this.pedestrians.forEach(p => {
+            if (p.x < -100 || p.x > this.width + 100) return;
+            
+            const bob = Math.abs(Math.sin(this.time * 8 + p.off)) * 6 * p.scale;
+            ctx.save();
+            ctx.translate(p.x, baseY - bob);
+            ctx.scale(p.scale, p.scale);
+
+            // Simple Body
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.roundRect(-8, -25, 16, 25, 6);
+            ctx.fill();
+
+            // Head
+            ctx.fillStyle = '#ffeaa7';
+            ctx.beginPath();
+            ctx.arc(0, -32, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        });
+    }
+
     drawMidground(ctx) {
+        this.drawPedestrians(ctx);
         const baseY = this.height * 0.6;
 
         // --- Ferris Wheel ---
