@@ -48,8 +48,8 @@ export default function NarrativePanel({
 
                 {currentScene === 0 && (
                     <div className={styles['start-prompt']}>
-                        <PlayCircle size={20} />
-                        <span>Press Space/Arrows | Press Enter to Toggle HUD</span>
+                        <PlayCircle size={18} />
+                        <span>Navigate with Arrows • Space to Strike • Enter for HUD</span>
                     </div>
                 )}
             </div>

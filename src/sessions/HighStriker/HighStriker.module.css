@@ -199,9 +199,9 @@
     font-weight: 600;
     font-size: 1.1rem;
     color: #2ed573;
-    animation: pulse 1.5s infinite;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    opacity: 0.8;
 }
 
 @keyframes pulse {
