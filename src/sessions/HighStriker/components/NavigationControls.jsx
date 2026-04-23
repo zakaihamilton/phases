@@ -16,14 +16,14 @@ export default function NavigationControls({
             <button
                 className={styles['nav-btn']}
                 onClick={prevStepFn}
-                disabled={currentScene === 0 || isAnimating}
+                disabled={currentScene === 0}
             >
                 <ChevronLeft size={36} />
             </button>
             <button
                 className={styles['nav-btn']}
                 onClick={nextStepFn}
-                disabled={(currentScene === scenesCount - 1 && purificationStep === 4) || isAnimating}
+                disabled={(currentScene === 5)}
             >
                 <ChevronRight size={36} />
             </button>
