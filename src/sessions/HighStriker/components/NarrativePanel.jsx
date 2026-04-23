@@ -39,7 +39,17 @@ export default function NarrativePanel({
                             {[0, 1, 2, 3, 4].map(step => (
                                 <div
                                     key={step}
-                                    className={`${styles['power-chunk']} ${4 - purificationStep >= step ? styles.filled : styles.empty}`}
+                                    className={`
+                                        ${styles['power-chunk']} 
+                                        ${4 - purificationStep >= step ? styles.filled : styles.empty}
+                                        ${4 - purificationStep >= step ? styles[
+                                            purificationStep === 0 ? 'crown' :
+                                            purificationStep === 1 ? 'wisdom' :
+                                            purificationStep === 2 ? 'understanding' :
+                                            purificationStep === 3 ? 'small-face' :
+                                            'kingdom'
+                                        ] : ''}
+                                    `}
                                 />
                             ))}
                         </div>

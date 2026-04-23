@@ -89,7 +89,7 @@ export default class GameEngine {
 
         // Calculate dynamic scale for mobile
         if (this.width < 900) {
-            this.baseScale = Math.max(0.4, this.width / 1000);
+            this.baseScale = Math.max(0.35, this.width / 1100);
         } else {
             this.baseScale = 1.0;
         }
@@ -640,7 +640,7 @@ export default class GameEngine {
         const baseY = this.height * 0.6;
 
         // --- Ferris Wheel ---
-        const fwX = this.width * 0.82;
+        const fwX = this.width < 600 ? this.width * 1.1 : this.width * 0.82;
         const fwY = baseY - 130;
         const fwR = 120;
         const fwRot = this.time * 0.3;
@@ -734,7 +734,7 @@ export default class GameEngine {
         }
 
         // --- Drop Tower ---
-        const dtX = this.width * 0.28;
+        const dtX = this.width < 600 ? this.width * 0.05 : this.width * 0.28;
         const dtH = 250;
 
         ctx.fillStyle = '#7f8fa6';
@@ -772,7 +772,7 @@ export default class GameEngine {
         ctx.beginPath(); ctx.arc(dtX + 15, carriageY + 15, 4, 0, Math.PI * 2); ctx.fill();
 
         // --- High-Quality Rollercoaster ---
-        const rcX = this.width * 0.08;
+        const rcX = this.width < 600 ? this.width * -0.8 : this.width * 0.08;
         ctx.lineCap = 'butt';
 
         // Sleepers (Cross-ties)
@@ -856,7 +856,7 @@ export default class GameEngine {
         }
 
         // --- Circus Tent ---
-        const tentX = this.width * 0.42;
+        const tentX = this.width < 600 ? this.width * 0.15 : this.width * 0.42;
         ctx.fillStyle = '#ff4757';
         ctx.beginPath(); ctx.moveTo(tentX, baseY - 180); ctx.lineTo(tentX - 110, baseY); ctx.lineTo(tentX + 110, baseY); ctx.fill();
         ctx.fillStyle = '#f5f6fa';
@@ -877,7 +877,7 @@ export default class GameEngine {
         ctx.beginPath(); ctx.moveTo(tentX, baseY - 215); ctx.lineTo(tentX + 30, baseY - 200); ctx.lineTo(tentX, baseY - 190); ctx.fill();
 
         // --- Carousel ---
-        const cX = this.width * 0.58;
+        const cX = this.width < 600 ? this.width * 0.95 : this.width * 0.58;
         const cW = 160;
         const cH = 90;
 
@@ -945,7 +945,7 @@ export default class GameEngine {
     }
 
     drawStrikerTower(ctx) {
-        const baseX = this.width / 2 - 90;
+        const baseX = this.width < 600 ? this.width / 2 - 120 : this.width / 2 - 90;
         const baseY = this.height - 110;
 
         // --- High Striker Tower ---
@@ -1161,7 +1161,7 @@ export default class GameEngine {
     }
 
     drawCharacter(ctx) {
-        const gx = this.width / 2 + 100;
+        const gx = this.width < 600 ? this.width / 2 + 130 : this.width / 2 + 100;
         const gy = this.height - 110;
 
         ctx.strokeStyle = '#2f3542';
