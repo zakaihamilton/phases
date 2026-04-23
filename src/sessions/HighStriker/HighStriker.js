@@ -158,13 +158,6 @@ export default function HighStriker() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [nextStepFn, prevStepFn]);
 
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => console.log(err));
-        } else {
-            document.exitFullscreen();
-        }
-    };
 
     return (
         <div className={styles['app-container']}>
@@ -174,7 +167,6 @@ export default function HighStriker() {
             <TopRightControls
                 hudVisible={hudVisible}
                 setHudVisible={setHudVisible}
-                toggleFullscreen={toggleFullscreen}
             />
 
             <NarrativePanel

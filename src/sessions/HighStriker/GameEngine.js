@@ -27,6 +27,7 @@ export default class GameEngine {
         this.flashAlpha = 0;
         this.requestId = null;
         this.baseScale = 1.0;
+        this.floatingTexts = [];
 
         // Level tracking
         this.reachedLevels = new Set();
@@ -88,7 +89,7 @@ export default class GameEngine {
 
         // Calculate dynamic scale for mobile
         if (this.width < 900) {
-            this.baseScale = Math.max(0.4, this.width / 1100);
+            this.baseScale = Math.max(0.4, this.width / 1000);
         } else {
             this.baseScale = 1.0;
         }
@@ -154,9 +155,16 @@ export default class GameEngine {
     spawnImpact() {
         this.shake = 0; // Disabled shake entirely
         this.padScaleY = 0.8; // Subtle compression
-        this.bamScale = 1;
+        this.bamScale = 1.2;
         this.flashAlpha = 0.6;
         this.shockwaves.push({ r: 10, alpha: 1.0, width: 20 });
+        this.floatingTexts.push({
+            x: this.width / 2 - 100,
+            y: this.height - 250,
+            text: 'CLANG!',
+            life: 1.0,
+            color: '#ff4757'
+        });
         this.shockwaves.push({ r: 5, alpha: 0.8, width: 10 });
 
         for (let i = 0; i < 100; i++) {
@@ -224,6 +232,12 @@ export default class GameEngine {
             this.padScaleY += dt * 6;
             if (this.padScaleY > 1.0) this.padScaleY = 1.0;
         }
+
+        this.floatingTexts.forEach((t, i) => {
+            t.y -= dt * 50;
+            t.life -= dt;
+            if (t.life <= 0) this.floatingTexts.splice(i, 1);
+        });
 
         if (this.bamScale > 0) {
             this.bamScale += dt * 3.0;
@@ -392,6 +406,7 @@ export default class GameEngine {
         this.drawStrikerTower(ctx);
         this.drawCharacter(ctx);
         this.drawParticles(ctx);
+        this.drawFloatingTexts(ctx);
         this.drawBAM(ctx);
         ctx.restore();
 
@@ -465,6 +480,15 @@ export default class GameEngine {
             ctx.quadraticCurveTo(g.x + tilt / 2 + 2, baseY - g.h / 3, g.x + tilt + 1, baseY - g.h / 2);
             ctx.lineTo(g.x + tilt + 2, baseY - g.h / 2);
             ctx.fill();
+            
+            // Add tiny colorful flowers
+            if (g.off % 7 < 0.2) {
+                ctx.fillStyle = g.off % 14 < 0.1 ? '#ff7675' : '#74b9ff';
+                ctx.beginPath();
+                ctx.arc(g.x + tilt + 1, baseY - g.h - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
             ctx.fillStyle = '#01a3a4';
         });
 
@@ -948,13 +972,13 @@ export default class GameEngine {
             ctx.fillStyle = '#2f3542';
             ctx.fillRect(baseX - tw / 2 - 40, y - 4, 30, 8);
 
-            const boardX = baseX - tw / 2 - 165 - pulse / 2;
-            const boardY = y - 22 - pulse / 2;
-            const boardW = 130 + pulse;
-            const boardH = 44 + pulse;
+            const boardW = 160 + pulse;
+            const boardH = 50 + pulse;
+            const boardX = baseX - tw / 2 - (boardW + 25) - pulse / 2;
+            const boardY = y - (boardH / 2) - pulse / 2;
 
             ctx.fillStyle = boardColor;
-            ctx.beginPath(); ctx.roundRect(boardX, boardY, boardW, boardH, 6); ctx.fill();
+            ctx.beginPath(); ctx.roundRect(boardX, boardY, boardW, boardH, 8); ctx.fill();
             ctx.strokeStyle = '#2d3436'; ctx.lineWidth = 3; ctx.stroke();
 
             ctx.strokeStyle = innerBorder; ctx.lineWidth = 2;
@@ -983,13 +1007,13 @@ export default class GameEngine {
                 ctx.beginPath(); ctx.arc(boardX + boardW - 10, boardY + boardH - 10, 3, 0, Math.PI * 2); ctx.fill();
             }
 
-            ctx.fillStyle = textColor;
-            ctx.shadowColor = isReached || isTarget ? '#d35400' : 'transparent';
-            ctx.shadowBlur = isReached || isTarget ? 8 : 0;
+            ctx.fillStyle = (isReached || isTarget) ? '#ffffff' : '#bdc3c7';
+            ctx.shadowColor = (isReached || isTarget) ? '#000000' : 'transparent';
+            ctx.shadowBlur = (isReached || isTarget) ? 10 : 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = `bold ${20 + pulse / 2}px "Bangers", cursive`;
-            ctx.fillText(lvl.name, baseX - tw / 2 - 100, y + 2);
+            ctx.font = `bold ${24 + pulse / 2}px "Bangers", cursive`;
+            ctx.fillText(lvl.name, boardX + boardW / 2, y + 2);
             ctx.shadowBlur = 0;
         });
 
@@ -1178,27 +1202,35 @@ export default class GameEngine {
         ctx.fillStyle = '#111';
         ctx.beginPath(); ctx.roundRect(gx - 25, gy - 70 + breath, 40, 16, 8); ctx.fill(); ctx.stroke();
 
-        // Gold Buckle
+        // Big Buckle
         ctx.fillStyle = '#f1c40f';
-        ctx.beginPath(); ctx.roundRect(gx - 12, gy - 74 + breath, 20, 24, 4); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(gx - 12, gy - 74 + breath, 24, 24, 4); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#111';
-        ctx.fillRect(gx - 6, gy - 68 + breath, 8, 12);
+        ctx.fillRect(gx - 4, gy - 68 + breath, 8, 12);
 
         // --- Head & Face ---
         const hy = gy + breath;
 
-        const headGrad = ctx.createRadialGradient(gx - 10, hy - 140, 5, gx - 10, hy - 140, 25);
+        // Better Head Graduation
+        const headGrad = ctx.createRadialGradient(gx - 10, hy - 140, 5, gx - 10, hy - 140, 35);
         headGrad.addColorStop(0, '#ffeaa7');
         headGrad.addColorStop(1, '#e1b12c');
         ctx.fillStyle = headGrad;
 
-        // Smooth, strong jaw shape
         ctx.beginPath();
-        ctx.moveTo(gx + 5, hy - 140); // Back of neck
-        ctx.lineTo(gx - 15, hy - 155); // Top of forehead
-        ctx.bezierCurveTo(gx - 30, hy - 155, gx - 35, hy - 140, gx - 30, hy - 125); // Face front
-        ctx.bezierCurveTo(gx - 25, hy - 110, gx - 10, hy - 115, gx, hy - 125); // Jaw
+        ctx.moveTo(gx + 5, hy - 140);
+        ctx.lineTo(gx - 15, hy - 155);
+        ctx.bezierCurveTo(gx - 30, hy - 155, gx - 35, hy - 140, gx - 30, hy - 125);
+        ctx.bezierCurveTo(gx - 25, hy - 110, gx - 10, hy - 115, gx, hy - 125);
         ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Feather on Hat
+        ctx.fillStyle = '#ff4757';
+        ctx.beginPath();
+        ctx.moveTo(gx + 8, hy - 165);
+        ctx.quadraticCurveTo(gx + 30, hy - 190, gx + 40, hy - 170);
+        ctx.quadraticCurveTo(gx + 35, hy - 160, gx + 8, hy - 160);
         ctx.fill(); ctx.stroke();
 
         // Ear
@@ -1367,6 +1399,18 @@ export default class GameEngine {
         ctx.fillText("BAM!", 0, 0);
 
         ctx.restore();
+    }
+
+    drawFloatingTexts(ctx) {
+        this.floatingTexts.forEach(t => {
+            ctx.save();
+            ctx.globalAlpha = t.life;
+            ctx.fillStyle = t.color;
+            ctx.font = 'bold 40px "Bangers", cursive';
+            ctx.textAlign = 'center';
+            ctx.fillText(t.text, t.x, t.y);
+            ctx.restore();
+        });
     }
 
     drawCinematicEffects(ctx) {
