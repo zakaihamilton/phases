@@ -51,11 +51,6 @@ const buildTimeline = () => {
         }
     }
 
-    timeline.push({
-        name: `Preparation for the Ray`, description: `The Outer Phases dim. The 3D view rotates.`, action: `PREP_RAY`,
-        stateModifiers: mod(s => { s.outerPhasesOpacity = 0.2; s.tiltProgress = 1; })
-    });
-
     const pNames = ["Crown", "Wisdom", "Understanding", "Beauty", "Kingdom"];
 
     for (let lyr = 0; lyr < 5; lyr++) {
