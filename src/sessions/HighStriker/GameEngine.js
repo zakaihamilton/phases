@@ -587,28 +587,77 @@ export default class GameEngine {
         this.balloons.forEach(b => {
             if (b.x > this.width + 100) return;
             const by = b.y + Math.sin(this.time + b.offset) * 15;
+            const scale = b.scale || 1.0;
+            const bx = b.x;
 
+            ctx.save();
+            ctx.translate(bx, by);
+            ctx.scale(scale, scale);
+
+            // Ropes
+            ctx.strokeStyle = '#576574';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-10, 20); ctx.lineTo(-12, 40);
+            ctx.moveTo(10, 20); ctx.lineTo(12, 40);
+            ctx.moveTo(-4, 25); ctx.lineTo(-4, 40);
+            ctx.moveTo(4, 25); ctx.lineTo(4, 40);
+            ctx.stroke();
+
+            // Balloon Envelope Segments
+            const colors = [b.color, '#ffffffdd', b.color];
+            for (let i = 0; i < 3; i++) {
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                const xOff = (i - 1) * 12;
+                const w = i === 1 ? 14 : 22;
+                ctx.ellipse(xOff, 0, w, 35, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.stroke();
+            }
+
+            // Highlight Overlay
+            const envelopeGrad = ctx.createRadialGradient(-10, -15, 5, 0, 0, 45);
+            envelopeGrad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+            envelopeGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = envelopeGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 32, 35, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Bottom Taper
             ctx.fillStyle = b.color;
             ctx.beginPath();
-            ctx.moveTo(b.x, by + 25);
-            ctx.bezierCurveTo(b.x + 35, by + 10, b.x + 35, by - 35, b.x, by - 35);
-            ctx.bezierCurveTo(b.x - 35, by - 35, b.x - 35, by + 10, b.x, by + 25);
+            ctx.moveTo(-18, 10);
+            ctx.quadraticCurveTo(0, 35, 18, 10);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            // Burner Glow
+            ctx.fillStyle = 'rgba(255, 159, 67, 0.4)';
             ctx.beginPath();
-            ctx.ellipse(b.x, by - 5, 10, 30, 0, 0, Math.PI * 2);
+            ctx.arc(0, 32, 6, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(b.x - 8, by + 22); ctx.lineTo(b.x - 12, by + 40); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(b.x + 8, by + 22); ctx.lineTo(b.x + 12, by + 40); ctx.stroke();
-
-            ctx.fillStyle = '#8395a7';
-            ctx.fillRect(b.x - 12, by + 40, 24, 14);
+            // Basket
+            const basketGrad = ctx.createLinearGradient(-12, 40, 12, 40);
+            basketGrad.addColorStop(0, '#84817a');
+            basketGrad.addColorStop(0.5, '#aaa69d');
+            basketGrad.addColorStop(1, '#84817a');
+            ctx.fillStyle = basketGrad;
             ctx.strokeStyle = '#222f3e';
-            ctx.strokeRect(b.x - 12, by + 40, 24, 14);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(-12, 40, 24, 16, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // Basket Texture
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+            ctx.beginPath(); ctx.moveTo(-12, 45); ctx.lineTo(12, 45); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-12, 51); ctx.lineTo(12, 51); ctx.stroke();
+
+            ctx.restore();
         });
     }
 
