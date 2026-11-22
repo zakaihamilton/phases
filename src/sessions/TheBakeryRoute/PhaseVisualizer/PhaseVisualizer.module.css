@@ -1,168 +1,171 @@
 .canvasWrapper {
-    position: absolute;
-    inset: 0;
-    width: 100vw;
-    height: 100dvh;
-    background: transparent;
-    overflow: hidden;
-    transition: all 0.5s ease;
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  background: transparent;
+  overflow: hidden;
+  transition: all 0.5s ease;
 }
 
 /* Empty classes kept to prevent React errors if they are still passed */
-.canvasMaxWidthNormal {}
+.canvasMaxWidthNormal {
+}
 
-.canvasMaxWidthExpanded {}
+.canvasMaxWidthExpanded {
+}
 
-.canvasMaxWidthSuper {}
+.canvasMaxWidthSuper {
+}
 
 .canvasGlow {
-    position: absolute;
-    inset: 0;
-    opacity: 0.5;
-    mix-blend-mode: screen;
-    transition: background 1s;
-    pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  transition: background 1s;
+  pointer-events: none;
 }
 
 .canvasEl {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: left center;
-    pointer-events: none;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  pointer-events: none;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvasElFill {
-    object-fit: contain;
-    object-position: center center;
+  object-fit: contain;
+  object-position: center center;
 }
 
 /* CANVAS HUD */
 .hudOverlay {
-    position: absolute;
-    top: 1rem;
-    left: 6rem;
-    background: rgba(15, 23, 42, 0.7);
-    padding: 1rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(71, 85, 105, 0.5);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    z-index: 10;
-    width: 280px;
-    transition: transform 0.3s ease;
+  position: absolute;
+  top: 1rem;
+  left: 6rem;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  width: 280px;
+  transition: transform 0.3s ease;
 }
 
 .canvasWrapper:hover .hudOverlay {
-    transform: scale(1.02);
+  transform: scale(1.02);
 }
 
 .hudHeader {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    color: #f1f5f9;
-    font-size: 0.875rem;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.8);
-    padding-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+  padding-bottom: 0.5rem;
 }
 
 .hudList {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .hudRow {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .hudRowTitle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .hudDot {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-    box-shadow: 0 0 10px currentColor;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
 }
 
 .hudDotGreen {
-    background-color: #22c55e;
-    color: #22c55e;
+  background-color: #22c55e;
+  color: #22c55e;
 }
 
 .hudDotRed {
-    background-color: #ef4444;
-    color: #ef4444;
+  background-color: #ef4444;
+  color: #ef4444;
 }
 
 .hudDotRose {
-    background-color: #f43f5e;
-    color: #f43f5e;
+  background-color: #f43f5e;
+  color: #f43f5e;
 }
 
 .hudDotSlate {
-    background-color: #64748b;
-    color: transparent;
-    box-shadow: none;
+  background-color: #64748b;
+  color: transparent;
+  box-shadow: none;
 }
 
 .hudLabel {
-    color: #cbd5e1;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    font-size: 0.75rem;
-    text-transform: uppercase;
+  color: #cbd5e1;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
 .hudValue {
-    padding-left: 1.25rem;
-    font-weight: 500;
-    color: #94a3b8;
-    font-size: 0.875rem;
+  padding-left: 1.25rem;
+  font-weight: 500;
+  color: #94a3b8;
+  font-size: 0.875rem;
 }
 
 .mapLabel {
-    position: absolute;
-    padding: 0.5rem 1rem;
-    border-radius: 9999px;
-    font-weight: 900;
-    letter-spacing: 0.2em;
-    font-size: 0.875rem;
-    pointer-events: none;
-    border: 1px solid;
+  position: absolute;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  font-size: 0.875rem;
+  pointer-events: none;
+  border: 1px solid;
 }
 
 @media (max-width: 1024px) {
-    .hudOverlay {
-        right: 1.5rem;
-        left: auto;
-        top: 1.5rem;
-        width: 240px;
-        padding: 0.75rem;
-    }
+  .hudOverlay {
+    right: 1.5rem;
+    left: auto;
+    top: 1.5rem;
+    width: 240px;
+    padding: 0.75rem;
+  }
 
-    .hudValue {
-        font-size: 0.75rem;
-    }
+  .hudValue {
+    font-size: 0.75rem;
+  }
 
-    .hudHeader {
-        font-size: 0.75rem;
-        margin-bottom: 0.5rem;
-    }
+  .hudHeader {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
 
-    .hudList {
-        gap: 0.5rem;
-    }
+  .hudList {
+    gap: 0.5rem;
+  }
 }

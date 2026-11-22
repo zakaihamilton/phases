@@ -1,1 +1,1 @@
-export { default } from './Hub';
+export { default } from "./Hub";

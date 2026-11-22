@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import styles from './Summary.module.css';
+import React, { useState } from "react";
+import styles from "./Summary.module.css";
 
 const Summary = ({ activeSubData }) => {
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
@@ -13,7 +13,7 @@ const Summary = ({ activeSubData }) => {
 
   const CollapseIcon = ({ isCollapsed }) => (
     <svg
-      className={`${styles.collapseIcon} ${isCollapsed ? styles.rotated : ''}`}
+      className={`${styles.collapseIcon} ${isCollapsed ? styles.rotated : ""}`}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -26,11 +26,21 @@ const Summary = ({ activeSubData }) => {
   return (
     <>
       {paragraphs[0] && (
-        <div className={`${styles.leftPanel} ${isLeftCollapsed ? styles.collapsedContainer : ''}`}>
-          <div className={`${styles.summaryGlass} ${isLeftCollapsed ? styles.collapsed : ''}`}>
-            <div className={styles.summaryHeader} onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}>
+        <div
+          className={`${styles.leftPanel} ${isLeftCollapsed ? styles.collapsedContainer : ""}`}
+        >
+          <div
+            className={`${styles.summaryGlass} ${isLeftCollapsed ? styles.collapsed : ""}`}
+          >
+            <div
+              className={styles.summaryHeader}
+              onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+            >
               {!isLeftCollapsed && (
-                <h2 className={styles.summaryTitle} style={{ color: activeSubData.color }}>
+                <h2
+                  className={styles.summaryTitle}
+                  style={{ color: activeSubData.color }}
+                >
                   Overview
                 </h2>
               )}
@@ -40,12 +50,8 @@ const Summary = ({ activeSubData }) => {
             </div>
             {!isLeftCollapsed && (
               <div className={styles.summaryContent}>
-                <p className={styles.paragraph}>
-                  {paragraphs[0]}
-                </p>
-                <p className={styles.paragraph}>
-                  {paragraphs[1]}
-                </p>
+                <p className={styles.paragraph}>{paragraphs[0]}</p>
+                <p className={styles.paragraph}>{paragraphs[1]}</p>
               </div>
             )}
           </div>

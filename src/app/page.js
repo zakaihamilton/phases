@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Launcher from "@/sessions/Launcher";
 import sessions from "@/sessions/sessions";
 
@@ -31,7 +31,9 @@ export default function Home() {
 
   const session = hashUrl?.split("/")[0];
 
-  const Session = (isMounted && sessions?.find((s) => s.id === session)?.component) || Launcher;
+  const Session =
+    (isMounted && sessions?.find((s) => s.id === session)?.component) ||
+    Launcher;
 
   return <Session />;
 }

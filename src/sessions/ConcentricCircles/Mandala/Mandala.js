@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import styles from './Mandala.module.css';
-import { FLAT_DATA } from '../Data';
+import React, { useEffect, useRef } from "react";
+import { FLAT_DATA } from "../Data";
+import styles from "./Mandala.module.css";
 
 const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
   const canvasRef = useRef(null);
@@ -17,7 +17,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     let animationFrameId;
 
     const VIEW_SIZE = 2000;
@@ -44,7 +44,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           baseAlpha: Math.random() * 0.4 + 0.1,
           twinkleSpeed: Math.random() * 1.5 + 0.5,
           timeOffset: Math.random() * Math.PI * 2,
-          color: Math.random() > 0.8 ? '#88ccff' : (Math.random() > 0.9 ? '#ffcc88' : '#ffffff')
+          color:
+            Math.random() > 0.8
+              ? "#88ccff"
+              : Math.random() > 0.9
+                ? "#ffcc88"
+                : "#ffffff",
         });
       }
     }
@@ -54,12 +59,13 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         { r: 74, g: 0, b: 224 },
         { r: 0, g: 198, b: 255 },
         { r: 255, g: 0, b: 153 },
-        { r: 142, g: 45, b: 226 }
+        { r: 142, g: 45, b: 226 },
       ];
 
       const cloudCount = isMobile ? 4 : 8;
       for (let i = 0; i < cloudCount; i++) {
-        const colorObj = cosmicColors[Math.floor(Math.random() * cosmicColors.length)];
+        const colorObj =
+          cosmicColors[Math.floor(Math.random() * cosmicColors.length)];
         cloudsRef.current.push({
           x: Math.random() * VIEW_SIZE,
           y: Math.random() * VIEW_SIZE,
@@ -69,12 +75,12 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           baseAlpha: Math.random() * 0.04 + 0.01,
           pulseSpeed: Math.random() * 0.5 + 0.2,
           timeOffset: Math.random() * Math.PI * 2,
-          color: colorObj
+          color: colorObj,
         });
       }
     }
 
-    let startTime = performance.now();
+    const startTime = performance.now();
     let lastTime = startTime;
 
     const draw = (currentTime) => {
@@ -83,7 +89,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       const elapsedTime = (currentTime - startTime) / 1000;
 
       ctx.clearRect(0, 0, VIEW_SIZE, VIEW_SIZE);
-      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalCompositeOperation = "lighter";
 
       // --- TRANSITION TRIGGERS ---
       const currentPathStr = `${activePath.p}-${activePath.s}`;
@@ -96,7 +102,10 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       globalSpinVelocityRef.current -= globalSpinVelocityRef.current * 2.5 * dt;
       globalSpinOffsetRef.current += globalSpinVelocityRef.current * dt;
 
-      phaseTransitionRef.current = Math.max(0, phaseTransitionRef.current - (1.5 * dt));
+      phaseTransitionRef.current = Math.max(
+        0,
+        phaseTransitionRef.current - 1.5 * dt,
+      );
       const tIntensity = phaseTransitionRef.current;
 
       // --- 1. DRAW GAS CLOUDS ---
@@ -105,7 +114,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       ctx.rotate(globalSpinOffsetRef.current * 0.02);
       ctx.translate(-CENTER, -CENTER);
 
-      cloudsRef.current.forEach(cloud => {
+      cloudsRef.current.forEach((cloud) => {
         cloud.x += cloud.vx * dt;
         cloud.y += cloud.vy * dt;
 
@@ -114,7 +123,10 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         if (cloud.y < -cloud.radius) cloud.y = VIEW_SIZE + cloud.radius;
         if (cloud.y > VIEW_SIZE + cloud.radius) cloud.y = -cloud.radius;
 
-        const currentAlpha = cloud.baseAlpha + Math.sin(elapsedTime * cloud.pulseSpeed + cloud.timeOffset) * (cloud.baseAlpha * 0.5);
+        const currentAlpha =
+          cloud.baseAlpha +
+          Math.sin(elapsedTime * cloud.pulseSpeed + cloud.timeOffset) *
+            (cloud.baseAlpha * 0.5);
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, currentAlpha);
@@ -125,8 +137,14 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
         if (!grad) {
           grad = ctx.createRadialGradient(0, 0, 0, 0, 0, cloud.radius);
-          grad.addColorStop(0, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 1)`);
-          grad.addColorStop(1, `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 0)`);
+          grad.addColorStop(
+            0,
+            `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 1)`,
+          );
+          grad.addColorStop(
+            1,
+            `rgba(${cloud.color.r}, ${cloud.color.g}, ${cloud.color.b}, 0)`,
+          );
           gradientCacheRef.current.set(cacheKey, grad);
         }
 
@@ -143,21 +161,31 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       ctx.translate(CENTER, CENTER);
       ctx.rotate(globalSpinOffsetRef.current * 0.05);
 
-      starsRef.current.forEach(star => {
-        const currentAlpha = star.baseAlpha + Math.sin(elapsedTime * star.twinkleSpeed + star.timeOffset) * 0.3;
+      starsRef.current.forEach((star) => {
+        const currentAlpha =
+          star.baseAlpha +
+          Math.sin(elapsedTime * star.twinkleSpeed + star.timeOffset) * 0.3;
         ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
 
         if (tIntensity > 0.01 && !isMobile) {
           const angle = Math.atan2(star.y, star.x);
           const stretch = tIntensity * 250 * star.radius;
 
-          const grad = ctx.createLinearGradient(star.x, star.y, star.x + Math.cos(angle) * stretch, star.y + Math.sin(angle) * stretch);
+          const grad = ctx.createLinearGradient(
+            star.x,
+            star.y,
+            star.x + Math.cos(angle) * stretch,
+            star.y + Math.sin(angle) * stretch,
+          );
           grad.addColorStop(0, star.color);
-          grad.addColorStop(1, 'transparent');
+          grad.addColorStop(1, "transparent");
 
           ctx.beginPath();
           ctx.moveTo(star.x, star.y);
-          ctx.lineTo(star.x + Math.cos(angle) * stretch, star.y + Math.sin(angle) * stretch);
+          ctx.lineTo(
+            star.x + Math.cos(angle) * stretch,
+            star.y + Math.sin(angle) * stretch,
+          );
           ctx.strokeStyle = grad;
           ctx.lineWidth = star.radius * 1.5;
           ctx.stroke();
@@ -174,7 +202,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       if (tIntensity > 0.01) {
         ctx.save();
         ctx.translate(CENTER, CENTER);
-        const novaRadius = (1.0 - Math.pow(tIntensity, 3)) * (VIEW_SIZE * 0.8);
+        const novaRadius = (1.0 - tIntensity ** 3) * (VIEW_SIZE * 0.8);
 
         // Ambient screen flash (Reduced to 1% opacity so it's not blinding)
         ctx.fillStyle = `rgba(0, 198, 255, ${tIntensity * 0.01})`;
@@ -190,7 +218,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
 
         if (!isMobile) {
           ctx.shadowBlur = 30;
-          ctx.shadowColor = '#00c6ff';
+          ctx.shadowColor = "#00c6ff";
         }
 
         ctx.stroke();
@@ -198,7 +226,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
       }
 
       // --- 4. DRAW MANDALA RINGS ---
-      const focusedIndex = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
+      const focusedIndex = FLAT_DATA.findIndex(
+        (d) => d.pIdx === activePath.p && d.sIdx === activePath.s,
+      );
 
       FLAT_DATA.forEach((data, index) => {
         if (!visibleList.includes(index)) return;
@@ -211,7 +241,9 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         const targetRadius = 800 * dynamicScale * cameraScale * depthScale;
 
         const baseTargetOpacity = data.opacity || 1;
-        const targetOpacity = isFocused ? baseTargetOpacity : baseTargetOpacity * 0.4;
+        const targetOpacity = isFocused
+          ? baseTargetOpacity
+          : baseTargetOpacity * 0.4;
         const targetFocus = isFocused ? 1 : 0;
 
         let tState = transitionsRef.current.get(index);
@@ -221,20 +253,23 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
             animatedRadius: targetRadius,
             radiusVelocity: 0,
             animatedOpacity: targetOpacity,
-            ripples: []
+            ripples: [],
           };
           transitionsRef.current.set(index, tState);
         }
 
-        const stiffness = (isMobile ? 120 : 180) - (index * 6);
-        const damping = (isMobile ? 10 : 12) + (index * 0.2);
+        const stiffness = (isMobile ? 120 : 180) - index * 6;
+        const damping = (isMobile ? 10 : 12) + index * 0.2;
 
         const springForce = (targetRadius - tState.animatedRadius) * stiffness;
-        tState.radiusVelocity += (springForce - (tState.radiusVelocity * damping)) * dt;
+        tState.radiusVelocity +=
+          (springForce - tState.radiusVelocity * damping) * dt;
         tState.animatedRadius += tState.radiusVelocity * dt;
 
-        tState.focusProgress += (targetFocus - tState.focusProgress) * (isMobile ? 6 : 8) * dt;
-        tState.animatedOpacity += (targetOpacity - tState.animatedOpacity) * (isMobile ? 6 : 8) * dt;
+        tState.focusProgress +=
+          (targetFocus - tState.focusProgress) * (isMobile ? 6 : 8) * dt;
+        tState.animatedOpacity +=
+          (targetOpacity - tState.animatedOpacity) * (isMobile ? 6 : 8) * dt;
 
         const focusP = tState.focusProgress;
         const currentRadius = Math.max(0, tState.animatedRadius);
@@ -247,7 +282,7 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         }
 
         const cColor = data.color;
-        ctx.lineCap = 'round';
+        ctx.lineCap = "round";
 
         const getCometGradient = () => {
           const cacheKey = `sheen-${cColor}`;
@@ -257,21 +292,32 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
             grad = ctx.createConicGradient(0, 0, 0);
             grad.addColorStop(0, cColor);
             grad.addColorStop(0.8, cColor);
-            grad.addColorStop(0.95, '#ffffff');
+            grad.addColorStop(0.95, "#ffffff");
             grad.addColorStop(1, cColor);
             gradientCacheRef.current.set(cacheKey, grad);
           }
           return grad;
         };
 
-        const drawRing = (radius, width, dashArray, rotationSpeed, glowAmount, alpha, useGradient = false) => {
+        const drawRing = (
+          radius,
+          width,
+          dashArray,
+          rotationSpeed,
+          glowAmount,
+          alpha,
+          useGradient = false,
+        ) => {
           if (alpha <= 0.01 || radius <= 0) return;
 
           ctx.save();
           ctx.translate(CENTER, CENTER);
 
           if (rotationSpeed) {
-            ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
+            ctx.rotate(
+              elapsedTime * rotationSpeed +
+                globalSpinOffsetRef.current * Math.sign(rotationSpeed),
+            );
           } else {
             ctx.rotate(globalSpinOffsetRef.current * 0.2);
           }
@@ -279,7 +325,8 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.beginPath();
           ctx.arc(0, 0, radius, 0, Math.PI * 2);
 
-          ctx.strokeStyle = (useGradient && !isMobile) ? getCometGradient() : cColor;
+          ctx.strokeStyle =
+            useGradient && !isMobile ? getCometGradient() : cColor;
 
           if (dashArray) ctx.setLineDash(dashArray);
 
@@ -301,20 +348,35 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
           ctx.globalAlpha = alpha;
           ctx.translate(CENTER, CENTER);
 
-          ctx.rotate((elapsedTime * rotationSpeed) + (globalSpinOffsetRef.current * Math.sign(rotationSpeed)));
+          ctx.rotate(
+            elapsedTime * rotationSpeed +
+              globalSpinOffsetRef.current * Math.sign(rotationSpeed),
+          );
 
           ctx.fillStyle = cColor;
 
           for (let i = 0; i < count; i++) {
-            const angle = (Math.PI * 2 / count) * i;
+            const angle = ((Math.PI * 2) / count) * i;
             ctx.beginPath();
-            ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, isMobile ? 3 : 4, 0, Math.PI * 2);
+            ctx.arc(
+              Math.cos(angle) * radius,
+              Math.sin(angle) * radius,
+              isMobile ? 3 : 4,
+              0,
+              Math.PI * 2,
+            );
             ctx.fill();
 
             if (!isMobile) {
               ctx.globalAlpha = alpha * 0.3;
               ctx.beginPath();
-              ctx.arc(Math.cos(angle) * radius, Math.sin(angle) * radius, 12, 0, Math.PI * 2);
+              ctx.arc(
+                Math.cos(angle) * radius,
+                Math.sin(angle) * radius,
+                12,
+                0,
+                Math.PI * 2,
+              );
               ctx.fill();
               ctx.globalAlpha = alpha;
             }
@@ -327,32 +389,71 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         }
 
         for (let i = tState.ripples.length - 1; i >= 0; i--) {
-          let ripple = tState.ripples[i];
+          const ripple = tState.ripples[i];
           ripple.spread += 100 * dt;
           ripple.alpha -= 0.8 * dt;
 
           if (ripple.alpha <= 0) {
             tState.ripples.splice(i, 1);
           } else {
-            drawRing(currentRadius + ripple.spread, 1, null, 0, 10, baseOpacity * ripple.alpha * 0.5);
+            drawRing(
+              currentRadius + ripple.spread,
+              1,
+              null,
+              0,
+              10,
+              baseOpacity * ripple.alpha * 0.5,
+            );
           }
         }
 
         if (focusP > 0.01) {
-          drawRing(currentRadius * 1.05, 1, null, -0.15, 5, baseOpacity * 0.4 * focusP, true);
+          drawRing(
+            currentRadius * 1.05,
+            1,
+            null,
+            -0.15,
+            5,
+            baseOpacity * 0.4 * focusP,
+            true,
+          );
           drawNodes(currentRadius * 1.05, 3, -0.15, baseOpacity * 0.8 * focusP);
 
-          drawRing(currentRadius * 0.95, 2, null, 0.3, 5, baseOpacity * 0.8 * focusP, true);
+          drawRing(
+            currentRadius * 0.95,
+            2,
+            null,
+            0.3,
+            5,
+            baseOpacity * 0.8 * focusP,
+            true,
+          );
           drawNodes(currentRadius * 0.95, 6, 0.3, baseOpacity * 0.8 * focusP);
         }
 
-        const currentThickness = isMobile ? (8 - (3 * focusP)) : (10 - (4 * focusP));
-        const currentGlow = 15 + (15 * focusP);
+        const currentThickness = isMobile ? 8 - 3 * focusP : 10 - 4 * focusP;
+        const currentGlow = 15 + 15 * focusP;
 
-        const slowDriftSpeed = (index % 2 === 0 ? 0.3 : -0.3) - (index * 0.05);
+        const slowDriftSpeed = (index % 2 === 0 ? 0.3 : -0.3) - index * 0.05;
 
-        drawRing(currentRadius, currentThickness, null, slowDriftSpeed, currentGlow, baseOpacity * (1 - focusP), true);
-        drawRing(currentRadius, currentThickness, null, 0.6, currentGlow, baseOpacity * focusP, true);
+        drawRing(
+          currentRadius,
+          currentThickness,
+          null,
+          slowDriftSpeed,
+          currentGlow,
+          baseOpacity * (1 - focusP),
+          true,
+        );
+        drawRing(
+          currentRadius,
+          currentThickness,
+          null,
+          0.6,
+          currentGlow,
+          baseOpacity * focusP,
+          true,
+        );
 
         if (data.bg) {
           ctx.save();
@@ -379,8 +480,8 @@ const Mandala = ({ cameraScale, activePath, visibleList, radiusLevels }) => {
         ref={canvasRef}
         className={styles.canvasElement}
         style={{
-          width: '2000px',
-          height: '2000px',
+          width: "2000px",
+          height: "2000px",
         }}
       />
     </div>
