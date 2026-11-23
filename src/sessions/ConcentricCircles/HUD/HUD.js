@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import styles from './HUD.module.css';
-import { MAPPED_DATA } from '../Data.js';
+import React, { useEffect, useMemo, useState } from "react";
+import { MAPPED_DATA } from "../Data.js";
+import styles from "./HUD.module.css";
 
 const HUD = ({ activeSubData, activePath }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -8,17 +8,20 @@ const HUD = ({ activeSubData, activePath }) => {
   const subPhaseIndex = activePath.s;
   const currentPhase = MAPPED_DATA[phaseIndex];
 
-  const phaseLabel = useMemo(() => activeSubData.phaseNumber, [activeSubData.phaseNumber]);
+  const phaseLabel = useMemo(
+    () => activeSubData.phaseNumber,
+    [activeSubData.phaseNumber],
+  );
   const phaseDescription = activeSubData.phaseTitle;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Enter') {
-        setIsCollapsed(prev => !prev);
+      if (e.key === "Enter") {
+        setIsCollapsed((prev) => !prev);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Unique key to force re-render animations on phase change
@@ -26,7 +29,7 @@ const HUD = ({ activeSubData, activePath }) => {
 
   const CollapseIcon = ({ isCollapsed }) => (
     <svg
-      className={`${styles.collapseIcon} ${isCollapsed ? styles.rotated : ''}`}
+      className={`${styles.collapseIcon} ${isCollapsed ? styles.rotated : ""}`}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -37,16 +40,18 @@ const HUD = ({ activeSubData, activePath }) => {
   );
 
   return (
-    <div className={`${styles.hudOverlay} ${isCollapsed ? styles.hudOverlayCollapsed : ''}`}>
+    <div
+      className={`${styles.hudOverlay} ${isCollapsed ? styles.hudOverlayCollapsed : ""}`}
+    >
       <div
         className={styles.hudGlow}
         style={{
-          backgroundColor: activeSubData.color
+          backgroundColor: activeSubData.color,
         }}
       />
 
       <div
-        className={`${styles.hudCard} ${isCollapsed ? styles.hudCardCollapsed : ''}`}
+        className={`${styles.hudCard} ${isCollapsed ? styles.hudCardCollapsed : ""}`}
         onClick={() => isCollapsed && setIsCollapsed(false)}
       >
         <button
@@ -63,19 +68,29 @@ const HUD = ({ activeSubData, activePath }) => {
         {!isCollapsed && (
           <>
             {/* Animated Header */}
-            <header key={`header-${transitionKey}`} className={`${styles.hudHeader} ${styles.animateSlideUp}`}>
+            <header
+              key={`header-${transitionKey}`}
+              className={`${styles.hudHeader} ${styles.animateSlideUp}`}
+            >
               <div className={styles.hudPhaseBadge}>{phaseLabel}</div>
               <div className={styles.hudPhaseName}>{phaseDescription}</div>
             </header>
 
             {/* Animated Title Area */}
-            <div key={`title-${transitionKey}`} className={`${styles.hudTitleContainer} ${styles.animateSlideUpDelay}`}>
-              <h1 className={styles.hudTitle} style={{ color: activeSubData.color }}>
+            <div
+              key={`title-${transitionKey}`}
+              className={`${styles.hudTitleContainer} ${styles.animateSlideUpDelay}`}
+            >
+              <h1
+                className={styles.hudTitle}
+                style={{ color: activeSubData.color }}
+              >
                 {activeSubData.name}
               </h1>
               <div className={styles.hudSubInfo}>
                 <div className={styles.hudSubTitle}>
-                  <span className={styles.hudSubLabel}>LEVEL</span> {activeSubData.id}
+                  <span className={styles.hudSubLabel}>LEVEL</span>{" "}
+                  {activeSubData.id}
                 </div>
               </div>
             </div>
@@ -85,14 +100,19 @@ const HUD = ({ activeSubData, activePath }) => {
               {currentPhase.sub.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`${styles.progressDot} ${idx === subPhaseIndex
-                    ? styles.progressDotActive
-                    : styles.progressDotInactive
-                    }`}
-                  style={idx === subPhaseIndex ? {
-                    backgroundColor: activeSubData.color,
-                    boxShadow: `0 0 20px ${activeSubData.color}cc`
-                  } : {}}
+                  className={`${styles.progressDot} ${
+                    idx === subPhaseIndex
+                      ? styles.progressDotActive
+                      : styles.progressDotInactive
+                  }`}
+                  style={
+                    idx === subPhaseIndex
+                      ? {
+                          backgroundColor: activeSubData.color,
+                          boxShadow: `0 0 20px ${activeSubData.color}cc`,
+                        }
+                      : {}
+                  }
                 />
               ))}
             </footer>

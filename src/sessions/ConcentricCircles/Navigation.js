@@ -1,190 +1,208 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { MAPPED_DATA, FLAT_DATA } from './Data.js';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FLAT_DATA, MAPPED_DATA } from "./Data.js";
 
 export function useNavigation() {
-    const [activePath, setActivePath] = useState(() => {
-        if (typeof window === 'undefined') return { p: 0, s: 0 };
-        const hash = window.location.hash.replace('#', '');
-        const parts = hash.split('/');
-        if (parts[0] === 'concentric-circles' && parts[1]) {
-            const id = parts[1];
-            const index = FLAT_DATA.findIndex(d => d.id === id);
-            if (index !== -1) {
-                const data = FLAT_DATA[index];
-                return { p: data.pIdx, s: data.sIdx };
-            }
+  const [activePath, setActivePath] = useState(() => {
+    if (typeof window === "undefined") return { p: 0, s: 0 };
+    const hash = window.location.hash.replace("#", "");
+    const parts = hash.split("/");
+    if (parts[0] === "concentric-circles" && parts[1]) {
+      const id = parts[1];
+      const index = FLAT_DATA.findIndex((d) => d.id === id);
+      if (index !== -1) {
+        const data = FLAT_DATA[index];
+        return { p: data.pIdx, s: data.sIdx };
+      }
+    }
+    return { p: 0, s: 0 };
+  });
+  const lastNavTime = useRef(0);
+  const navThrottleMs = 150; // Minimum time between navigation steps
+
+  // Initial load and hash change listener
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      const parts = hash.split("/");
+      if (parts[0] === "concentric-circles") {
+        const id = parts[1];
+        let targetPath = null;
+
+        if (id) {
+          const index = FLAT_DATA.findIndex((d) => d.id === id);
+          if (index !== -1) {
+            const data = FLAT_DATA[index];
+            targetPath = { p: data.pIdx, s: data.sIdx };
+          }
+        } else {
+          // Default to first phase if no ID provided
+          targetPath = { p: 0, s: 0 };
         }
-        return { p: 0, s: 0 };
-    });
-    const lastNavTime = useRef(0);
-    const navThrottleMs = 150; // Minimum time between navigation steps
 
-    // Initial load and hash change listener
-    useEffect(() => {
-        const syncFromHash = () => {
-            const hash = window.location.hash.replace('#', '');
-            const parts = hash.split('/');
-            if (parts[0] === 'concentric-circles') {
-                const id = parts[1];
-                let targetPath = null;
-                
-                if (id) {
-                    const index = FLAT_DATA.findIndex(d => d.id === id);
-                    if (index !== -1) {
-                        const data = FLAT_DATA[index];
-                        targetPath = { p: data.pIdx, s: data.sIdx };
-                    }
-                } else {
-                    // Default to first phase if no ID provided
-                    targetPath = { p: 0, s: 0 };
-                }
-
-                if (targetPath) {
-                    setActivePath(prev => {
-                        if (prev.p === targetPath.p && prev.s === targetPath.s) return prev;
-                        return targetPath;
-                    });
-                }
-            }
-        };
-
-        syncFromHash();
-        window.addEventListener('hashchange', syncFromHash);
-        return () => window.removeEventListener('hashchange', syncFromHash);
-    }, []);
-
-    // Update hash on path change
-    useEffect(() => {
-        const activeItem = FLAT_DATA.find(d => d.pIdx === activePath.p && d.sIdx === activePath.s);
-        if (activeItem) {
-            const newHash = `#concentric-circles/${activeItem.id}`;
-            if (window.location.hash !== newHash) {
-                window.history.replaceState(null, '', newHash);
-            }
+        if (targetPath) {
+          setActivePath((prev) => {
+            if (prev.p === targetPath.p && prev.s === targetPath.s) return prev;
+            return targetPath;
+          });
         }
-    }, [activePath]);
-
-    const performNav = (direction) => {
-        const now = Date.now();
-        if (now - lastNavTime.current < navThrottleMs) return;
-        lastNavTime.current = now;
-
-        setActivePath(prev => {
-            let { p, s } = prev;
-            if (direction === "up") {
-                p = Math.max(0, p - 1); s = 0;
-            } else if (direction === "down") {
-                p = Math.min(MAPPED_DATA.length - 1, p + 1); s = 0;
-            } else if (direction === "left") {
-                if (s > 0) s--;
-                else if (p > 0) { p--; s = MAPPED_DATA[p].sub.length - 1; }
-            } else if (direction === "right") {
-                if (s < MAPPED_DATA[p].sub.length - 1) s++;
-                else if (p < MAPPED_DATA.length - 1) { p++; s = 0; }
-            }
-            return { p, s };
-        });
+      }
     };
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === "ArrowUp") performNav("up");
-            else if (e.key === "ArrowDown") performNav("down");
-            else if (e.key === "ArrowLeft") performNav("left");
-            else if (e.key === "ArrowRight") performNav("right");
-            else if (e.key === "Escape") window.location.hash = 'launcher';
-        };
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    return () => window.removeEventListener("hashchange", syncFromHash);
+  }, []);
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        const handleTouchStart = (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        };
-
-        const handleTouchEnd = (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-
-            const dx = touchEndX - touchStartX;
-            const dy = touchEndY - touchStartY;
-            const absX = Math.abs(dx);
-            const absY = Math.abs(dy);
-
-            if (Math.max(absX, absY) < 40) return; // threshold
-
-            if (absX > absY) {
-                // Horizontal swipe (Inverted: direction matches swipe)
-                if (dx > 0) performNav("right");
-                else performNav("left");
-            } else {
-                // Vertical swipe (Inverted: direction matches swipe)
-                if (dy > 0) performNav("down");
-                else performNav("up");
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("touchstart", handleTouchStart, { passive: true });
-        window.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-            window.removeEventListener("touchstart", handleTouchStart);
-            window.removeEventListener("touchend", handleTouchEnd);
-        };
-    }, []);
-
-    const navTo = (direction) => {
-        performNav(direction);
-    };
-
-    const targetFlatIndex = useMemo(() =>
-        FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === activePath.s),
-        [activePath]
+  // Update hash on path change
+  useEffect(() => {
+    const activeItem = FLAT_DATA.find(
+      (d) => d.pIdx === activePath.p && d.sIdx === activePath.s,
     );
+    if (activeItem) {
+      const newHash = `#concentric-circles/${activeItem.id}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash);
+      }
+    }
+  }, [activePath]);
 
-    const activeSubData = useMemo(() => FLAT_DATA[targetFlatIndex], [targetFlatIndex]);
+  const performNav = (direction) => {
+    const now = Date.now();
+    if (now - lastNavTime.current < navThrottleMs) return;
+    lastNavTime.current = now;
 
-    const navigationState = useMemo(() => {
-        const visibleList = [];
-        const radiusLevels = new Array(FLAT_DATA.length).fill(0);
-
-        const completedPhasesCount = activePath.p;
-        const currentPhaseSubCount = activePath.s + 1;
-        let level = (completedPhasesCount * 1.5) + currentPhaseSubCount;
-
-        // Completed phases
-        for (let p = 0; p < activePath.p; p++) {
-            FLAT_DATA.forEach((d, i) => {
-                if (d.pIdx === p) {
-                    radiusLevels[i] = level;
-                    visibleList.push(i);
-                }
-            });
-            level -= 1.5; // Gap between condensed phases
+    setActivePath((prev) => {
+      let { p, s } = prev;
+      if (direction === "up") {
+        p = Math.max(0, p - 1);
+        s = 0;
+      } else if (direction === "down") {
+        p = Math.min(MAPPED_DATA.length - 1, p + 1);
+        s = 0;
+      } else if (direction === "left") {
+        if (s > 0) s--;
+        else if (p > 0) {
+          p--;
+          s = MAPPED_DATA[p].sub.length - 1;
         }
-
-        // Current phase
-        for (let s = 0; s <= activePath.s; s++) {
-            const i = FLAT_DATA.findIndex(d => d.pIdx === activePath.p && d.sIdx === s);
-            if (i !== -1) {
-                radiusLevels[i] = level;
-                visibleList.push(i);
-                level -= 1.0; // Space between active sub phases
-            }
+      } else if (direction === "right") {
+        if (s < MAPPED_DATA[p].sub.length - 1) s++;
+        else if (p < MAPPED_DATA.length - 1) {
+          p++;
+          s = 0;
         }
+      }
+      return { p, s };
+    });
+  };
 
-        return { visibleList, radiusLevels };
-    }, [activePath]);
-
-    return {
-        activePath,
-        activeSubData,
-        visibleList: navigationState.visibleList,
-        radiusLevels: navigationState.radiusLevels,
-        navTo,
-        targetFlatIndex
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowUp") performNav("up");
+      else if (e.key === "ArrowDown") performNav("down");
+      else if (e.key === "ArrowLeft") performNav("left");
+      else if (e.key === "ArrowRight") performNav("right");
+      else if (e.key === "Escape") window.location.hash = "launcher";
     };
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      if (Math.max(absX, absY) < 40) return; // threshold
+
+      if (absX > absY) {
+        // Horizontal swipe (Inverted: direction matches swipe)
+        if (dx > 0) performNav("right");
+        else performNav("left");
+      } else {
+        // Vertical swipe (Inverted: direction matches swipe)
+        if (dy > 0) performNav("down");
+        else performNav("up");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
+  const navTo = (direction) => {
+    performNav(direction);
+  };
+
+  const targetFlatIndex = useMemo(
+    () =>
+      FLAT_DATA.findIndex(
+        (d) => d.pIdx === activePath.p && d.sIdx === activePath.s,
+      ),
+    [activePath],
+  );
+
+  const activeSubData = useMemo(
+    () => FLAT_DATA[targetFlatIndex],
+    [targetFlatIndex],
+  );
+
+  const navigationState = useMemo(() => {
+    const visibleList = [];
+    const radiusLevels = new Array(FLAT_DATA.length).fill(0);
+
+    const completedPhasesCount = activePath.p;
+    const currentPhaseSubCount = activePath.s + 1;
+    let level = completedPhasesCount * 1.5 + currentPhaseSubCount;
+
+    // Completed phases
+    for (let p = 0; p < activePath.p; p++) {
+      FLAT_DATA.forEach((d, i) => {
+        if (d.pIdx === p) {
+          radiusLevels[i] = level;
+          visibleList.push(i);
+        }
+      });
+      level -= 1.5; // Gap between condensed phases
+    }
+
+    // Current phase
+    for (let s = 0; s <= activePath.s; s++) {
+      const i = FLAT_DATA.findIndex(
+        (d) => d.pIdx === activePath.p && d.sIdx === s,
+      );
+      if (i !== -1) {
+        radiusLevels[i] = level;
+        visibleList.push(i);
+        level -= 1.0; // Space between active sub phases
+      }
+    }
+
+    return { visibleList, radiusLevels };
+  }, [activePath]);
+
+  return {
+    activePath,
+    activeSubData,
+    visibleList: navigationState.visibleList,
+    radiusLevels: navigationState.radiusLevels,
+    navTo,
+    targetFlatIndex,
+  };
 }

@@ -5,7 +5,9 @@
   overflow: hidden;
   position: relative;
   color: white;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   user-select: none;
 }
 
@@ -15,7 +17,12 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background: radial-gradient(circle at center, rgba(30, 27, 75, 0.2), #020205, #020205);
+  background: radial-gradient(
+    circle at center,
+    rgba(30, 27, 75, 0.2),
+    #020205,
+    #020205
+  );
 }
 
 .intro p {

@@ -8,7 +8,7 @@
 
 .controlsWrapper {
   display: grid;
-  grid-template-areas: 
+  grid-template-areas:
     ". up ."
     "left down right"
     ". home .";
@@ -45,18 +45,28 @@
   transform: translateY(0) scale(0.95);
 }
 
-.btnUp { grid-area: up; }
-.btnDown { grid-area: down; }
-.btnLeft { grid-area: left; }
-.btnRight { grid-area: right; }
-.btnHome { grid-area: home; }
+.btnUp {
+  grid-area: up;
+}
+.btnDown {
+  grid-area: down;
+}
+.btnLeft {
+  grid-area: left;
+}
+.btnRight {
+  grid-area: right;
+}
+.btnHome {
+  grid-area: home;
+}
 
 @media (max-width: 768px) {
   .controlsContainer {
     top: 1rem;
     right: 1rem;
   }
-  
+
   .btn {
     width: 40px;
     height: 40px;
